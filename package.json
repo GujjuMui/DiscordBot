@@ -1,0 +1,33 @@
+{
+  "name": "hornet-bot",
+  "version": "1.2.0",
+  "description": "Discord SFA Clan Management Bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "deploy": "node deploy-commands.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "sfa",
+    "shadow-fight-arena"
+  ],
+  "author": "gujju_mui",
+  "license": "MIT",
+  "dependencies": {
+    "@discordjs/builders": "^1.14.1",
+    "@discordjs/rest": "^2.6.1",
+    "discord.js": "^14.26.4",
+    "dotenv": "^17.4.2",
+    "mongoose": "^9.7.3",
+    "uuid": "^14.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "engines": {
+  "node": ">=22"
+}
+}
