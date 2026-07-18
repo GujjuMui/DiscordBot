@@ -63,6 +63,16 @@ module.exports = async ({
             heading = "🔴 ART DELETED";
             break;
 
+        case "LINK_CREATE":
+            color = "#2ecc71";
+            heading = "🟢 LINK CREATED";
+            break;
+
+        case "LINK_DELETE":
+            color = "#e74c3c";
+            heading = "🔴 LINK DELETED";
+            break;
+
         case "TRUST_ADD":
             color = "#3498db";
             heading = "🔵 TRUST ADDED";

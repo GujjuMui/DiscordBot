@@ -28,8 +28,13 @@ const linkSchema = new mongoose.Schema({
     },
 
     favorites: {
-        type: Number,
-        default: 0
+    type: Number,
+    default: 0
+    },
+
+    discordMessageId: {
+    type: String,
+    default: null
     }
 
 }, {

@@ -5,6 +5,8 @@ const {
 } = require("discord.js");
 
 const Link = require("../../database/Link");
+const settings = require("../../config/settings");
+const logger = require("../../utils/logger");
 
 module.exports = {
 
@@ -26,7 +28,9 @@ module.exports = {
 
     async execute(interaction) {
 
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        await interaction.deferReply({
+            flags: MessageFlags.Ephemeral
+        });
 
         const title = interaction.options.getString("title");
 
@@ -36,9 +40,55 @@ module.exports = {
 
         if (!deleted) {
 
-            return interaction.editReply("❌ Link not found.");
+            return interaction.editReply(
+                "❌ Link not found."
+            );
 
         }
+
+        // Delete showcase message
+        if (deleted.discordMessageId) {
+
+            const contentChannel =
+                interaction.guild.channels.cache.find(
+                    c => c.name === settings.channels.links
+                );
+
+            if (contentChannel) {
+
+                try {
+
+                    const message =
+                        await contentChannel.messages.fetch(
+                            deleted.discordMessageId
+                        );
+
+                    if (message) {
+                        await message.delete();
+                    }
+
+                } catch (err) {
+                    console.log(
+                        "Couldn't delete link showcase message."
+                    );
+                }
+
+            }
+
+        }
+
+        await logger({
+
+            guild: interaction.guild,
+            client: interaction.client,
+
+            type: "LINK_DELETE",
+
+            user: interaction.user,
+
+            title: deleted.title
+
+        });
 
         await interaction.editReply(
             `✅ Deleted **${title}**`
