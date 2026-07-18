@@ -16,6 +16,11 @@ const cardSchema = new mongoose.Schema({
         required: true
     },
 
+    category: {
+        type: String,
+        default: "General"
+    },
+
     tags: {
         type: [String],
         default: []

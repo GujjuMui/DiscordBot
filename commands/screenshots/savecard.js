@@ -46,6 +46,13 @@ module.exports = {
 
         .addStringOption(option =>
             option
+                .setName("category")
+                .setDescription("Card category")
+                .setRequired(true)
+        )
+
+        .addStringOption(option =>
+            option
                 .setName("tags")
                 .setDescription("Separate tags with commas")
                 .setRequired(false)
@@ -89,10 +96,10 @@ module.exports = {
                 cardId,
                 cardName: name,
                 character,
-                    tags,
-
+                category: interaction.options.getString("category"),
+                tags,
                 imageFile,
-
+                
                 uploader: interaction.user.username,
                 uploaderId: interaction.user.id
 

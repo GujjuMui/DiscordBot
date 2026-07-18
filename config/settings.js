@@ -2,11 +2,11 @@ module.exports = {
 
     channels: {
 
-        cards: "sfa-cards",
+        cards: "🎴┃sfa-cards",
 
         arts: "🎨┃sfa-arts",
 
-        links: "links",
+        links: "📺┃content",
 
         tournaments: "tournaments",
 

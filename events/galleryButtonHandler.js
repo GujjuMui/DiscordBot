@@ -1,6 +1,7 @@
 const gallery = require("../services/galleryV2");
 
 const Art = require("../database/Art");
+const Card = require("../database/Card");
 const Link = require("../database/Link");
 
 const {
@@ -74,6 +75,40 @@ module.exports = async (interaction) => {
         return true;
 
     }
+
+    if (g.type === "cards") {
+
+    const cards = await Card.find().sort({ createdAt: -1 });
+
+    const categories = [...new Set(
+        cards
+            .map(card => card.category)
+            .filter(Boolean)
+    )].sort();
+
+    const {
+        createCardCategoryMenu
+    } = require("../utils/embedBuilder");
+
+    await interaction.editReply({
+
+        embeds: [{
+            color: 0xff9900,
+            title: "🎴 Browse SFA Cards",
+            description: "Select a category from the dropdown below."
+        }],
+
+        components: [
+            createCardCategoryMenu(categories)
+        ],
+
+        files: []
+
+    });
+
+    return true;
+
+}
 
     if (g.type === "links") {
 
@@ -158,12 +193,14 @@ module.exports = async (interaction) => {
         files,
 
         components: [
-            require("../utils/embedBuilder").createCardGalleryButtons()
+            createGalleryButtons()
         ]
 
     });
 
-} else if (g.type === "links") {
+} 
+
+    else if (g.type === "links") {
 
     const { embed, files } =
         require("../utils/embedBuilder").createLinkEmbed(

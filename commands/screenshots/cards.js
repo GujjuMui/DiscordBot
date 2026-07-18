@@ -8,7 +8,8 @@ const gallery = require("../../services/galleryV2");
 
 const {
     createCardEmbed,
-    createCardGalleryButtons
+    createCardGalleryButtons,
+    createCardCategoryMenu
 } = require("../../utils/embedBuilder");
 
 module.exports = {
@@ -31,25 +32,18 @@ module.exports = {
 
         }
 
-        gallery.open(interaction.user.id, {
-            type: "cards",
-            items: cards
-        });
-
-        const { embed, files } = createCardEmbed(
-    cards[0],
-    0,
-    cards.length
-);
+        const categories = [
+    ...new Set(
+        cards.map(card => card.category || "General")
+    )
+];
 
 await interaction.editReply({
 
-    embeds: [embed],
-
-    files,
+    content: "📂 Select a card category.",
 
     components: [
-        createCardGalleryButtons()
+        createCardCategoryMenu(categories)
     ]
 
 });

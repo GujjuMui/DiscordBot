@@ -12,6 +12,7 @@ module.exports = async (interaction) => {
     if (
     interaction.customId !== "edit_card_name" &&
     interaction.customId !== "edit_card_character" &&
+    interaction.customId !== "edit_card_category" &&
     interaction.customId !== "edit_card_tags" &&
     interaction.customId !== "edit_card_image"
 ) return false;
@@ -25,6 +26,28 @@ module.exports = async (interaction) => {
     const input = new TextInputBuilder()
         .setCustomId("new_character")
         .setLabel("New Character")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(input)
+    );
+
+    await interaction.showModal(modal);
+
+    return true;
+
+}
+
+    if (interaction.customId === "edit_card_category") {
+
+    const modal = new ModalBuilder()
+        .setCustomId("edit_card_category_modal")
+        .setTitle("Edit Category");
+
+    const input = new TextInputBuilder()
+        .setCustomId("new_category")
+        .setLabel("New Category")
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
 

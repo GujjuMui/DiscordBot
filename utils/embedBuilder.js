@@ -105,6 +105,12 @@ function createArtEmbed(art, index, total) {
                 inline: true
             },
 
+             {
+                name: "📂 Category",
+                value: art.category || "General",
+                inline: true
+            },
+
             {
                 name: "🏷️ Tags",
                 value: tags.length ? tags.join(", ") : "None"
@@ -275,6 +281,28 @@ function createArtCategoryMenu(categories) {
 
 }
 
+function createCardCategoryMenu(categories) {
+
+    const menu = new StringSelectMenuBuilder()
+
+        .setCustomId("card_category")
+
+        .setPlaceholder("Choose a card category");
+
+    for (const category of categories) {
+
+        menu.addOptions(
+            new StringSelectMenuOptionBuilder()
+                .setLabel(category)
+                .setValue(category)
+        );
+
+    }
+
+    return new ActionRowBuilder().addComponents(menu);
+
+}
+
 function createLinkCategoryMenu(categories) {
 
     const menu = new StringSelectMenuBuilder()
@@ -335,11 +363,15 @@ function createEditArtButtons() {
             .setStyle(ButtonStyle.Primary),
 
         new ButtonBuilder()
+            .setCustomId("edit_card_category")
+            .setLabel("Category")
+            .setStyle(ButtonStyle.Primary),
+
+        new ButtonBuilder()
             .setCustomId("edit_card_tags")
             .setLabel("Tags")
             .setStyle(ButtonStyle.Primary)
-
-    );
+        );
 
 }
 
@@ -370,6 +402,7 @@ module.exports = {
     createLinkCategoryMenu,
     createEditArtButtons,
     createDeleteButtons,
+    createCardCategoryMenu,
     createCardGalleryButtons,
     createEditCardButtons
                 };
