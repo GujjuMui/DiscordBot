@@ -18,7 +18,9 @@ module.exports = async ({
 
     oldValue,
 
-    newValue
+    newValue,
+
+    fields
 
 }) => {
 
@@ -31,63 +33,67 @@ module.exports = async ({
     let color = "#3498db";
     let heading = "";
 
-    switch (type) {
+switch (type) {
 
-        case "CARD_CREATE":
-            color = "#2ecc71";
-            heading = "🟢 CARD CREATED";
-            break;
+case "CARD_CREATE":
+    color = "#2ecc71";
+    heading = `${settings.emojis.success} CARD CREATED`;
+    break;
 
-        case "CARD_EDIT":
-            color = "#f1c40f";
-            heading = "🟡 CARD EDITED";
-            break;
+case "CARD_EDIT":
+    color = "#f1c40f";
+    heading = `${settings.emojis.warning} CARD EDITED`;
+    break;
 
-        case "CARD_DELETE":
-            color = "#e74c3c";
-            heading = "🔴 CARD DELETED";
-            break;
+case "CARD_DELETE":
+    color = "#e74c3c";
+    heading = `${settings.emojis.delete} CARD DELETED`;
+    break;
 
-        case "ART_CREATE":
-            color = "#2ecc71";
-            heading = "🟢 ART CREATED";
-            break;
+case "ART_CREATE":
+    color = "#2ecc71";
+    heading = `${settings.emojis.success} ART CREATED`;
+    break;
 
-        case "ART_EDIT":
-            color = "#f1c40f";
-            heading = "🟡 ART EDITED";
-            break;
+case "ART_EDIT":
+    color = "#f1c40f";
+    heading = `${settings.emojis.warning} ART EDITED`;
+    break;
 
-        case "ART_DELETE":
-            color = "#e74c3c";
-            heading = "🔴 ART DELETED";
-            break;
+case "ART_DELETE":
+    color = "#e74c3c";
+    heading = `${settings.emojis.delete} ART DELETED`;
+    break;
 
-        case "LINK_CREATE":
-            color = "#2ecc71";
-            heading = "🟢 LINK CREATED";
-            break;
+case "LINK_CREATE":
+    color = "#2ecc71";
+    heading = `${settings.emojis.success} LINK CREATED`;
+    break;
 
-        case "LINK_DELETE":
-            color = "#e74c3c";
-            heading = "🔴 LINK DELETED";
-            break;
+case "LINK_DELETE":
+    color = "#e74c3c";
+    heading = `${settings.emojis.delete} LINK DELETED`;
+    break;
 
-        case "TRUST_ADD":
-            color = "#3498db";
-            heading = "🔵 TRUST ADDED";
-            break;
+case "TRUST_ADD":
+    color = "#3498db";
+    heading = `${settings.emojis.info} TRUST ADDED`;
+    break;
 
-        case "TRUST_REMOVE":
-            color = "#e67e22";
-            heading = "🟠 TRUST REMOVED";
-            break;
+case "TRUST_REMOVE":
+    color = "#e67e22";
+    heading = `${settings.emojis.warning} TRUST REMOVED`;
+    break;
 
-        case "SETUP":
-            color = "#9b59b6";
-            heading = "🟣 SETUP EXECUTED";
-            break;
+case "SETUP":
+    color = "#9b59b6";
+    heading = `${settings.emojis.system} SETUP EXECUTED`;
+    break;
 
+case "VERIFY":
+    color = "#2ecc71";
+    heading = `${settings.emojis.success} USER VERIFIED`;
+    break;
     }
 
     const embed = new EmbedBuilder()
@@ -142,9 +148,8 @@ module.exports = async ({
 
             inline: true
 
-        });
-
-    }
+        });   
+}
 
     if (oldValue !== undefined) {
 
@@ -171,6 +176,12 @@ module.exports = async ({
             inline: true
 
         });
+
+    }
+
+    if (fields && fields.length) {
+
+    embed.addFields(fields);
 
     }
 

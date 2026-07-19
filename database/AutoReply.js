@@ -15,7 +15,7 @@ const autoReplySchema = new mongoose.Schema({
 
     cooldown: {
         type: Number,
-        default: 3600000 // 1 hour
+        default: 32000000
     },
 
     enabled: {

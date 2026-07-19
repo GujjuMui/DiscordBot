@@ -94,6 +94,9 @@ client.on(Events.InteractionCreate, async interaction => {
         if (await require("./events/deleteArtButtonHandler")(interaction))
             return;
 
+        if (await require("./events/verificationButtonHandler")(interaction))
+            return;
+
         if (await require("./events/galleryButtonHandler")(interaction))
             return;
 
@@ -139,6 +142,9 @@ client.on(Events.InteractionCreate, async interaction => {
     if (interaction.isModalSubmit()) {
 
     if (await require("./events/editCardModalHandler")(interaction)) return;
+
+    if (await require("./events/verificationModalHandler")(interaction))
+    return;
 
     if (await require("./events/editArtModalHandler")(interaction)) return;
 
