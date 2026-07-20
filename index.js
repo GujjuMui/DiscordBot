@@ -10,6 +10,8 @@ const {
 const fs = require("fs");
 const path = require("path");
 
+const clanButtonHandler = require("./events/clanButtonHandler");
+
 const config = require("./config/config");
 const connectMongo = require("./database/mongo");
 
@@ -97,6 +99,12 @@ client.on(Events.InteractionCreate, async interaction => {
         if (await require("./events/verificationButtonHandler")(interaction))
             return;
 
+        if (await require("./events/clanButtonHandler")(interaction))
+            return;
+
+        if (await require("./events/tryoutButtonHandler")(interaction))
+            return;
+
         if (await require("./events/galleryButtonHandler")(interaction))
             return;
 
@@ -148,6 +156,8 @@ client.on(Events.InteractionCreate, async interaction => {
 
     if (await require("./events/editArtModalHandler")(interaction)) return;
 
+    if (await require("./events/tryoutModalHandler")(interaction))
+            return;
 }
 
 

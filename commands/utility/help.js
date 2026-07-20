@@ -17,7 +17,7 @@ module.exports = {
 
             .setColor("#f1c40f")
 
-            .setTitle("📖 HORNET Help")
+            .setTitle("<a:Rules:1528079131844018297>  HORNET Help")
 
             .setDescription(
                 "Welcome to **HORNET**.\n\n" +

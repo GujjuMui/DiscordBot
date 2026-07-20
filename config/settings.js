@@ -20,8 +20,9 @@ module.exports = {
         // Replace with the actual channel IDs
         serverMap: "1176828357590130757",
 
-        joinClan: "1175701042374115428"
+        howToJoin: "1175701042374115428",
 
+        tryout: "1326826025950117898"
     },
 
     idPrefix: {
@@ -40,7 +41,17 @@ module.exports = {
 
         trusted: "Trusted",
 
-        member: "1171390411646963744"
+        member: "1171390411646963744",
+
+        pendingTryout: "1175736919603302430",
+
+        clanMember: "1175839611193409617",
+
+        pendingTryoutAS: "1175736919603302430",
+        pendingTryoutEU: "1480831128389681152",
+
+        tryoutTesterAS: "1205879584369942548",
+        tryoutTesterEU: "1457795909869113521"
 
     },
 
@@ -56,7 +67,7 @@ module.exports = {
 
         system: "<a:GL_animatedarrowwhite:1528304165267312733>",
 
-        // NEW - replace with your custom welcome emoji
+
         welcome: "<:hornethi:1528388173242040462> ",
 
         // Button emojis

@@ -45,9 +45,7 @@ function publicCommands() {
 
             "`/about` • Learn about HORNET\n\n" +
 
-            "`/help` • Open the help menu\n\n" +
-
-            "`/joke` • Crack a random joke"
+            "`/help` • Open the help menu"
 
         )
 
@@ -98,11 +96,15 @@ function moderatorCommands() {
 
         .setDescription(
 
+            "**Gallery Management**\n\n" +
+
             "`/deletecard`\n\n" +
 
             "`/deleteart`\n\n" +
 
-            "`/removelink`"
+            "**Links**\n\n" +
+
+            "`/deletelink`"
 
         )
 
@@ -123,7 +125,17 @@ function ownerCommands() {
             "**Server Management**\n\n" +
 
             "`/setup`\n" +
-            "`/trust`\n\n" +
+            "`/clan setup`\n\n" +
+
+            "**Trusted Users**\n\n" +
+
+            "`/trust`\n" +
+            "`/untrust`\n" +
+            "`/trustedlist`\n\n" +
+
+            "**Verification**\n\n" +
+
+            "`/verification`\n\n" +
 
             "**Auto Replies**\n\n" +
 
@@ -133,6 +145,7 @@ function ownerCommands() {
 
             "**Utilities**\n\n" +
 
+            "`/say`\n" +
             "`/spam`\n" +
             "`/stopspam`"
 

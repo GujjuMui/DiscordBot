@@ -94,7 +94,23 @@ case "VERIFY":
     color = "#2ecc71";
     heading = `${settings.emojis.success} USER VERIFIED`;
     break;
-    }
+
+case "CLAN_JOIN":
+    color = "#2ecc71";
+    heading = `${settings.emojis.success} CLAN JOIN`;
+    break;
+
+case "TRYOUT_PASS":
+    color = "#57F287";
+    heading =   `${settings.emojis.success} TRYOUT PASS`;
+    break;
+
+case "TRYOUT_FAIL":
+    color = "#ED4245";
+    heading = `${settings.emojis.delete} TRYOUT FAIL` ;
+    break;
+
+}
 
     const embed = new EmbedBuilder()
 
