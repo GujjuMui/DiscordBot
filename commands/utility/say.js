@@ -57,11 +57,14 @@ module.exports = {
 
     async execute(interaction) {
 
-        if (interaction.user.id !== settings.ownerId) {
+    await interaction.deferReply({
+        flags: MessageFlags.Ephemeral
+    });
 
-            return interaction.reply({
-                content: "❌ Only the bot owner can use this command.",
-                flags: MessageFlags.Ephemeral
+    if (interaction.user.id !== settings.ownerId) {
+
+            return interaction.editReply({
+                content: "❌ Only the bot owner can use this command."
             });
 
         }
@@ -101,14 +104,11 @@ module.exports = {
 
         }
 
-        await interaction.reply({
+        await interaction.editReply({
 
-            content: `✅ Message sent to ${channel}.`,
-
-            flags: MessageFlags.Ephemeral
+            content: `✅ Message sent to ${channel}.`
 
         });
-
     }
 
 };

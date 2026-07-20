@@ -45,7 +45,8 @@ module.exports = {
 
         pendingTryout: "1175736919603302430",
 
-        clanMember: "1175839611193409617",
+        clanMemberAS: "1175839611193409617",
+        clanMemberEU: "1461006413802242264",
 
         pendingTryoutAS: "1175736919603302430",
         pendingTryoutEU: "1480831128389681152",

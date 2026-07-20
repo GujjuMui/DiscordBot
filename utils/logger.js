@@ -110,6 +110,25 @@ case "TRYOUT_FAIL":
     heading = `${settings.emojis.delete} TRYOUT FAIL` ;
     break;
 
+case "MEMBER_ADD":
+    color = "#57F287";
+    heading = `${settings.emojis.success} MEMBER ADDED`;
+    break;
+
+case "MEMBER_REMOVE":
+    color = "#ED4245";
+    heading = `${settings.emojis.delete} MEMBER REMOVED`;
+    break;
+
+case "MEMBER_TRANSFER":
+    color = "#FEE75C";
+    heading = `${settings.emojis.info} MEMBER TRANSFERRED`;
+    break;
+
+}
+
+    if (!heading) {
+    heading = type;
 }
 
     const embed = new EmbedBuilder()

@@ -27,11 +27,11 @@ module.exports = {
             .addFields({
                 name: "Categories",
                 value:
-                    "🌍 Public\n" +
-                    "⭐ Trusted\n" +
-                    "🛡️ Moderator\n" +
-                    "👑 Owner\n" +
-                    "ℹ️ About"
+                    "<a:Discord:1528303361781137501> Public\n" +
+                    "<a:sprinkle_gbn:1528808995807035482> Trusted\n" +
+                    "<a:shields:1528808564200570880> Moderator\n" +
+                    "<a:dream_crowns:1528808039870628091> Owner\n" +
+                    "<a:info:1528638936082157589> About"
             })
 
             .setFooter({
@@ -51,31 +51,31 @@ module.exports = {
                 {
                     label: "Public Commands",
                     value: "public",
-                    emoji: "🌍"
+                    emoji: "<a:Discord:1528303361781137501>"
                 },
 
                 {
                     label: "Trusted Commands",
                     value: "trusted",
-                    emoji: "⭐"
+                    emoji: "<a:sprinkle_gbn:1528808995807035482>"
                 },
 
                 {
                     label: "Moderator Commands",
                     value: "moderator",
-                    emoji: "🛡️"
+                    emoji: "<a:shields:1528808564200570880>"
                 },
 
                 {
                     label: "Owner Commands",
                     value: "owner",
-                    emoji: "👑"
+                    emoji: "<a:dream_crowns:1528808039870628091>"
                 },
 
                 {
                     label: "About HORNET",
                     value: "about",
-                    emoji: "ℹ️"
+                    emoji: "<a:info:1528638936082157589>"
                 }
 
             );

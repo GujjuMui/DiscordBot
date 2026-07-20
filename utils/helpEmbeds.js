@@ -20,11 +20,11 @@ function home() {
         .addFields({
             name: "Available Categories",
             value:
-                "🌍 Public\n" +
-                "⭐ Trusted\n" +
-                "🛡️ Moderator\n" +
-                "👑 Owner\n" +
-                "ℹ️ About"
+                "<a:Discord:1528303361781137501> Public\n" +
+                "<a:sprinkle_gbn:1528808995807035482> Trusted\n" +
+                "<a:shields:1528808564200570880> Moderator\n" +
+                "<a:dream_crowns:1528808039870628091> Owner\n" +
+                "<a:info:1528638936082157589> About"
         })
 
         .setFooter(footer)
@@ -39,7 +39,7 @@ function publicCommands() {
 
         .setColor("#2ecc71")
 
-        .setTitle("🌍 Public Commands")
+        .setTitle("<a:Discord:1528303361781137501> Public Commands")
 
         .setDescription(
 
@@ -59,7 +59,7 @@ function trustedCommands() {
 
         .setColor("#3498db")
 
-        .setTitle("⭐ Trusted Commands")
+        .setTitle("<a:sprinkle_gbn:1528808995807035482> Trusted Commands")
 
         .setDescription(
 
@@ -92,9 +92,20 @@ function moderatorCommands() {
 
         .setColor("#e67e22")
 
-        .setTitle("🛡️ Moderator Commands")
+        .setTitle("<a:shields:1528808564200570880> Moderator Commands")
 
         .setDescription(
+
+            "**Member Management**\n\n" +
+
+            "`/member add`\n" +
+            "Add a user to FATE AS or FATE EU.\n\n" +
+
+            "`/member remove`\n" +
+            "Remove a user from a clan.\n\n" +
+
+            "`/member transfer`\n" +
+            "Transfer a member between AS and EU.\n\n" +
 
             "**Gallery Management**\n\n" +
 
@@ -111,14 +122,13 @@ function moderatorCommands() {
         .setFooter(footer);
 
 }
-
 function ownerCommands() {
 
     return new EmbedBuilder()
 
         .setColor("#e74c3c")
 
-        .setTitle("👑 Owner Commands")
+        .setTitle("<a:dream_crowns:1528808039870628091> Owner Commands")
 
         .setDescription(
 
@@ -161,7 +171,7 @@ function about() {
 
         .setColor("#9b59b6")
 
-        .setTitle("ℹ️ About HORNET")
+        .setTitle("<a:info:1528638936082157589> About HORNET")
 
         .setDescription(
 
@@ -173,9 +183,7 @@ function about() {
             "• Artwork Gallery\n" +
             "• Link Library\n" +
             "• Tournament Tools\n" +
-            "• Staff Utilities\n\n" +
-
-            "Built with ❤️ for the SFA community."
+            "• Staff Utilities" 
 
         )
 

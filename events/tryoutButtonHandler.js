@@ -91,12 +91,18 @@ const disabledRow = new ActionRowBuilder().addComponents(
 if (action === "pass") {
 
     await member.roles.remove(pendingRole);
-    await member.roles.add(settings.roles.clanMember);
 
-    embed.spliceFields(1, 1, {
+    const clanMemberRoleId =
+        pendingRole === settings.roles.pendingTryoutAS
+            ? settings.roles.clanMemberAS
+            : settings.roles.clanMemberEU;
+
+    await member.roles.add(clanMemberRoleId);
+
+    embed.spliceFields(4, 1, {
         name: "Status",
         value: "🟢 Passed",
-        inline: true
+        inline: false
     });
 
     embed.addFields({
@@ -127,6 +133,12 @@ if (action === "pass") {
                 name: "Applicant",
                 value: `${member.user.tag}`,
                 inline: true
+            },
+
+            {
+                name: "Region",
+                value: pendingRole === settings.roles.pendingTryoutAS ? "AS" : "EU",
+                inline: true
             }
 
         ]
@@ -141,10 +153,10 @@ if (action === "fail") {
 
     await member.roles.remove(pendingRole);
 
-    embed.spliceFields(1, 1, {
+    embed.spliceFields(4, 1, {
         name: "Status",
         value: "🔴 Failed",
-        inline: true
+        inline: false
     });
 
     embed.addFields({
@@ -163,23 +175,29 @@ if (action === "fail") {
 
     await logger({
 
-        guild: interaction.guild,
+    guild: interaction.guild,
 
-        type: "TRYOUT_FAIL",
+    type: "TRYOUT_FAIL",
 
-        user: interaction.user,
+    user: interaction.user,
 
-        fields: [
+    fields: [
 
-            {
-                name: "Applicant",
-                value: `${member.user.tag}`,
-                inline: true
-            }
+        {
+            name: "Applicant",
+            value: `${member.user.tag}`,
+            inline: true
+        },
 
-        ]
+        {
+            name: "Region",
+            value: pendingRole === settings.roles.pendingTryoutAS ? "AS" : "EU",
+            inline: true
+        }
 
-    });
+    ]
+
+});
 
     return true;
 

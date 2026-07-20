@@ -65,6 +65,24 @@ module.exports = async interaction => {
 
     }
 
+    const isClanMember =
+    interaction.member.roles.cache.has(settings.roles.clanMemberAS) ||
+    interaction.member.roles.cache.has(settings.roles.clanMemberEU);
+
+    if (isClanMember) {
+
+    await interaction.reply({
+
+        content: "❌ You are already a member of the clan.",
+
+        flags: MessageFlags.Ephemeral
+
+    });
+
+    return true;
+
+}
+
     const modal = new ModalBuilder()
         .setCustomId(`tryout_apply_${isAS ? "AS" : "EU"}`)
         .setTitle("Clan Tryout");
