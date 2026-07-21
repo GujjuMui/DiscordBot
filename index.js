@@ -108,6 +108,9 @@ client.on(Events.InteractionCreate, async interaction => {
         if (await require("./events/galleryButtonHandler")(interaction))
             return;
 
+        if (await require("./events/selfRoleHandler")(interaction))
+            return;
+
         if (await require("./events/buttonHandler")(interaction))
             return;
 
@@ -142,6 +145,9 @@ client.on(Events.InteractionCreate, async interaction => {
 
     if (await require("./events/gallerySelectHandler")(interaction))
         return;
+
+    if (await require("./events/selfRoleHandler")(interaction))
+    return;
 
     return require("./events/selectMenuHandler")(interaction);
 

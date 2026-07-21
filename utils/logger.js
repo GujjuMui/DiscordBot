@@ -125,6 +125,27 @@ case "MEMBER_TRANSFER":
     heading = `${settings.emojis.info} MEMBER TRANSFERRED`;
     break;
 
+case "SELFROLE_COLOR":
+    color = "#5865F2";
+    heading = "🎨 COLOR ROLE UPDATED";
+    break;
+
+case "SELFROLE_FACTION":
+    color = "#F1C40F";
+    heading = "⚔️ FACTION UPDATED";
+    break;
+
+case "SELFROLE_PING":
+    color = "#3498DB";
+    heading = "🔔 PING ROLES UPDATED";
+    break;
+
+case "SELFROLE_PING_REMOVE":
+    color = "#E74C3C";
+    heading = "🗑️ PING ROLES CLEARED";
+    break;
+
+
 }
 
     if (!heading) {

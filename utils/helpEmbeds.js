@@ -157,7 +157,8 @@ function ownerCommands() {
 
             "`/say`\n" +
             "`/spam`\n" +
-            "`/stopspam`"
+            "`/stopspam`\n" +
+            "`/selfroles` - Create or refresh the self-role panel"
 
         )
 
