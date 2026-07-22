@@ -70,7 +70,7 @@ if (!verificationChannel) {
 
     return interaction.reply({
 
-        content: "❌ Verification channel not found.",
+        content: settings.emojis.cross + " Verification channel not found.",
 
         flags: MessageFlags.Ephemeral
 
@@ -88,7 +88,7 @@ await verificationChannel.send({
 
         await interaction.reply({
 
-            content: "✅ Verification panel created.",
+            content: settings.emojis.check + " Verification panel created.",
 
             flags: MessageFlags.Ephemeral
 

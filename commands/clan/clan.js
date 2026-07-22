@@ -71,7 +71,7 @@ Basically clan tryouts are the process where we check the player is capable of j
 
             return interaction.reply({
 
-                content: "❌ How-to-Join channel not found.",
+                content: settings.emojis.cross + " How-to-Join channel not found.",
 
                 flags: MessageFlags.Ephemeral
 
@@ -89,7 +89,7 @@ Basically clan tryouts are the process where we check the player is capable of j
 
         await interaction.reply({
 
-            content: "✅ Clan join panel created.",
+            content: settings.emojis.check + " Clan join panel created.",
 
             flags: MessageFlags.Ephemeral
 

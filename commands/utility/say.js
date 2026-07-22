@@ -64,7 +64,7 @@ module.exports = {
     if (interaction.user.id !== settings.ownerId) {
 
             return interaction.editReply({
-                content: "❌ Only the bot owner can use this command."
+                content: settings.emojis.cross + " Only the bot owner can use this command."
             });
 
         }
@@ -106,7 +106,7 @@ module.exports = {
 
         await interaction.editReply({
 
-            content: `✅ Message sent to ${channel}.`
+            content: `${settings.emojis.check} Message sent to ${channel}.`
 
         });
     }

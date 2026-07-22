@@ -1,9 +1,7 @@
 const Card = require("../database/Card");
-
 const updateCardMessage = require("../utils/updateCardMessage");
-
+const settings = require("../config/settings");
 const logger = require("../utils/logger");
-
 const { MessageFlags } = require("discord.js");
 
 module.exports = async (interaction) => {
@@ -66,7 +64,7 @@ module.exports = async (interaction) => {
 });
 
     await interaction.editReply({
-        content: "✅ Tags updated successfully.",
+        content: settings.emojis.check + " Tags updated successfully.",
         flags: MessageFlags.Ephemeral
     });
 
@@ -116,7 +114,7 @@ module.exports = async (interaction) => {
     });
 
     await interaction.editReply({
-        content: `✅ Category updated to **${newCategory}**`,
+        content: `${settings.emojis.check} Category updated to **${newCategory}**`,
         flags: MessageFlags.Ephemeral
     });
 
@@ -166,7 +164,7 @@ module.exports = async (interaction) => {
 });
 
     await interaction.editReply({
-        content: `✅ Character updated to **${newCharacter}**`,
+        content: `${settings.emojis.check} Character updated to **${newCharacter}**`,
         flags: MessageFlags.Ephemeral
     });
 
@@ -215,7 +213,7 @@ module.exports = async (interaction) => {
 });
 
     await interaction.editReply({
-        content: `✅ Card name updated to **${newName}**`,
+        content: `${settings.emojis.check} Card name updated to **${newName}**`,
         flags: MessageFlags.Ephemeral
     });
 

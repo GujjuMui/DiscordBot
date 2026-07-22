@@ -1,6 +1,6 @@
 const Art = require("../database/Art");
 const Card = require("../database/Card");
-
+const settings = require("../config/settings");
 const gallery = require("../services/galleryV2");
 
 const {
@@ -35,7 +35,7 @@ module.exports = async (interaction) => {
         if (!arts.length) {
 
             await interaction.editReply({
-                content: "❌ No artwork found."
+                content: settings.emojis.cross + " No artwork found."
             });
 
             return true;
@@ -86,7 +86,7 @@ module.exports = async (interaction) => {
         if (!cards.length) {
 
             await interaction.editReply({
-                content: "❌ No cards found."
+                content: settings.emojis.cross + " No cards found."
             });
 
             return true;

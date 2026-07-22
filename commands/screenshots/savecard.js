@@ -87,7 +87,7 @@ module.exports = {
         if (!channel) {
 
             return interaction.editReply({
-                content: "❌ Channel #sfa-cards not found."
+                content: settings.emojis.cross + " Channel #sfa-cards not found."
                 });
         }
 
@@ -172,7 +172,7 @@ module.exports = {
 });
 
        await interaction.editReply({
-        content: `✅ Card saved successfully!\n\nCard ID: **${card.cardId}**`
+        content: `${settings.emojis.check} Card saved successfully!\n\nCard ID: **${card.cardId}**`
         });
 
     }

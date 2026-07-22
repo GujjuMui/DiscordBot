@@ -49,7 +49,7 @@ module.exports = {
     if (!card) {
 
         return interaction.editReply({
-            content: "❌ Card not found."
+            content: settings.emojis.cross + " Card not found."
         });
 
     }
@@ -131,7 +131,7 @@ await logger({
 });
 
 return interaction.editReply({
-    content: `✅ Card **${card.cardId}** deleted successfully.`
+    content: `${settings.emojis.check} Card **${card.cardId}** deleted successfully.`
 });
 
 }

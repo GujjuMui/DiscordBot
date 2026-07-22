@@ -46,7 +46,7 @@ module.exports = {
 
             return interaction.reply({
 
-                content: "❌ Only the bot owner can use this command.",
+                content: settings.emojis.cross + " Only the bot owner can use this command.",
 
                 flags: MessageFlags.Ephemeral
 
@@ -72,7 +72,7 @@ module.exports = {
 
             return interaction.editReply({
 
-                content: "❌ Self role channel not found."
+                content: settings.emojis.cross + " Self role channel not found."
 
             });
 
@@ -125,7 +125,7 @@ module.exports = {
 
             return interaction.editReply({
 
-                content: "✅ Self role panel created."
+                content: settings.emojis.check + " Self role panel created."
 
             });
 
@@ -145,7 +145,7 @@ module.exports = {
 
             return interaction.editReply({
 
-                content: "❌ No self role panel has been created."
+                content: settings.emojis.cross + " No self role panel has been created."
 
             });
 
@@ -165,7 +165,7 @@ module.exports = {
 
             return interaction.editReply({
 
-                content: "✅ Self role panel refreshed."
+                content: settings.emojis.check + " Self role panel refreshed."
 
             });
 
@@ -173,7 +173,7 @@ module.exports = {
 
             return interaction.editReply({
 
-                content: "❌ Couldn't find the saved self role panel."
+                content: settings.emojis.cross + " Couldn't find the saved self role panel."
 
             });
 

@@ -41,7 +41,7 @@ module.exports = {
         if (!deleted) {
 
             return interaction.editReply(
-                "❌ Link not found."
+                settings.emojis.cross + " Link not found."
             );
 
         }
@@ -91,7 +91,7 @@ module.exports = {
         });
 
         await interaction.editReply(
-            `✅ Deleted **${title}**`
+            `${settings.emojis.check} Deleted **${title}**`
         );
 
     }

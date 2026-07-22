@@ -7,7 +7,7 @@ const {
 } = require("discord.js");
 
 const Art = require("../../database/Art");
-
+const settings = require("../../config/settings");
 const logger = require("../../utils/logger");
 
 module.exports = {
@@ -41,7 +41,7 @@ module.exports = {
         if (!art) {
 
             return interaction.reply({
-                content: "❌ Artwork not found.",
+                content: settings.emojis.cross + " Artwork not found.",
                 flags: MessageFlags.Ephemeral
             });
 

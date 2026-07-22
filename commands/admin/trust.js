@@ -10,6 +10,8 @@ const owner = require("../../config/owner");
 
 const logger = require("../../utils/logger");
 
+const settings = require("../../config/settings");
+
 module.exports = {
 
     data: new SlashCommandBuilder()
@@ -42,7 +44,7 @@ module.exports = {
 
             return interaction.reply({
 
-                content: "❌ Only the bot owner can use this command.",
+                content: settings.emojis.cross + " Only the bot owner can use this command.",
 
                 flags: MessageFlags.Ephemeral
 
@@ -57,7 +59,7 @@ module.exports = {
 
             return interaction.reply({
 
-                content: "❌ Select either a user or a role.",
+                content: settings.emojis.cross + " Select either a user or a role.",
 
                 flags: MessageFlags.Ephemeral
 
@@ -69,7 +71,7 @@ module.exports = {
 
             return interaction.reply({
 
-                content: "❌ Choose only one: user OR role.",
+                content: settings.emojis.cross + " Choose only one: user OR role.",
 
                 flags: MessageFlags.Ephemeral
 
@@ -106,7 +108,7 @@ module.exports = {
 
         await interaction.reply({
 
-            content: `✅ ${user ? user.tag : role.name} is now trusted.`,
+            content: `${settings.emojis.check} ${user ? user.tag : role.name} is now trusted.`,
 
             flags: MessageFlags.Ephemeral
 

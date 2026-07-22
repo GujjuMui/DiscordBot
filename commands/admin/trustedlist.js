@@ -6,6 +6,7 @@ const {
 
 const Trusted = require("../../database/Trusted");
 const owner = require("../../config/owner");
+const settings = require("../../config/settings");
 
 module.exports = {
 
@@ -21,7 +22,7 @@ module.exports = {
 
             return interaction.reply({
 
-                content: "❌ Only the bot owner can use this command.",
+                content: settings.emojis.cross + " Only the bot owner can use this command.",
 
                 flags: MessageFlags.Ephemeral
 

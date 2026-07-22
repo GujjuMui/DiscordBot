@@ -70,7 +70,7 @@ module.exports = async interaction => {
 
     await interaction.followUp({
 
-    content: `✅ Your color role has been updated to <@&${selectedRole}>.`,
+    content: `${settings.emojis.check} Your color role has been updated to <@&${selectedRole}>.`,
 
     ephemeral: true
 
@@ -122,7 +122,7 @@ if (interaction.customId === "selfroles_faction") {
 
     await interaction.followUp({
 
-    content: `✅ Your faction has been updated to <@&${selectedRole}>.`,
+    content: `${settings.emojis.check} Your faction has been updated to <@&${selectedRole}>.`,
 
     ephemeral: true
 
@@ -181,7 +181,7 @@ await logger({
 
     await interaction.followUp({
 
-    content: "✅ Your notification roles have been updated.",
+    content: settings.emojis.check + " Your notification roles have been updated.",
 
     ephemeral: true
 

@@ -5,6 +5,7 @@ const {
 } = require("discord.js");
 
 const AutoReply = require("../../database/AutoReply");
+const settings = require("../../config/settings");
 
 module.exports = {
 
@@ -67,7 +68,7 @@ async execute(interaction) {
     if (interaction.user.id !== "1466871611893219455") {
 
         return interaction.editReply({
-            content: "❌ Only the bot owner can use this command."
+            content: settings.emojis.cross + " Only the bot owner can use this command."
         });
 
     }
@@ -84,7 +85,7 @@ async execute(interaction) {
         if (user.bot) {
 
             return interaction.editReply({
-                content: "❌ You cannot add an auto reply for a bot."
+                content: settings.emojis.cross + " You cannot add an auto reply for a bot."
             });
 
         }
@@ -98,7 +99,7 @@ async execute(interaction) {
         if (existing) {
 
             return interaction.editReply({
-                content: "❌ That user already has an auto reply."
+                content: settings.emojis.cross + " That user already has an auto reply."
             });
 
         }
@@ -121,7 +122,7 @@ async execute(interaction) {
 
             .setColor("#2ecc71")
 
-            .setTitle("✅ Auto Reply Added")
+            .setTitle(settings.emojis.check + " Auto Reply Added")
 
             .addFields(
 
@@ -171,7 +172,7 @@ async execute(interaction) {
 
             return interaction.editReply({
 
-                content: "❌ That user doesn't have an auto reply."
+                content: settings.emojis.cross + " That user doesn't have an auto reply."
 
             });
 
@@ -216,7 +217,7 @@ async execute(interaction) {
 
             return interaction.editReply({
 
-                content: "❌ No automatic replies have been configured."
+                content: settings.emojis.cross + " No automatic replies have been configured."
 
             });
 

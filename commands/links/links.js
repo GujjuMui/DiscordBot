@@ -4,6 +4,7 @@ const {
 } = require("discord.js");
 
 const Link = require("../../database/Link");
+const settings = require("../../config/settings");
 
 module.exports = {
 
@@ -20,7 +21,7 @@ module.exports = {
     if (!links.length) {
 
         return interaction.editReply({
-            content: "❌ No links have been added yet."
+            content: settings.emojis.cross + " No links have been added yet."
         });
 
     }

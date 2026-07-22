@@ -6,7 +6,7 @@ const {
 } = require("discord.js");
 
 const Art = require("../../database/Art");
-
+const settings = require("../../config/settings");
 const path = require("path");
 
 const { createEditArtButtons } = require("../../utils/embedBuilder");
@@ -44,7 +44,7 @@ module.exports = {
     if (!art) {
 
       return interaction.editReply({
-    content: "❌ Art not found."
+    content: settings.emojis.cross + " Art not found."
 });
 
     }

@@ -140,7 +140,7 @@ module.exports = {
         if (!hasPermission) {
 
             return interaction.editReply({
-                content: "❌ You don't have permission to use this command."
+                content: settings.emojis.cross + " You don't have permission to use this command."
             });
 
         }
@@ -172,7 +172,7 @@ module.exports = {
         if (!target) {
 
             return interaction.editReply({
-                content: "❌ Member not found."
+                content: settings.emojis.cross + " Member not found."
             });
 
         }
@@ -180,7 +180,7 @@ module.exports = {
         if (target.user.bot) {
 
             return interaction.editReply({
-                content: "❌ Bots cannot be clan members."
+                content: settings.emojis.cross + " Bots cannot be clan members."
             });
 
         }
@@ -199,7 +199,7 @@ module.exports = {
             ) {
 
                 return interaction.editReply({
-                    content: "❌ This user is already a clan member."
+                    content: settings.emojis.cross + " This user is already a clan member."
                 });
 
             }
@@ -215,7 +215,7 @@ module.exports = {
 
                 .setColor("#2ecc71")
 
-                .setTitle("✅ Member Added")
+                .setTitle(settings.emojis.check + " Member Added")
 
                 .addFields(
 
@@ -281,7 +281,7 @@ module.exports = {
             if (!target.roles.cache.has(regionData.clanRole)) {
 
                 return interaction.editReply({
-                    content: `❌ User is not in ${regionData.name}.`
+                    content: `${settings.emojis.cross} User is not in ${regionData.name}.`
                 });
 
             }
@@ -366,7 +366,7 @@ module.exports = {
                 return interaction.editReply({
 
                     content:
-                        "❌ This user isn't a clan member."
+                        settings.emojis.cross + " This user isn't a clan member."
 
                 });
 
@@ -377,7 +377,7 @@ module.exports = {
                 return interaction.editReply({
 
                     content:
-                        "❌ This user has both clan roles. Resolve it manually."
+                        settings.emojis.cross + " This user has both clan roles. Resolve it manually."
 
                 });
 
@@ -391,7 +391,7 @@ module.exports = {
                 return interaction.editReply({
 
                     content:
-                        "❌ User is already in that region."
+                        settings.emojis.cross + " User is already in that region."
 
                 });
 

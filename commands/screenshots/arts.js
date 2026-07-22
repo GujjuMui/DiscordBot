@@ -5,6 +5,7 @@ const {
 const Art = require("../../database/Art");
 
 const gallery = require("../../services/galleryV2");
+const settings = require("../../config/settings");
 
 const {
     createArtCategoryMenu,
@@ -25,7 +26,7 @@ module.exports = {
         if (arts.length === 0) {
 
             return interaction.editReply({
-                content: "❌ No artwork found."
+                content: settings.emojis.cross + " No artwork found."
             });
 
         }

@@ -1,5 +1,6 @@
 const { REST, Routes } = require("discord.js");
 const fs = require("fs");
+const settings = require("./config/settings");
 const path = require("path");
 require("dotenv").config();
 
@@ -65,7 +66,7 @@ for (const guildId of guilds) {
 
     );
 
-    console.log(`✅ Registered in ${guildId}`);
+    console.log(`${settings.emojis.check} Registered in ${guildId}`);
 
 }
 

@@ -21,7 +21,7 @@ module.exports = async interaction => {
 
         await interaction.reply({
 
-            content: "❌ Member role not found.",
+            content: settings.emojis.cross + " Member role not found.",
 
             flags: MessageFlags.Ephemeral
 
@@ -35,7 +35,7 @@ module.exports = async interaction => {
 
         await interaction.reply({
 
-            content: "✅ You are already verified.",
+            content: settings.emojis.check + " You are already verified.",
 
             flags: MessageFlags.Ephemeral
 

@@ -32,7 +32,7 @@ module.exports = async interaction => {
 
         await interaction.reply({
 
-            content: "❌ Pending role not found.",
+            content: settings.emojis.cross + " Pending role not found.",
 
             flags: MessageFlags.Ephemeral
 
@@ -51,7 +51,7 @@ if (!/^\d+$/.test(gameId)) {
 
     await interaction.reply({
 
-        content: "❌ In-Game ID must contain only numbers.",
+        content: settings.emojis.cross + " In-Game ID must contain only numbers.",
 
         flags: MessageFlags.Ephemeral
 
@@ -119,7 +119,7 @@ await interaction.member.roles.add(pendingRole);
 
     await interaction.reply({
 
-        content: "✅ Your tryout application has been submitted successfully!",
+        content: settings.emojis.check + " Your tryout application has been submitted successfully!",
 
         flags: MessageFlags.Ephemeral
 

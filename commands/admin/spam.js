@@ -5,6 +5,7 @@ const {
 } = require("discord.js");
 
 const spamManager = require("../../services/spamManager");
+const settings = require("../../config/settings");
 
 module.exports = {
 
@@ -52,7 +53,7 @@ module.exports = {
 
             return interaction.editReply({
 
-                content: "❌ Only the bot owner can use this command.",
+                content: settings.emojis.cross + " Only the bot owner can use this command.",
 
             });
 
@@ -62,7 +63,7 @@ module.exports = {
 
    return interaction.editReply({
 
-        content: "❌ A spam session is already running.",
+        content: settings.emojis.cross + " A spam session is already running.",
 
     });
 
@@ -75,7 +76,7 @@ module.exports = {
 
     return interaction.editReply({
 
-        content: "❌ You cannot spam another bot."
+        content: settings.emojis.cross + " You cannot spam another bot."
 
     });
 
@@ -91,7 +92,7 @@ module.exports = {
         await interaction.editReply({
 
             content:
-            `✅ Spam started.
+            `${settings.emojis.check} Spam started.
 
             👤 Target: ${user.tag}
             🔢 Count: ${count}
@@ -121,7 +122,7 @@ module.exports = {
 
     } catch (err) {
 
-        console.error(`❌ Failed to send spam message ${i + 1}/${count}`);
+        console.error(`${settings.emojis.cross} Failed to send spam message ${i + 1}/${count}`);
         console.error(err);
 
     }
@@ -140,7 +141,7 @@ module.exports = {
 
 spamManager.stop();
 
-console.log("✅ Spam finished.");
+console.log(settings.emojis.check + " Spam finished.");
 
     }
 

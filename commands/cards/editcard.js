@@ -8,6 +8,7 @@ const {
 } = require("discord.js");
 
 const Card = require("../../database/Card");
+const settings = require("../../config/settings");
 
 const {
     createEditCardButtons
@@ -50,7 +51,7 @@ module.exports = {
         if (!card) {
 
             return interaction.editReply({
-    content: "❌ Card not found."
+    content: settings.emojis.cross + " Card not found."
 });
 
         }

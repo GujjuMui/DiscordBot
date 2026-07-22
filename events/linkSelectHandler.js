@@ -1,5 +1,6 @@
 const Link = require("../database/Link");
 const gallery = require("../services/galleryV2");
+const settings = require("../config/settings");
 
 const {
     createLinkEmbed,
@@ -23,7 +24,7 @@ module.exports = async (interaction) => {
     if (!links.length) {
 
         await interaction.editReply({
-            content: "❌ No links found."
+            content: settings.emojis.cross + " No links found."
         });
 
         return true;

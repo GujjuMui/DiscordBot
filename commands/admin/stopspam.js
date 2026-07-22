@@ -5,6 +5,7 @@ const {
 } = require("discord.js");
 
 const spamManager = require("../../services/spamManager");
+const settings = require("../../config/settings");
 
 module.exports = {
 
@@ -24,7 +25,7 @@ module.exports = {
 
             return interaction.reply({
 
-                content: "❌ Owner only.",
+                content: settings.emojis.cross + " Owner only.",
 
                 flags: MessageFlags.Ephemeral
 

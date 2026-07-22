@@ -3,7 +3,7 @@ const {
 } = require("discord.js");
 
 const Card = require("../../database/Card");
-
+const settings = require("../../config/settings");
 const gallery = require("../../services/galleryV2");
 
 const {
@@ -27,7 +27,7 @@ module.exports = {
         if (cards.length === 0) {
 
             return interaction.editReply({
-                content: "❌ No cards found."
+                content: settings.emojis.cross + " No cards found."
             });
 
         }

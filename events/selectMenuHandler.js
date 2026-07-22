@@ -1,5 +1,5 @@
 const Art = require("../database/Art");
-
+const settings = require("../config/settings");
 const gallery = require("../services/galleryService");
 
 const {
@@ -22,7 +22,7 @@ module.exports = async (interaction) => {
     if (!arts.length) {
 
         return interaction.reply({
-            content: "❌ No artwork found in this category.",
+            content: settings.emojis.cross + " No artwork found in this category.",
             flags: MessageFlags.Ephemeral
         });
 

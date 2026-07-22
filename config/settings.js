@@ -119,7 +119,11 @@ module.exports = {
         // Button emojis
         map: "<a:Mapspinlocationred:1528391832021766144> ",
 
-        clan: "<a:bronzecoin:1528393323247698023> "
+        clan: "<a:bronzecoin:1528393323247698023> ",
+
+        // Universal emojis
+        check: "<:Correct:1528079418424033331>",
+        cross: "<:Cross99:1528675926555234447>"
 
     }
 

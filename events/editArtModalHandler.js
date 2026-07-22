@@ -1,7 +1,6 @@
 const Art = require("../database/Art");
-
 const updateArtMessage = require("../utils/updateArtMessage");
-
+const settings = require("../config/settings");
 const logger = require("../utils/logger");
 
 module.exports = async (interaction) => {
@@ -64,7 +63,7 @@ module.exports = async (interaction) => {
 });
 
     await interaction.editReply({
-        content: "✅ Tags updated successfully.",
+        content: settings.emojis.check + " Tags updated successfully.",
         flags: MessageFlags.Ephemeral
     });
 
@@ -114,7 +113,7 @@ module.exports = async (interaction) => {
 });
 
     await interaction.editReply({
-        content: `✅ Category updated to **${newCategory}**`,
+        content: `${settings.emojis.check} Category updated to **${newCategory}**`,
         flags: MessageFlags.Ephemeral
     });
 
@@ -164,7 +163,7 @@ module.exports = async (interaction) => {
 });
 
     await interaction.editReply({
-        content: `✅ Artwork name updated to **${newName}**`,
+        content: `${settings.emojis.check} Artwork name updated to **${newName}**`,
         flags: MessageFlags.Ephemeral
     });
 

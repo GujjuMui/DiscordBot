@@ -19,7 +19,7 @@ module.exports = async interaction => {
     if (!memberRole) {
 
         await interaction.reply({
-            content: "❌ Member role not found.",
+            content: settings.emojis.cross + " Member role not found.",
             flags: MessageFlags.Ephemeral
         });
 
@@ -30,7 +30,7 @@ module.exports = async interaction => {
     if (interaction.member.roles.cache.has(memberRole.id)) {
 
         await interaction.reply({
-            content: "✅ You are already verified.",
+            content: settings.emojis.check + " You are already verified.",
             flags: MessageFlags.Ephemeral
         });
 
@@ -47,7 +47,7 @@ module.exports = async interaction => {
         await interaction.reply({
 
             content:
-                "❌ Your Discord account must be at least **30 days old** before you can verify.",
+                settings.emojis.cross + " Your Discord account must be at least **30 days old** before you can verify.",
 
             flags: MessageFlags.Ephemeral
 

@@ -9,7 +9,7 @@ const {
 
 const fs = require("fs");
 const path = require("path");
-
+const settings = require("./config/settings");
 const clanButtonHandler = require("./events/clanButtonHandler");
 
 const config = require("./config/config");
@@ -123,7 +123,7 @@ client.on(Events.InteractionCreate, async interaction => {
         if (!interaction.replied && !interaction.deferred) {
 
             await interaction.reply({
-                content: "❌ Something went wrong.",
+                content: settings.emojis.cross + " Something went wrong.",
                 flags: MessageFlags.Ephemeral
             }).catch(() => {});
 
@@ -210,13 +210,13 @@ if (
            if (interaction.deferred) {
 
     await interaction.editReply({
-        content: "❌ Something went wrong."
+        content: settings.emojis.cross + " Something went wrong."
     });
 
 } else if (!interaction.replied) {
 
     await interaction.reply({
-        content: "❌ Something went wrong.",
+        content: settings.emojis.cross + " Something went wrong.",
         flags: MessageFlags.Ephemeral
     });
 

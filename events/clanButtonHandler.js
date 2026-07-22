@@ -33,7 +33,7 @@ module.exports = async interaction => {
 
         await interaction.reply({
 
-            content: "❌ Required roles were not found.",
+            content: settings.emojis.cross + " Required roles were not found.",
 
             flags: MessageFlags.Ephemeral
 
@@ -55,7 +55,7 @@ module.exports = async interaction => {
 
         await interaction.reply({
 
-            content: "❌ You are already enrolled in the tryout process.",
+            content: settings.emojis.cross + " You are already enrolled in the tryout process.",
 
             flags: MessageFlags.Ephemeral
 
@@ -73,7 +73,7 @@ module.exports = async interaction => {
 
     await interaction.reply({
 
-        content: "❌ You are already a member of the clan.",
+        content: settings.emojis.cross + " You are already a member of the clan.",
 
         flags: MessageFlags.Ephemeral
 
