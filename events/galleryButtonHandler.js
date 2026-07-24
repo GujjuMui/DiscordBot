@@ -23,21 +23,20 @@ module.exports = async (interaction) => {
         id !== "gallery_back"
     ) return false;
 
-    const current = gallery.get(interaction.user.id);
-
+    const current = gallery.get(interaction.message.id);
     if (!current) return false;
 
     await interaction.deferUpdate();
 
     if (id === "gallery_next") {
-        gallery.next(interaction.user.id);
+        gallery.next(interaction.message.id);
     }
 
     if (id === "gallery_prev") {
-        gallery.previous(interaction.user.id);
+        gallery.previous(interaction.message.id);
     }
 
-    const g = gallery.get(interaction.user.id);
+    const g = gallery.get(interaction.message.id);
     const item = g.items[g.index];
 
    if (id === "gallery_back") {

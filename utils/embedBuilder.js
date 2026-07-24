@@ -10,6 +10,46 @@ const settings = require("../config/settings");
 
 const path = require("path");
 
+function getImageData(folder, imageFile) {
+
+    if (
+        imageFile &&
+        (imageFile.startsWith("http://") ||
+         imageFile.startsWith("https://"))
+    ) {
+
+        return {
+            image: imageFile,
+            files: []
+        };
+
+    }
+
+    return {
+
+        image: `attachment://${imageFile}`,
+
+        files: [
+
+            {
+
+                attachment: path.join(
+                    process.cwd(),
+                    "uploads",
+                    folder,
+                    imageFile
+                ),
+
+                name: imageFile
+
+            }
+
+        ]
+
+    };
+
+}
+
 function createCardEmbed(card, index, total) {
 
     const tags = Array.isArray(card.tags)
@@ -44,7 +84,9 @@ function createCardEmbed(card, index, total) {
 
         )
 
-        .setImage(`attachment://${card.imageFile}`)
+        const imageData = getImageData("cards", card.imageFile);
+
+        embed.setImage(imageData.image)   
 
         .setFooter({
             text: `Card ${index + 1} of ${total}`
@@ -52,27 +94,13 @@ function createCardEmbed(card, index, total) {
 
         .setTimestamp();
 
-        
+        return {
 
-    return {
+            embed,
 
-        embed,
+            files: imageData.files
 
-        files: [
-
-            {
-                attachment: path.join(
-                    process.cwd(),
-                    "uploads",
-                    "cards",
-                    card.imageFile
-                ),
-                name: card.imageFile
-            }
-
-        ]
-
-    };
+        };
 
 }
 
@@ -117,7 +145,9 @@ function createArtEmbed(art, index, total) {
 
         )
 
-        .setImage(`attachment://${art.imageFile}`)
+        const imageData = getImageData("arts", art.imageFile);
+
+        embed.setImage(imageData.image)
 
         .setFooter({
             text: `Art ${index + 1} of ${total}`
@@ -125,28 +155,13 @@ function createArtEmbed(art, index, total) {
 
         .setTimestamp();
 
-       return {
+        return {
 
-        embed,
+            embed,
 
-        files: [
+            files: imageData.files
 
-            {
-
-                attachment: path.join(
-                    process.cwd(),
-                    "uploads",
-                    "arts",
-                    art.imageFile
-                ),
-
-                name: art.imageFile
-
-            }
-
-        ]
-
-    };
+        };
 
 }
 

@@ -1,23 +1,23 @@
 const galleries = new Map();
 
-function open(userId, data) {
+function open(messageId, data) {
 
-    galleries.set(userId, {
+    galleries.set(messageId, {
         ...data,
         index: 0
     });
 
 }
 
-function get(userId) {
+function get(messageId) {
 
-    return galleries.get(userId);
+    return galleries.get(messageId);
 
 }
 
-function setIndex(userId, index) {
+function setIndex(messageId, index) {
 
-    const gallery = galleries.get(userId);
+    const gallery = galleries.get(messageId);
 
     if (!gallery) return;
 
@@ -25,9 +25,9 @@ function setIndex(userId, index) {
 
 }
 
-function next(userId) {
+function next(messageId) {
 
-    const gallery = galleries.get(userId);
+    const gallery = galleries.get(messageId);
 
     if (!gallery) return;
 
@@ -38,9 +38,9 @@ function next(userId) {
 
 }
 
-function previous(userId) {
+function previous(messageId) {
 
-    const gallery = galleries.get(userId);
+    const gallery = galleries.get(messageId);
 
     if (!gallery) return;
 
@@ -53,9 +53,9 @@ function previous(userId) {
 
 }
 
-function close(userId) {
+function close(messageId) {
 
-    galleries.delete(userId);
+    galleries.delete(messageId);
 
 }
 

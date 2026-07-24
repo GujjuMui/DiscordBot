@@ -41,11 +41,14 @@ module.exports = async (interaction) => {
             return true;
         }
 
-        gallery.open(interaction.user.id, {
+        gallery.open(interaction.message.id, {
             type: "arts",
             items: arts,
             categories: true
         });
+
+console.log("Opened ART gallery with key:", interaction.message.id);
+console.log(gallery.get(interaction.message.id));
 
         const { embed, files } = createArtEmbed(
             arts[0],
@@ -92,11 +95,14 @@ module.exports = async (interaction) => {
             return true;
         }
 
-        gallery.open(interaction.user.id, {
+        gallery.open(interaction.message.id, {
             type: "cards",
             items: cards,
             categories: true
         });
+
+console.log("Opened CARD gallery with key:", interaction.message.id);
+console.log(gallery.get(interaction.message.id));
 
         const { embed, files } = createCardEmbed(
             cards[0],

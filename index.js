@@ -111,9 +111,6 @@ client.on(Events.InteractionCreate, async interaction => {
         if (await require("./events/selfRoleHandler")(interaction))
             return;
 
-        if (await require("./events/buttonHandler")(interaction))
-            return;
-
     } catch (err) {
 
         console.error("========== BUTTON ERROR ==========");
