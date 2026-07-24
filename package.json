@@ -14,7 +14,7 @@
     "sfa",
     "shadow-fight-arena"
   ],
-  "author": "gujju_mui",
+  "author": "gujju_mui", 
   "license": "MIT",
   "dependencies": {
     "@discordjs/builders": "^1.14.1",
