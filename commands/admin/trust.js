@@ -91,7 +91,7 @@ module.exports = {
 
             return interaction.reply({
 
-                content: "⚠️ Already trusted.",
+                content: `${settings.emojis.warning} Already trusted.`,
 
                 flags: MessageFlags.Ephemeral
 

@@ -3,7 +3,7 @@ const gallery = require("../services/galleryV2");
 const Art = require("../database/Art");
 const Card = require("../database/Card");
 const Link = require("../database/Link");
-
+const settings = require("../config/settings");
 const {
     createArtEmbed,
     createLinkEmbed,
@@ -59,10 +59,10 @@ module.exports = async (interaction) => {
         await interaction.editReply({
 
             embeds: [{
-                color: 0x8e44ad,
-                title: "🎨 Browse SFA Artwork",
-                description: "Select a category from the dropdown below."
-            }],
+                    color: 0x8e44ad,
+                    title: `${settings.emojis.color} Browse SFA Artwork`,
+                    description: "Select a category from the dropdown below."
+                    }],
 
             components: [
                 createArtCategoryMenu(categories)
@@ -93,10 +93,10 @@ module.exports = async (interaction) => {
     await interaction.editReply({
 
         embeds: [{
-            color: 0xff9900,
-            title: "🎴 Browse SFA Cards",
-            description: "Select a category from the dropdown below."
-        }],
+    color: 0xff9900,
+    title: `${settings.emojis.allover.cards} Browse SFA Cards`,
+    description: "Select a category from the dropdown below."
+}],
 
         components: [
             createCardCategoryMenu(categories)
@@ -131,7 +131,7 @@ module.exports = async (interaction) => {
 
             embeds: [{
                 color: 0x00b894,
-                title: "📚 Browse Links",
+                title: `${settings.emojis.allover.books} Browse Links`,
                 description: "Select a category from the dropdown below."
             }],
 

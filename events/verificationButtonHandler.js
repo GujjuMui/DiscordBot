@@ -66,7 +66,7 @@ module.exports = async interaction => {
         await interaction.reply({
 
             content:
-                "⏳ Please wait until you've been in the server for **5 minutes** before verifying.",
+    `${settings.emojis.allover.timer} Please wait until you've been in the server for **5 minutes** before verifying.`,
 
             flags: MessageFlags.Ephemeral
 

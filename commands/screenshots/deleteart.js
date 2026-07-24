@@ -66,7 +66,7 @@ module.exports = {
         await interaction.reply({
 
            content:
-`⚠️ Delete **${art.artName}**?\n\nArt ID: ${art.artId}\n\nPress Confirm or Cancel.`,
+`${settings.emojis.warning} Delete **${art.artName}**?\n\nArt ID: ${art.artId}\n\nPress Confirm or Cancel.`,
 
             components: [
     createDeleteButtons()

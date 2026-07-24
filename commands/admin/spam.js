@@ -94,7 +94,7 @@ module.exports = {
             content:
             `${settings.emojis.check} Spam started.
 
-            👤 Target: ${user.tag}
+            ${settings.emojis.allover.person} Target: ${user.tag}
             🔢 Count: ${count}
             💬 Message: ${message || "None"}`,
 

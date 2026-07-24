@@ -15,6 +15,10 @@ module.exports = async interaction => {
 
     const region = interaction.customId.split("_")[2];
 
+    await interaction.deferReply({
+    flags: MessageFlags.Ephemeral
+});
+
     const pendingRoleId =
         region === "AS"
             ? settings.roles.pendingTryoutAS
@@ -30,11 +34,9 @@ module.exports = async interaction => {
 
     if (!pendingRole) {
 
-        await interaction.reply({
+        await interaction.editReply({
 
             content: settings.emojis.cross + " Pending role not found.",
-
-            flags: MessageFlags.Ephemeral
 
         });
 
@@ -49,12 +51,9 @@ const gameId = interaction.fields.getTextInputValue("gameid");
 // Validate Game ID
 if (!/^\d+$/.test(gameId)) {
 
-    await interaction.reply({
+    await interaction.editReply({
 
         content: settings.emojis.cross + " In-Game ID must contain only numbers.",
-
-        flags: MessageFlags.Ephemeral
-
     });
 
     return true;
@@ -90,25 +89,25 @@ await interaction.member.roles.add(pendingRole);
         fields: [
 
             {
-                name: "🌍 Region",
+                name: "Region",
                 value: region,
                 inline: true
             },
 
             {
-                name: "🎮 In-Game Name",
+                name: "In-Game Name",
                 value: ign,
                 inline: true
             },
 
             {
-                name: "🆔 In-Game ID",
+                name: `${settings.emojis.allover.id} In-Game ID`,
                 value: gameId,
                 inline: true
             },
 
             {
-                name: "🎭 Role Given",
+                name: `${settings.emojis.mask} Role Given`,
                 value: pendingRole.name,
                 inline: true
             }
@@ -117,11 +116,9 @@ await interaction.member.roles.add(pendingRole);
 
     });
 
-    await interaction.reply({
+    await interaction.editReply({
 
         content: settings.emojis.check + " Your tryout application has been submitted successfully!",
-
-        flags: MessageFlags.Ephemeral
 
     });
 

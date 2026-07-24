@@ -78,10 +78,7 @@ module.exports = {
 
         }
 
-        const payload = buildSelfRolePanel(
-    interaction.guild,
-    interaction.member
-);
+        const payload = buildSelfRolePanel(interaction.guild);
 
         // =========================
         // SETUP
@@ -132,53 +129,42 @@ module.exports = {
         }
 
         // =========================
-        // REFRESH
-        // =========================
+// REFRESH
+// =========================
 
-        const saved = await SelfRoleMessage.findOne({
-
-            guildId: interaction.guild.id
-
-        });
-
-        if (!saved) {
-
-            return interaction.editReply({
-
-                content: settings.emojis.cross + " No self role panel has been created."
-
-            });
-
-        }
-
-        try {
-
-            const message = await channel.messages.fetch(saved.messageId);
-
-            await message.edit({
-
-    ...payload,
-
-    flags: MessageFlags.IsComponentsV2
-
+const saved = await SelfRoleMessage.findOne({
+    guildId: interaction.guild.id
 });
 
-            return interaction.editReply({
+if (!saved) {
+    return interaction.editReply({
+        content: settings.emojis.cross + " No self role panel has been created."
+    });
+}
 
-                content: settings.emojis.check + " Self role panel refreshed."
+try {
 
-            });
+    const message = await channel.messages.fetch(saved.messageId);
 
-        } catch {
+    await message.edit({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2
+    });
 
-            return interaction.editReply({
+    return interaction.editReply({
+        content: settings.emojis.check + " Self role panel refreshed."
+    });
 
-                content: settings.emojis.cross + " Couldn't find the saved self role panel."
+} catch (error) {
 
-            });
+    console.error("Refresh failed:", error);
 
-        }
+    return interaction.editReply({
+        content: settings.emojis.cross + " Couldn't find the saved self role panel."
+    });
 
-    }
+}
+
+}
 
 };

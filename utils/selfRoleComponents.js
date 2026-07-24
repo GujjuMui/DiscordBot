@@ -15,9 +15,9 @@ function buildSelfRolePanel(guild) {
 
          const factionEmojis = {
 
-    Legion: "🛡️",
-    Dynasty: "🐉",
-    Herald: "⚔️"
+    "🎀 •  Legion": settings.emojis.faction.legion,
+    "🎀  •  Dynasty": settings.emojis.faction.dynasty,
+    "🎀  •  Heralds": settings.emojis.faction.herald
 
 };
 
@@ -66,7 +66,7 @@ const colorOptions = Object.values(settings.roles.color)
 
     value: role.id,
 
-    emoji: colorEmojis[role.name] ?? "🎨",
+    emoji: colorEmojis[role.name] ?? settings.emojis.color,
 
     description: `Choose the ${role.name} color role`,
 
@@ -91,24 +91,22 @@ const colorOptions = Object.values(settings.roles.color)
 
         };
 
-        const emojis = {
+        const pingEmojis = {
+    "📌  •  Giveaway ping": settings.emojis.ping.giveaway,
+    "📌  •  Announcement Ping": settings.emojis.ping.speaker,
+    "📌  •  Clan Update Ping": settings.emojis.sword,
+    "📌  •  Server Update Ping": settings.emojis.ping.newspaper,
+    "Friendly ping": settings.emojis.ping.handshake,
+    "Friendly Ping (Europe)": settings.emojis.ping.handshake
+};
 
-            giveaway: "🎉",
-            announcement: "📢",
-            clanUpdate: "⚔️",
-            serverUpdate: "📰",
-            friendlyAS: "🌏",
-            friendlyEU: "🌍"
-
-        };
-
-        return {
+       return {
 
     label: role.name,
 
     value: role.id,
 
-    emoji: emojis[key] ?? "🔔",
+    emoji: pingEmojis[role.name] ?? settings.emojis.ping.bellring,
 
     description: descriptions[key] ?? "Receive notifications",
 
@@ -140,15 +138,16 @@ const colorOptions = Object.values(settings.roles.color)
         .addTextDisplayComponents(
 
             text => text.setContent(
-`# 🎭 HORNET SELF ROLES
+`# ${settings.emojis.mask} HORNET SELF ROLES
 
-Welcome!
+Welcome to the self-role panel!
 
-Customize your profile below.
+Personalize your profile by selecting:
+• A Color Role
+• A Faction Role
+• Any Ping Roles you wish to receive
 
-• One Color
-• One Faction
-• Multiple Ping Roles`
+-# Your selections can be changed at any time.`
             )
 
         )
@@ -172,7 +171,7 @@ Customize your profile below.
         .addTextDisplayComponents(
 
             text => text.setContent(
-`### 🎨 Color Roles
+`### ${settings.emojis.color} Color Roles
 
 Choose **one** color role. Selecting another color will automatically remove the previous one.`
             )
@@ -216,7 +215,7 @@ Choose **one** color role. Selecting another color will automatically remove the
         .addTextDisplayComponents(
 
             text => text.setContent(
-`### ⚔️ Faction Roles
+`### ${settings.emojis.sword} Faction Roles
 
 Choose **one** faction role. Selecting another faction will automatically remove the previous one.`
             )
@@ -260,7 +259,7 @@ Choose **one** faction role. Selecting another faction will automatically remove
         .addTextDisplayComponents(
 
             text => text.setContent(
-`### 📢 Ping Roles
+`### ${settings.emojis.dankping} Ping Roles
 
 Select the notifications you would like to receive.
 

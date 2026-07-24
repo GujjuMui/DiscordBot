@@ -44,14 +44,14 @@ module.exports = {
             .addFields(
 
                 {
-                    name: `👤 Trusted Users (${users.length})`,
+                    name: `${settings.emojis.allover.person} Trusted Users (${users.length})`,
                     value: users.length
                         ? users.map(u => `<@${u.targetId}>`).join("\n")
                         : "None"
                 },
 
                 {
-                    name: `🎭 Trusted Roles (${roles.length})`,
+                    name: `${settings.emojis.mask} Trusted Roles (${roles.length})`,
                     value: roles.length
                         ? roles.map(r => `<@&${r.targetId}>`).join("\n")
                         : "None"

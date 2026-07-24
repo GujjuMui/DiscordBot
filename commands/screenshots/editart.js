@@ -58,7 +58,7 @@ module.exports = {
     .addFields(
 
         {
-            name: "🆔 Art ID",
+            name: `${settings.emojis.allover.id} Art ID`,
             value: art.artId,
             inline: true
         },
@@ -70,13 +70,13 @@ module.exports = {
         },
 
         {
-            name: "📂 Category",
+            name: `${settings.emojis.allover.file} Category`,
             value: art.category,
             inline: true
         },
 
         {
-            name: "🏷️ Tags",
+            name: `${settings.emojis.allover.tags} Tags`,
             value: art.tags.length
                 ? art.tags.join(", ")
                 : "None"

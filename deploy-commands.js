@@ -25,7 +25,7 @@ for (const folder of commandFolders) {
         if ("data" in command && "execute" in command) {
             commands.push(command.data.toJSON());
         } else {
-            console.log(`⚠️ ${file} is missing "data" or "execute".`);
+            console.log(`${settings.emojis.warning} ${file} is missing "data" or "execute".`);
         }
     }
 }

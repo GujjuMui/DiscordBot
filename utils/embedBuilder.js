@@ -6,7 +6,7 @@ const {
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder
 } = require("discord.js");
-const { create } = require("../database/Card");
+const settings = require("../config/settings");
 
 const path = require("path");
 
@@ -20,26 +20,25 @@ function createCardEmbed(card, index, total) {
 
         .setColor("#ff9900")
 
-        .setTitle(`🎴 ${card.cardName}`)
+        .setTitle(`${settings.emojis.allover.cards} ${card.cardName}`)
 
         .setDescription(`**Character:** ${card.character}`)
 
         .addFields(
 
             {
-                name: "🆔 Card ID",
+                name: `${settings.emojis.allover.id} Card ID`,
                 value: card.cardId || "Unknown",
                 inline: true
             },
 
             {
-                name: "❤️ Favorites",
-                value: String(card.favorites ?? 0),
-                inline: true
-            },
-
+    name: `${settings.emojis.allover.heart} Favorites`,
+    value: String(card.favorites ?? 0),
+    inline: true
+},
             {
-                name: "🏷️ Tags",
+                name: `${settings.emojis.allover.tags} Tags`,
                 value: tags.length ? tags.join(", ") : "None"
             }
 
@@ -87,32 +86,32 @@ function createArtEmbed(art, index, total) {
 
         .setColor("#8e44ad")
 
-        .setTitle(`🎨 ${art.artName}`)
+        .setTitle(`${settings.emojis.color} ${art.artName}`)
 
         .setDescription(`**Category:** ${art.category}`)
 
         .addFields(
 
             {
-                name: "🆔 Art ID",
+                name: `${settings.emojis.allover.id} Art ID`,
                 value: art.artId || "Unknown",
                 inline: true
             },
 
             {
-                name: "❤️ Favorites",
+                name: `${settings.emojis.allover.heart} Favorites`,
                 value: String(art.favorites ?? 0),
                 inline: true
             },
 
              {
-                name: "📂 Category",
+                name: `${settings.emojis.allover.file} Category`,
                 value: art.category || "General",
                 inline: true
             },
 
             {
-                name: "🏷️ Tags",
+                name: `${settings.emojis.allover.tags} Tags`,
                 value: tags.length ? tags.join(", ") : "None"
             }
 
@@ -166,28 +165,28 @@ function createLinkEmbed(link, index, total) {
 
         .setColor("#00b894")
 
-        .setTitle(`🔗 ${link.title}`)
+        .setTitle(`${settings.emojis.allover.link} ${link.title}`)
 
         .setDescription(
-            `[🌐 Open Link](${url})`
-        )
+    `[${settings.emojis.allover.web} Open Link](${url})`
+)
 
         .addFields(
 
             {
-                name: "📂 Category",
+                name: `${settings.emojis.allover.file} Category`,
                 value: link.category,
                 inline: true
             },
 
             {
-                name: "❤️ Favorites",
+                name: `${settings.emojis.allover.heart} Favorites`,
                 value: String(link.favorites ?? 0),
                 inline: true
             },
 
             {
-                name: "👤 Added By",
+                name: `${settings.emojis.allover.person} Added By`,
                 value: `<@${link.addedById}>`
             }
 
@@ -215,22 +214,22 @@ function createGalleryButtons() {
 
         new ButtonBuilder()
             .setCustomId("gallery_back")
-            .setEmoji("🏠")
+            .setEmoji(settings.emojis.allover.homebutton)
             .setStyle(ButtonStyle.Primary),
 
         new ButtonBuilder()
             .setCustomId("gallery_prev")
-            .setEmoji("⬅️")
+            .setEmoji(settings.emojis.allover.leftarrow)
             .setStyle(ButtonStyle.Secondary),
 
         new ButtonBuilder()
             .setCustomId("gallery_favorite")
-            .setEmoji("❤️")
+            .setEmoji(settings.emojis.allover.heart)
             .setStyle(ButtonStyle.Danger),
 
         new ButtonBuilder()
             .setCustomId("gallery_next")
-            .setEmoji("➡️")
+            .setEmoji(settings.emojis.allover.rightarrow)
             .setStyle(ButtonStyle.Secondary)
 
     );
@@ -242,17 +241,17 @@ function createGalleryButtons() {
 
         new ButtonBuilder()
             .setCustomId("gallery_prev")
-            .setEmoji("⬅️")
+            .setEmoji(settings.emojis.allover.leftarrow)
             .setStyle(ButtonStyle.Secondary),
 
         new ButtonBuilder()
             .setCustomId("gallery_favorite")
-            .setEmoji("❤️")
+            .setEmoji(settings.emojis.allover.heart)
             .setStyle(ButtonStyle.Danger),
 
         new ButtonBuilder()
             .setCustomId("gallery_next")
-            .setEmoji("➡️")
+            .setEmoji(settings.emojis.allover.rightarrow)
             .setStyle(ButtonStyle.Secondary)
 
     );

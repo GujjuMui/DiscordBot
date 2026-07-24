@@ -102,29 +102,62 @@ module.exports = {
 },
 
     emojis: {
-
-        success: "<a:Online_Ping:1528308269075136582>",
-
-        delete: "<a:reddot:1528309054047260794>",
-
-        warning: "<a:anxiety2:1528307358705385472>",
-
-        info: "<a:Plak:1528322599371935785>",
-
+// Logs 
+        success: "<a:loading:1529586198220111892>",
+        delete: "<a:Loading1:1529586241060864010>",
+        warning: "<a:Animation1700250735126:1529592722997116949>",
+        info: "<a:info:1529592377784795169>",
+        
         system: "<a:GL_animatedarrowwhite:1528304165267312733>",
-
-
-        welcome: "<:hornethi:1528388173242040462> ",
-
-        // Button emojis
-        map: "<a:Mapspinlocationred:1528391832021766144> ",
-
+// Welcome Button emojis
+        welcome: "<:hornethi:1528388173242040462>",
+        map: "<a:Mapspinlocationred:1528391832021766144>",
         clan: "<a:bronzecoin:1528393323247698023> ",
-
-        // Universal emojis
+// Universal emojis
         check: "<:Correct:1528079418424033331>",
-        cross: "<:Cross99:1528675926555234447>"
-
+        cross: "<:Cross99:1528675926555234447>",
+// Self roles emojis
+        mask: "<a:Maskhovering:1529598753873334325>",
+        sword: "<a:Battlesoftcolour:1529603108718645388>",
+        color: "<a:PaletteLoading:1529602923464757378>",
+        dankping: "<a:pepe_ping:1529718271388155905>",
+    faction: {
+        // faction drop down menu 
+        legion: "<:sfa_iconlegion:1529715649557823580>",
+        dynasty: "<:sfa_icondynasty:1229640246941978675>",
+        herald: "<:sfa_iconherald:1529715824280076380>",
+    },
+    ping: {
+        // ping drop down menu 
+        speaker: "<a:Loudspeakerhorn:1529602996063961148>",
+        newspaper: "<a:NewsorDocumentScroll:1529737703199998162>",
+        handshake: "<a:ShakeHands:1529739105250967602>",
+        giveaway: "<a:Giftpremiumanimation:1529737667309473834>",
+        // in logs 
+        bellring: "<a:Notificationbell:1529744154815500341>",
+    },
+    allover: {
+        // insdie logs and some embeds
+        trash: "<:trash:1528675924776718349>",
+        person: "<a:links_embed3:1529073017525633235>",
+        id: "<a:IDCardProfileCard:1529781157988667443>",
+        heart: "<a:YoutubeLikeDislike:1529783242494836817>",
+        cards: "<a:cards:1529785360387805296>",
+        tags: "<a:DiscountTagPurple:1529782348735057931>",
+        books: "<a:STACKOFBOOKS:1529077163775623319>",
+        file: "<a:links_embed:1529072790127513750>",
+        timer: "<a:clocktime:1529806300387606570>",
+        calendar: "<a:Searching:1529806701031591956>",
+        // links allover 
+        web: "<a:globalnetwork:1529586128057794774>",
+        link: "<a:Link_embed5:1529076681523068969>",
+        // buttons 
+        homebutton: "<a:HomeIconLoading:1529808253427515412>",
+        rightarrow: "<a:ScrollDownArrow122:1529800990679760926>",
+        leftarrow: "<a:ScrollDownArrow:1529800843405295687>"
     }
+}
 
 };
+
+// ${settings.emoji.emojiname}

@@ -215,7 +215,7 @@ if (interaction.customId === "selfroles_remove_ping") {
 
     await interaction.followUp({
 
-    content: "🗑️ All ping roles have been removed.",
+    content: `${settings.emojis.allover.trash} All ping roles have been removed.`,
 
     ephemeral: true
 

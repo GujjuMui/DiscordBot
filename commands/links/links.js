@@ -51,7 +51,7 @@ module.exports = {
 
                 .setColor("#00b894")
 
-                .setTitle("📚 Browse Links")
+                .setTitle(`${settings.emojis.allover.books} Browse Links`)
 
                 .setDescription(
                     "Select a category from the dropdown below."

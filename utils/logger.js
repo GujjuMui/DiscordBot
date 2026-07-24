@@ -127,24 +127,23 @@ case "MEMBER_TRANSFER":
 
 case "SELFROLE_COLOR":
     color = "#5865F2";
-    heading = "🎨 COLOR ROLE UPDATED";
+    heading = `${settings.emojis.color} COLOR ROLE UPDATED`;
     break;
 
 case "SELFROLE_FACTION":
     color = "#F1C40F";
-    heading = "⚔️ FACTION UPDATED";
+    heading = `${settings.emojis.sword} FACTION UPDATED`;
     break;
 
 case "SELFROLE_PING":
     color = "#3498DB";
-    heading = "🔔 PING ROLES UPDATED";
+    heading = `${settings.emojis.ping.bellring} PING ROLES UPDATED`;
     break;
 
 case "SELFROLE_PING_REMOVE":
     color = "#E74C3C";
-    heading = "🗑️ PING ROLES CLEARED";
+    heading = `${settings.emojis.allover.trash} PING ROLES CLEARED`;
     break;
-
 
 }
 
@@ -170,7 +169,7 @@ case "SELFROLE_PING_REMOVE":
 
         embed.addFields({
 
-            name: "🆔 ID",
+            name: `${settings.emojis.allover.id} ID`,
 
             value: id,
 
@@ -184,7 +183,7 @@ case "SELFROLE_PING_REMOVE":
 
         embed.addFields({
 
-            name: "📄 Name",
+            name: "Name",
 
             value: title,
 
@@ -209,31 +208,29 @@ case "SELFROLE_PING_REMOVE":
 
     if (oldValue !== undefined) {
 
-        embed.addFields({
+    embed.addFields({
 
-            name: "⬅️ Old",
+        name: `${settings.emojis.allover.leftarrow} Old`,
 
-            value: String(oldValue),
+        value: String(oldValue),
 
-            inline: true
+        inline: true
 
-        });
-
-    }
+    });
+}
 
     if (newValue !== undefined) {
 
-        embed.addFields({
+    embed.addFields({
 
-            name: "➡️ New",
+        name: `${settings.emojis.allover.rightarrow} New`,
 
-            value: String(newValue),
+        value: String(newValue),
 
-            inline: true
+        inline: true
 
-        });
-
-    }
+    });
+}
 
     if (fields && fields.length) {
 
@@ -243,7 +240,7 @@ case "SELFROLE_PING_REMOVE":
 
     embed.addFields({
 
-        name: "👤 Performed By",
+        name: `${settings.emojis.allover.person} Performed By`,
 
         value: `<@${user.id}>`
 

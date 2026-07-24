@@ -186,7 +186,7 @@ async execute(interaction) {
 
                     .setColor("#e74c3c")
 
-                    .setTitle("🗑️ Auto Reply Removed")
+                    .setTitle(`${settings.emojis.allover.trash} Auto Reply Removed`)
 
                     .addFields({
 

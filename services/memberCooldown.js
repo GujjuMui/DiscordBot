@@ -65,9 +65,7 @@ module.exports = async (userId) => {
             allowed: false,
 
             message:
-                `⏳ You have reached the limit of **${MAX_USES}** member commands.\n\nTry again in **${hours}h ${minutes}m**.`
-
-        };
+    `${settings.emojis.allover.timer} You have reached the limit of **${MAX_USES}** member commands.\n\nTry again in **${hours}h ${minutes}m**.`
 
     }
 
@@ -102,4 +100,4 @@ module.exports = async (userId) => {
 
     };
 
-};
+}};

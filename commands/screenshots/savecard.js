@@ -1,7 +1,6 @@
 const {
     SlashCommandBuilder,
-    MessageFlags,
-    EmbedBuilder
+    MessageFlags
 } = require("discord.js");
 
 const { createCardEmbed } = require("../../utils/embedBuilder");
@@ -107,47 +106,15 @@ module.exports = {
 
             await card.save();
 
-        const embed = new EmbedBuilder()
+const { embed, files } = createCardEmbed(card, 0, 1);
 
-            .setColor("#ff9900")
+const message = await channel.send({
 
-            .setTitle(`🎴 ${card.cardName}`)
+    embeds: [embed],
 
-            .setDescription(`**Character:** ${card.character}`)
+    files
 
-            .addFields(
-
-                {
-                    name: "🆔 Card ID",
-                    value: card.cardId,
-                    inline: true
-                },
-
-                {
-                    name: "🏷️ Tags",
-                    value: tags.length ? tags.join(", ") : "None",
-                    inline: true
-                },
-
-                {
-                    name: "👤 Uploaded By",
-                    value: interaction.user.toString()
-                }
-
-            )
-
-            .setImage(image.url)
-
-            .setFooter({
-                text: "SFA Manager"
-            })
-
-            .setTimestamp();
-
-       
-        const message = await channel.send({
-            embeds: [embed]
-        });
+});
 
         card.discordMessageId = message.id;
 

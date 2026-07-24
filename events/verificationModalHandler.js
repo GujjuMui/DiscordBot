@@ -106,7 +106,7 @@ if (welcomeChannel) {
     .setThumbnail(interaction.guild.iconURL({ dynamic: true }))
 
     .setDescription(
-`${settings.emojis.welcome} Welcome to **F A T E - SF**, ${interaction.user}, enjoy your stay! ❤️`
+    `${settings.emojis.welcome} Welcome to **F A T E - SF**, ${interaction.user}, enjoy your stay! ${settings.emojis.allover.heart}`
     );
     await interaction.reply({
 
@@ -133,9 +133,8 @@ if (welcomeChannel) {
 
     fields: [
 
-        {
-
-            name: "👤 User",
+        {   
+            name: `${settings.emojis.allover.person} User`,
 
             value: `${interaction.user}`,
 
@@ -145,7 +144,7 @@ if (welcomeChannel) {
 
         {
 
-            name: "🆔 User ID",
+            name: `${settings.emojis.allover.id} User ID`,
 
             value: interaction.user.id,
 
@@ -155,7 +154,8 @@ if (welcomeChannel) {
 
         {
 
-            name: "📅 Discord Account Created",
+            name: `${settings.emojis.allover.calendar} Discord Account Created`,
+            
 
             value: accountCreated,
 
@@ -164,18 +164,14 @@ if (welcomeChannel) {
         },
 
         {
-
-            name: "⏳ Discord Account Age",
-
-            value: `${accountAgeDays} days`,
-
-            inline: true
-
-        },
+    name: `${settings.emojis.allover.timer} Discord Account Age`,
+    value: `${accountAgeDays} days`,
+    inline: true
+},
 
         {
 
-            name: "👋 Joined Server",
+            name: "Joined Server",
 
             value: `<t:${Math.floor(interaction.member.joinedTimestamp / 1000)}:F>`,
 
@@ -184,8 +180,7 @@ if (welcomeChannel) {
         },
 
         {
-
-            name: "👤 Preferred Name",
+            name: `Preferred Name`,
 
             value: name,
 
@@ -195,7 +190,7 @@ if (welcomeChannel) {
 
         {
 
-            name: "🌍 Found Server",
+            name: "Found Server",
 
             value: source,
 
@@ -205,7 +200,7 @@ if (welcomeChannel) {
 
         {
 
-            name: "🎮 Interested In",
+            name: "Interested In",
 
             value: interest,
 

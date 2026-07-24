@@ -65,25 +65,25 @@ module.exports = {
             .addFields(
 
                 {
-                    name: "🆔 Card ID",
+                    name: `${settings.emojis.allover.id} Card ID`,
                     value: card.cardId,
                     inline: true
                 },
 
                 {
-                    name: "🎴 Name",
+                    name: `${settings.emojis.allover.cards} Name`,
                     value: card.cardName,
                     inline: true
                 },
 
                 {
-                    name: "👤 Character",
+                    name: `${settings.emojis.allover.person} Character`,
                     value: card.character,
                     inline: true
                 },
 
                 {
-                    name: "🏷️ Tags",
+                    name: `${settings.emojis.allover.tags} Tags`,
                     value: card.tags.length
                         ? card.tags.join(", ")
                         : "None"

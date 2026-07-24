@@ -1,6 +1,5 @@
 const {
     SlashCommandBuilder,
-    EmbedBuilder,
     MessageFlags
 } = require("discord.js");
 
@@ -13,6 +12,8 @@ const settings = require("../../config/settings");
 const saveImage = require("../../utils/saveImage");
 
 const logger = require("../../utils/logger");
+
+const { createArtEmbed } = require("../../utils/embedBuilder");
 
 module.exports = {
 
@@ -101,44 +102,15 @@ module.exports = {
 
         }
 
-        const embed = new EmbedBuilder()
+const { embed, files } = createArtEmbed(art, 0, 1);
 
-            .setColor("#8e44ad")
+const message = await channel.send({
 
-            .setTitle(`🎨 ${art.artName}`)
+    embeds: [embed],
 
-            .setDescription(`**Category:** ${art.category}`)
+    files
 
-            .addFields(
-
-                {
-                    name: "🆔 Art ID",
-                    value: art.artId,
-                    inline: true
-                },
-
-                {
-                    name: "🏷️ Tags",
-                    value: tags.length
-                        ? tags.join(", ")
-                        : "None",
-                    inline: true
-                },
-
-                {
-                    name: "👤 Uploaded By",
-                    value: interaction.user.toString()
-                }
-
-            )
-
-            .setImage(image.url)
-
-            .setTimestamp();
-
-        const message = await channel.send({
-            embeds: [embed]
-        });
+});
 
         art.discordMessageId = message.id;
         art.messageUrl = message.url;

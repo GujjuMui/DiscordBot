@@ -42,11 +42,11 @@ module.exports = {
 
 
     const embed = {
-        color: 0x8e44ad,
-        title: "🎨 Browse SFA Artwork",
-        description:
-            "Select a category from the dropdown below."
-    };
+    color: 0x8e44ad,
+    title: `${settings.emojis.color} Browse SFA Artwork`,
+    description:
+        "Select a category from the dropdown below."
+};
 
     await interaction.editReply({
 

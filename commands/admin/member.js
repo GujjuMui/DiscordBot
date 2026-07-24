@@ -292,7 +292,7 @@ module.exports = {
 
                 .setColor("#e74c3c")
 
-                .setTitle("🗑️ Member Removed")
+                .setTitle(`${settings.emojis.allover.trash} Member Removed`)
 
                 .addFields(
 

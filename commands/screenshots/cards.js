@@ -1,14 +1,12 @@
 const {
-    SlashCommandBuilder
+    SlashCommandBuilder,
+    EmbedBuilder
 } = require("discord.js");
 
 const Card = require("../../database/Card");
 const settings = require("../../config/settings");
-const gallery = require("../../services/galleryV2");
 
 const {
-    createCardEmbed,
-    createCardGalleryButtons,
     createCardCategoryMenu
 } = require("../../utils/embedBuilder");
 
@@ -25,28 +23,31 @@ module.exports = {
         const cards = await Card.find().sort({ createdAt: -1 });
 
         if (cards.length === 0) {
-
             return interaction.editReply({
-                content: settings.emojis.cross + " No cards found."
+                content: `${settings.emojis.cross} No cards found.`
             });
-
         }
 
         const categories = [
-    ...new Set(
-        cards.map(card => card.category || "General")
-    )
-];
+            ...new Set(
+                cards.map(card => card.category || "General")
+            )
+        ];
 
-await interaction.editReply({
+        await interaction.editReply({
 
-    content: "📂 Select a card category.",
+            embeds: [
+                new EmbedBuilder()
+                    .setColor(0x00b894)
+                    .setTitle(`${settings.emojis.allover.cards} Browse SFA Cards`)
+                    .setDescription("Select a category from the dropdown below.")
+            ],
 
-    components: [
-        createCardCategoryMenu(categories)
-    ]
+            components: [
+                createCardCategoryMenu(categories)
+            ]
 
-});
+        });
 
     }
 
