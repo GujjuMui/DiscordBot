@@ -45,15 +45,19 @@ module.exports = {
     async execute(interaction) {
 
         await interaction.deferReply({
-    flags: MessageFlags.Ephemeral
-});
+            flags: MessageFlags.Ephemeral
+        });
 
         // Owner Only
-        if (interaction.user.id !== "1466871611893219455") {
+        if (
+            interaction.user.id !==
+            "1466871611893219455"
+        ) {
 
             return interaction.editReply({
 
-                content: settings.emojis.cross + " Only the bot owner can use this command.",
+                content:
+                    "❌ Only the bot owner can use this command."
 
             });
 
@@ -61,87 +65,119 @@ module.exports = {
 
         if (spamManager.isRunning()) {
 
-   return interaction.editReply({
+            return interaction.editReply({
 
-        content: settings.emojis.cross + " A spam session is already running.",
+                content:
+                    "❌ A spam session is already running."
 
-    });
+            });
 
-}
+        }
 
-        const user = interaction.options.getUser("user");
-
+        const user =
+            interaction.options.getUser("user");
 
         if (user.bot) {
 
-    return interaction.editReply({
+            return interaction.editReply({
 
-        content: settings.emojis.cross + " You cannot spam another bot."
+                content:
+                    "❌ You cannot spam another bot."
 
-    });
+            });
 
-}
+        }
 
-        const count = interaction.options.getInteger("count");
+        const count =
+            interaction.options.getInteger("count");
 
         const message =
             interaction.options.getString("message") || "";
 
-        const channel = interaction.channel;
+        const channel =
+            interaction.channel;
 
         await interaction.editReply({
 
             content:
-            `${settings.emojis.check} Spam started.
+                `✅ Spam started.\n\n` +
+                `👤 Target: ${user.tag}\n` +
+                `🔢 Count: ${count}\n` +
+                `💬 Message: ${message || "None"}`
 
-            ${settings.emojis.allover.person} Target: ${user.tag}
-            🔢 Count: ${count}
-            💬 Message: ${message || "None"}`,
+        });
 
-        })
+        spamManager.start(
+            user.id,
+            channel.id
+        );
 
-        spamManager.start();
+        console.log(
+            `🚀 Starting spam for ${user.tag}`
+        );
 
-        console.log(`🚀 Starting spam for ${user.tag}`);
+        for (
+            let i = 0;
+            i < count;
+            i++
+        ) {
 
-    for (let i = 0; i < count; i++) {
+            console.log(
+                "Loop:",
+                i
+            );
 
-        console.log("Loop:", i);
-    
-    if (!spamManager.isRunning()) {
+            if (!spamManager.isRunning()) {
 
-        console.log("🛑 Spam manually stopped.");
+                console.log(
+                    "🛑 Spam manually stopped."
+                );
 
-        break;
+                break;
 
-    }
+            }
 
-    try {
+            try {
 
-        await channel.send(`${user} ${message}`);
+                await channel.send(
+                    `${user} ${message}`
+                );
 
-    } catch (err) {
+            } catch (err) {
 
-        console.error(`${settings.emojis.cross} Failed to send spam message ${i + 1}/${count}`);
-        console.error(err);
+                console.error(
+                    `❌ Failed to send spam message ${i + 1}/${count}`
+                );
 
-    }
+                console.error(err);
 
-    if ((i + 1) % 50 === 0) {
+            }
 
-        console.log(`📨 Spam Progress: ${i + 1}/${count}`);
+            if (
+                (i + 1) % 50 === 0
+            ) {
 
-    }
+                console.log(
+                    `📨 Spam Progress: ${i + 1}/${count}`
+                );
 
-    await new Promise(resolve =>
-        setTimeout(resolve, 1000)
-    );
+            }
 
-}
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        1000
+                    )
+            );
 
-spamManager.stop();
+        }
 
-console.log(settings.emojis.check + " Spam finished.");
+        spamManager.stop();
+
+        console.log(
+            "✅ Spam finished."
+        );
 
     }
 

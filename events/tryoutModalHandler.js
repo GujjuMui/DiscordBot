@@ -36,7 +36,7 @@ module.exports = async interaction => {
 
         await interaction.editReply({
 
-            content: settings.emojis.cross + " Pending role not found.",
+            content: "❌" + " Pending role not found.",
 
         });
 
@@ -53,7 +53,7 @@ if (!/^\d+$/.test(gameId)) {
 
     await interaction.editReply({
 
-        content: settings.emojis.cross + " In-Game ID must contain only numbers.",
+        content: "❌" + " In-Game ID must contain only numbers.",
     });
 
     return true;
@@ -101,13 +101,13 @@ await interaction.member.roles.add(pendingRole);
             },
 
             {
-                name: `${settings.emojis.allover.id} In-Game ID`,
+                name: `${"🪪"} In-Game ID`,
                 value: gameId,
                 inline: true
             },
 
             {
-                name: `${settings.emojis.mask} Role Given`,
+                name: `${"🎭"} Role Given`,
                 value: pendingRole.name,
                 inline: true
             }
@@ -118,7 +118,7 @@ await interaction.member.roles.add(pendingRole);
 
     await interaction.editReply({
 
-        content: settings.emojis.check + " Your tryout application has been submitted successfully!",
+        content: "✅" + " Your tryout application has been submitted successfully!",
 
     });
 

@@ -6,7 +6,6 @@ const {
 
 const Trusted = require("../../database/Trusted");
 const owner = require("../../config/owner");
-const settings = require("../../config/settings");
 
 module.exports = {
 
@@ -14,58 +13,93 @@ module.exports = {
 
         .setName("trustedlist")
 
-        .setDescription("View all trusted users and roles"),
+        .setDescription(
+            "View all trusted users and roles"
+        ),
 
     async execute(interaction) {
 
-        if (interaction.user.id !== owner.ownerId) {
+        if (
+            interaction.user.id !==
+            owner.ownerId
+        ) {
 
             return interaction.reply({
 
-                content: settings.emojis.cross + " Only the bot owner can use this command.",
+                content:
+                    "❌ Only the bot owner can use this command.",
 
-                flags: MessageFlags.Ephemeral
+                flags:
+                    MessageFlags.Ephemeral
 
             });
 
         }
 
-        const trusted = await Trusted.find();
+        const trusted =
+            await Trusted.find();
 
-        const users = trusted.filter(t => t.type === "user");
-        const roles = trusted.filter(t => t.type === "role");
+        const users =
+            trusted.filter(
+                t => t.type === "user"
+            );
 
-        const embed = new EmbedBuilder()
+        const roles =
+            trusted.filter(
+                t => t.type === "role"
+            );
 
-            .setColor("#2ecc71")
+        const embed =
+            new EmbedBuilder()
 
-            .setTitle("🛡️ Trusted Access")
+                .setColor("#2ecc71")
 
-            .addFields(
+                .setTitle(
+                    "🛡️ Trusted Access"
+                )
 
-                {
-                    name: `${settings.emojis.allover.person} Trusted Users (${users.length})`,
-                    value: users.length
-                        ? users.map(u => `<@${u.targetId}>`).join("\n")
-                        : "None"
-                },
+                .addFields(
 
-                {
-                    name: `${settings.emojis.mask} Trusted Roles (${roles.length})`,
-                    value: roles.length
-                        ? roles.map(r => `<@&${r.targetId}>`).join("\n")
-                        : "None"
-                }
+                    {
+                        name:
+                            `👤 Trusted Users (${users.length})`,
 
-            )
+                        value:
+                            users.length
+                                ? users
+                                    .map(
+                                        u =>
+                                            `<@${u.targetId}>`
+                                    )
+                                    .join("\n")
+                                : "None"
+                    },
 
-            .setTimestamp();
+                    {
+                        name:
+                            `🎭 Trusted Roles (${roles.length})`,
+
+                        value:
+                            roles.length
+                                ? roles
+                                    .map(
+                                        r =>
+                                            `<@&${r.targetId}>`
+                                    )
+                                    .join("\n")
+                                : "None"
+                    }
+
+                )
+
+                .setTimestamp();
 
         await interaction.reply({
 
             embeds: [embed],
 
-            flags: MessageFlags.Ephemeral
+            flags:
+                MessageFlags.Ephemeral
 
         });
 

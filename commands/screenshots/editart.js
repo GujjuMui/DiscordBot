@@ -44,7 +44,7 @@ module.exports = {
     if (!art) {
 
       return interaction.editReply({
-    content: settings.emojis.cross + " Art not found."
+    content: "❌" + " Art not found."
 });
 
     }
@@ -58,7 +58,7 @@ module.exports = {
     .addFields(
 
         {
-            name: `${settings.emojis.allover.id} Art ID`,
+            name: `${"🪪"} Art ID`,
             value: art.artId,
             inline: true
         },
@@ -70,13 +70,13 @@ module.exports = {
         },
 
         {
-            name: `${settings.emojis.allover.file} Category`,
+            name: `${"📄"} Category`,
             value: art.category,
             inline: true
         },
 
         {
-            name: `${settings.emojis.allover.tags} Tags`,
+            name: `${"🏷️"} Tags`,
             value: art.tags.length
                 ? art.tags.join(", ")
                 : "None"

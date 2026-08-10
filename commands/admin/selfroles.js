@@ -8,7 +8,8 @@ const settings = require("../../config/settings");
 
 const SelfRoleMessage = require("../../database/SelfRoleMessage");
 
-const buildSelfRolePanel = require("../../utils/selfRoleComponents");
+const buildSelfRolePanel =
+    require("../../utils/selfRoleComponents");
 
 module.exports = {
 
@@ -18,7 +19,9 @@ module.exports = {
 
         .setDescription("Manage the self role panel")
 
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .setDefaultMemberPermissions(
+            PermissionFlagsBits.Administrator
+        )
 
         .addSubcommand(subcommand =>
 
@@ -26,7 +29,9 @@ module.exports = {
 
                 .setName("setup")
 
-                .setDescription("Create the self role panel")
+                .setDescription(
+                    "Create the self role panel"
+                )
 
         )
 
@@ -36,19 +41,26 @@ module.exports = {
 
                 .setName("refresh")
 
-                .setDescription("Refresh the existing self role panel")
+                .setDescription(
+                    "Refresh the existing self role panel"
+                )
 
         ),
 
     async execute(interaction) {
 
-        if (interaction.user.id !== settings.ownerId) {
+        if (
+            interaction.user.id !==
+            settings.ownerId
+        ) {
 
             return interaction.reply({
 
-                content: settings.emojis.cross + " Only the bot owner can use this command.",
+                content:
+                    "❌ Only the bot owner can use this command.",
 
-                flags: MessageFlags.Ephemeral
+                flags:
+                    MessageFlags.Ephemeral
 
             });
 
@@ -56,29 +68,34 @@ module.exports = {
 
         await interaction.deferReply({
 
-            flags: MessageFlags.Ephemeral
+            flags:
+                MessageFlags.Ephemeral
 
         });
 
-        const subcommand = interaction.options.getSubcommand();
+        const subcommand =
+            interaction.options.getSubcommand();
 
-        const channel = interaction.guild.channels.cache.get(
-
-            settings.selfRoles.channel
-
-        );
+        const channel =
+            interaction.guild.channels.cache.get(
+                settings.selfRoles.channel
+            );
 
         if (!channel) {
 
             return interaction.editReply({
 
-                content: settings.emojis.cross + " Self role channel not found."
+                content:
+                    "❌ Self role channel not found."
 
             });
 
         }
 
-        const payload = buildSelfRolePanel(interaction.guild);
+        const payload =
+            buildSelfRolePanel(
+                interaction.guild
+            );
 
         // =========================
         // SETUP
@@ -86,85 +103,111 @@ module.exports = {
 
         if (subcommand === "setup") {
 
-            const message = await channel.send({
+            const message =
+                await channel.send({
 
-    ...payload,
+                    ...payload,
 
-    flags: MessageFlags.IsComponentsV2
+                    flags:
+                        MessageFlags.IsComponentsV2
 
-});
+                });
 
             await SelfRoleMessage.findOneAndUpdate(
 
                 {
-
-                    guildId: interaction.guild.id
-
+                    guildId:
+                        interaction.guild.id
                 },
 
                 {
+                    guildId:
+                        interaction.guild.id,
 
-                    guildId: interaction.guild.id,
+                    channelId:
+                        channel.id,
 
-                    channelId: channel.id,
-
-                    messageId: message.id
-
+                    messageId:
+                        message.id
                 },
 
                 {
-
                     upsert: true
-
                 }
 
             );
 
             return interaction.editReply({
 
-                content: settings.emojis.check + " Self role panel created."
+                content:
+                    "✅ Self role panel created."
 
             });
 
         }
 
         // =========================
-// REFRESH
-// =========================
+        // REFRESH
+        // =========================
 
-const saved = await SelfRoleMessage.findOne({
-    guildId: interaction.guild.id
-});
+        const saved =
+            await SelfRoleMessage.findOne({
 
-if (!saved) {
-    return interaction.editReply({
-        content: settings.emojis.cross + " No self role panel has been created."
-    });
-}
+                guildId:
+                    interaction.guild.id
 
-try {
+            });
 
-    const message = await channel.messages.fetch(saved.messageId);
+        if (!saved) {
 
-    await message.edit({
-        ...payload,
-        flags: MessageFlags.IsComponentsV2
-    });
+            return interaction.editReply({
 
-    return interaction.editReply({
-        content: settings.emojis.check + " Self role panel refreshed."
-    });
+                content:
+                    "❌ No self role panel has been created."
 
-} catch (error) {
+            });
 
-    console.error("Refresh failed:", error);
+        }
 
-    return interaction.editReply({
-        content: settings.emojis.cross + " Couldn't find the saved self role panel."
-    });
+        try {
 
-}
+            const message =
+                await channel.messages.fetch(
+                    saved.messageId
+                );
 
-}
+            await message.edit({
+
+                ...payload,
+
+                flags:
+                    MessageFlags.IsComponentsV2
+
+            });
+
+            return interaction.editReply({
+
+                content:
+                    "✅ Self role panel refreshed."
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Refresh failed:",
+                error
+            );
+
+            return interaction.editReply({
+
+                content:
+                    "❌ Couldn't find the saved self role panel."
+
+            });
+
+        }
+
+    }
 
 };

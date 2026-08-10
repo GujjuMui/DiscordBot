@@ -25,7 +25,7 @@ for (const folder of commandFolders) {
         if ("data" in command && "execute" in command) {
             commands.push(command.data.toJSON());
         } else {
-            console.log(`${settings.emojis.warning} ${file} is missing "data" or "execute".`);
+            console.log(`${"⚠️"} ${file} is missing "data" or "execute".`);
         }
     }
 }
@@ -66,7 +66,7 @@ for (const guildId of guilds) {
 
     );
 
-    console.log(`${settings.emojis.check} Registered in ${guildId}`);
+    console.log(`${"✅"} Registered in ${guildId}`);
 
 }
 

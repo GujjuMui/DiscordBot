@@ -51,7 +51,7 @@ module.exports = {
         if (!card) {
 
             return interaction.editReply({
-    content: settings.emojis.cross + " Card not found."
+    content: "❌" + " Card not found."
 });
 
         }
@@ -65,25 +65,25 @@ module.exports = {
             .addFields(
 
                 {
-                    name: `${settings.emojis.allover.id} Card ID`,
+                    name: `${"🪪"} Card ID`,
                     value: card.cardId,
                     inline: true
                 },
 
                 {
-                    name: `${settings.emojis.allover.cards} Name`,
+                    name: `${"🎴"} Name`,
                     value: card.cardName,
                     inline: true
                 },
 
                 {
-                    name: `${settings.emojis.allover.person} Character`,
+                    name: `${"👤"} Character`,
                     value: card.character,
                     inline: true
                 },
 
                 {
-                    name: `${settings.emojis.allover.tags} Tags`,
+                    name: `${"🏷️"} Tags`,
                     value: card.tags.length
                         ? card.tags.join(", ")
                         : "None"

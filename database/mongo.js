@@ -6,9 +6,9 @@ async function connectMongo() {
         console.log(process.env.MONGO_URI);
 await mongoose.connect(process.env.MONGO_URI);
 
-        console.log(settings.emojis.check + " Connected to MongoDB");
+        console.log("✅" + " Connected to MongoDB");
     } catch (err) {
-        console.error(settings.emojis.cross + " MongoDB Connection Failed");
+        console.error("❌" + " MongoDB Connection Failed");
         console.error(err);
         process.exit(1);
     }

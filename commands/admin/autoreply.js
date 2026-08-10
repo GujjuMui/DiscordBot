@@ -5,259 +5,303 @@ const {
 } = require("discord.js");
 
 const AutoReply = require("../../database/AutoReply");
-const settings = require("../../config/settings");
 
 module.exports = {
 
     data: new SlashCommandBuilder()
 
-    .setName("autoreply")
+        .setName("autoreply")
 
-    .setDescription("Manage automatic replies (Owner Only)")
+        .setDescription("Manage automatic replies (Owner Only)")
 
-    .addSubcommand(subcommand =>
-        subcommand
-            .setName("add")
-            .setDescription("Add an automatic reply")
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("add")
+                .setDescription("Add an automatic reply")
 
-            .addUserOption(option =>
-                option
-                    .setName("user")
-                    .setDescription("Target user")
-                    .setRequired(true)
-            )
+                .addUserOption(option =>
+                    option
+                        .setName("user")
+                        .setDescription("Target user")
+                        .setRequired(true)
+                )
 
-            .addStringOption(option =>
-                option
-                    .setName("reply")
-                    .setDescription("Bot reply")
-                    .setRequired(true)
-            )
-    )
+                .addStringOption(option =>
+                    option
+                        .setName("reply")
+                        .setDescription("Bot reply")
+                        .setRequired(true)
+                )
+        )
 
-    .addSubcommand(subcommand =>
-        subcommand
-            .setName("remove")
-            .setDescription("Remove an automatic reply")
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("remove")
+                .setDescription("Remove an automatic reply")
 
-            .addUserOption(option =>
-                option
-                    .setName("user")
-                    .setDescription("Target user")
-                    .setRequired(true)
-            )
-    )
+                .addUserOption(option =>
+                    option
+                        .setName("user")
+                        .setDescription("Target user")
+                        .setRequired(true)
+                )
+        )
 
-    .addSubcommand(subcommand =>
-        subcommand
-            .setName("list")
-            .setDescription("View all automatic replies")
-    ),
-    
-async execute(interaction) {
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("list")
+                .setDescription("View all automatic replies")
+        ),
 
-    console.log("AUTOREPLY EXECUTE:", interaction.commandName, interaction.options.getSubcommand());
+    async execute(interaction) {
 
-    await interaction.deferReply({
-        flags: MessageFlags.Ephemeral
-    });
+        console.log(
+            "AUTOREPLY EXECUTE:",
+            interaction.commandName,
+            interaction.options.getSubcommand()
+        );
 
-    console.log("AUTOREPLY DEFERRED");
-
-    // Owner Only
-    if (interaction.user.id !== "1466871611893219455") {
-
-        return interaction.editReply({
-            content: settings.emojis.cross + " Only the bot owner can use this command."
+        await interaction.deferReply({
+            flags: MessageFlags.Ephemeral
         });
 
-    }
+        console.log("AUTOREPLY DEFERRED");
 
-    const subcommand = interaction.options.getSubcommand();
-
-    // =========================
-    // ADD
-    // =========================
-    if (subcommand === "add") {
-
-        const user = interaction.options.getUser("user");
-
-        if (user.bot) {
+        // Owner Only
+        if (
+            interaction.user.id !==
+            "1466871611893219455"
+        ) {
 
             return interaction.editReply({
-                content: settings.emojis.cross + " You cannot add an auto reply for a bot."
+                content:
+                    "❌ Only the bot owner can use this command."
             });
 
         }
 
-        const reply = interaction.options.getString("reply");
+        const subcommand =
+            interaction.options.getSubcommand();
 
-        const existing = await AutoReply.findOne({
-            targetId: user.id
-        });
+        // =========================
+        // ADD
+        // =========================
 
-        if (existing) {
+        if (subcommand === "add") {
 
-            return interaction.editReply({
-                content: settings.emojis.cross + " That user already has an auto reply."
-            });
+            const user =
+                interaction.options.getUser("user");
 
-        }
+            if (user.bot) {
 
-        const autoReply = new AutoReply({
+                return interaction.editReply({
+                    content:
+                        "❌ You cannot add an auto reply for a bot."
+                });
 
-            targetId: user.id,
+            }
 
-            reply,
+            const reply =
+                interaction.options.getString("reply");
 
-            createdBy: interaction.user.username,
+            const existing =
+                await AutoReply.findOne({
+                    targetId: user.id
+                });
 
-            createdById: interaction.user.id
+            if (existing) {
 
-        });
+                return interaction.editReply({
+                    content:
+                        "❌ That user already has an auto reply."
+                });
 
-        await autoReply.save();
+            }
 
-        const embed = new EmbedBuilder()
+            const autoReply =
+                new AutoReply({
 
-            .setColor("#2ecc71")
+                    targetId:
+                        user.id,
 
-            .setTitle(settings.emojis.check + " Auto Reply Added")
+                    reply,
 
-            .addFields(
+                    createdBy:
+                        interaction.user.username,
 
-                {
-                    name: "User",
-                    value: user.toString(),
-                    inline: true
-                },
+                    createdById:
+                        interaction.user.id
 
-                {
-                    name: "Cooldown",
-                    value: "1 Hour",
-                    inline: true
-                },
+                });
 
-                {
-                    name: "Reply",
-                    value: reply
-                }
+            await autoReply.save();
 
-            )
-
-            .setTimestamp();
-
-        return interaction.editReply({
-
-            embeds: [embed]
-
-        });
-
-    }
-
-    // =========================
-    // REMOVE
-    // =========================
-    if (subcommand === "remove") {
-
-        const user = interaction.options.getUser("user");
-
-        const deleted = await AutoReply.findOneAndDelete({
-
-            targetId: user.id
-
-        });
-
-        if (!deleted) {
-
-            return interaction.editReply({
-
-                content: settings.emojis.cross + " That user doesn't have an auto reply."
-
-            });
-
-        }
-
-        return interaction.editReply({
-
-            embeds: [
-
+            const embed =
                 new EmbedBuilder()
 
-                    .setColor("#e74c3c")
+                    .setColor("#2ecc71")
 
-                    .setTitle(`${settings.emojis.allover.trash} Auto Reply Removed`)
+                    .setTitle(
+                        "✅ Auto Reply Added"
+                    )
 
-                    .addFields({
+                    .addFields(
 
-                        name: "User",
+                        {
+                            name: "User",
+                            value: user.toString(),
+                            inline: true
+                        },
 
-                        value: user.toString()
+                        {
+                            name: "Cooldown",
+                            value: "1 Hour",
+                            inline: true
+                        },
+
+                        {
+                            name: "Reply",
+                            value: reply
+                        }
+
+                    )
+
+                    .setTimestamp();
+
+            return interaction.editReply({
+
+                embeds: [embed]
+
+            });
+
+        }
+
+        // =========================
+        // REMOVE
+        // =========================
+
+        if (subcommand === "remove") {
+
+            const user =
+                interaction.options.getUser("user");
+
+            const deleted =
+                await AutoReply.findOneAndDelete({
+
+                    targetId:
+                        user.id
+
+                });
+
+            if (!deleted) {
+
+                return interaction.editReply({
+
+                    content:
+                        "❌ That user doesn't have an auto reply."
+
+                });
+
+            }
+
+            return interaction.editReply({
+
+                embeds: [
+
+                    new EmbedBuilder()
+
+                        .setColor("#e74c3c")
+
+                        .setTitle(
+                            "🗑️ Auto Reply Removed"
+                        )
+
+                        .addFields({
+
+                            name: "User",
+
+                            value:
+                                user.toString()
+
+                        })
+
+                        .setTimestamp()
+
+                ]
+
+            });
+
+        }
+
+        // =========================
+        // LIST
+        // =========================
+
+        if (subcommand === "list") {
+
+            const autoReplies =
+                await AutoReply.find().sort({
+                    createdAt: 1
+                });
+
+            if (!autoReplies.length) {
+
+                return interaction.editReply({
+
+                    content:
+                        "❌ No automatic replies have been configured."
+
+                });
+
+            }
+
+            const embed =
+                new EmbedBuilder()
+
+                    .setColor("#3498db")
+
+                    .setTitle(
+                        "🤖 Auto Replies"
+                    )
+
+                    .setFooter({
+
+                        text:
+                            `${autoReplies.length} configured`
 
                     })
 
-                    .setTimestamp()
+                    .setTimestamp();
 
-            ]
+            for (
+                const autoReply
+                of autoReplies
+            ) {
 
-        });
+                embed.addFields({
 
-    }
+                    name:
+                        `<@${autoReply.targetId}>`,
 
-    // =========================
-    // LIST
-    // =========================
-    if (subcommand === "list") {
+                    value:
+                        `💬 ${autoReply.reply}\n\n` +
+                        `⏱️ Cooldown: ` +
+                        `${Math.floor(
+                            autoReply.cooldown / 60000
+                        )} minutes`
 
-        const autoReplies = await AutoReply.find().sort({
-            createdAt: 1
-        });
+                });
 
-        if (!autoReplies.length) {
+            }
 
             return interaction.editReply({
 
-                content: settings.emojis.cross + " No automatic replies have been configured."
+                embeds: [embed]
 
             });
 
         }
 
-        const embed = new EmbedBuilder()
-
-            .setColor("#3498db")
-
-            .setTitle("🤖 Auto Replies")
-
-            .setFooter({
-
-                text: `${autoReplies.length} configured`
-
-            })
-
-            .setTimestamp();
-
-        for (const autoReply of autoReplies) {
-
-            embed.addFields({
-
-                name: `<@${autoReply.targetId}>`,
-
-                value:
-`💬 ${autoReply.reply}
-
-⏱️ Cooldown: ${Math.floor(autoReply.cooldown / 60000)} minutes`
-
-            });
-
-        }
-
-        return interaction.editReply({
-
-            embeds: [embed]
-
-            });
-
-        }
     }
-}
+
+};

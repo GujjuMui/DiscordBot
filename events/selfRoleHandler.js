@@ -70,7 +70,7 @@ module.exports = async interaction => {
 
     await interaction.followUp({
 
-    content: `${settings.emojis.check} Your color role has been updated to <@&${selectedRole}>.`,
+    content: `${"✅"} Your color role has been updated to <@&${selectedRole}>.`,
 
     ephemeral: true
 
@@ -122,7 +122,7 @@ if (interaction.customId === "selfroles_faction") {
 
     await interaction.followUp({
 
-    content: `${settings.emojis.check} Your faction has been updated to <@&${selectedRole}>.`,
+    content: `${"✅"} Your faction has been updated to <@&${selectedRole}>.`,
 
     ephemeral: true
 
@@ -181,7 +181,7 @@ await logger({
 
     await interaction.followUp({
 
-    content: settings.emojis.check + " Your notification roles have been updated.",
+    content: "✅" + " Your notification roles have been updated.",
 
     ephemeral: true
 
@@ -215,7 +215,7 @@ if (interaction.customId === "selfroles_remove_ping") {
 
     await interaction.followUp({
 
-    content: `${settings.emojis.allover.trash} All ping roles have been removed.`,
+    content: `${"🗑️"} All ping roles have been removed.`,
 
     ephemeral: true
 

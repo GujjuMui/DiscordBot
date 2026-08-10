@@ -14,7 +14,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
             { body: [] }
         );
 
-        console.log(settings.emojis.check + " Global commands removed.");
+        console.log("✅" + " Global commands removed.");
 
     } catch (err) {
 

@@ -13,7 +13,7 @@ module.exports = async (interaction) => {
 
         await interaction.update({
 
-            content: settings.emojis.cross + " Deletion cancelled.",
+            content: "❌" + " Deletion cancelled.",
 
             embeds: [],
 
@@ -30,7 +30,7 @@ module.exports = async (interaction) => {
     if (!match) {
 
         await interaction.reply({
-            content: settings.emojis.cross + " Couldn't find Art ID.",
+            content: "❌" + " Couldn't find Art ID.",
             flags: MessageFlags.Ephemeral
         });
 
@@ -47,7 +47,7 @@ module.exports = async (interaction) => {
     if (!art) {
 
         await interaction.reply({
-            content: settings.emojis.cross + " Artwork not found.",
+            content: "❌" + " Artwork not found.",
             flags: MessageFlags.Ephemeral
         });
 
@@ -87,7 +87,7 @@ if (channel && art.discordMessageId) {
 
     await interaction.update({
 
-        content: `${settings.emojis.check} ${art.artName} deleted successfully.`,
+        content: `${"✅"} ${art.artName} deleted successfully.`,
 
         embeds: [],
 

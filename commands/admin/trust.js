@@ -10,8 +10,6 @@ const owner = require("../../config/owner");
 
 const logger = require("../../utils/logger");
 
-const settings = require("../../config/settings");
-
 module.exports = {
 
     data: new SlashCommandBuilder()
@@ -40,28 +38,38 @@ module.exports = {
 
     async execute(interaction) {
 
-        if (interaction.user.id !== owner.ownerId) {
+        if (
+            interaction.user.id !==
+            owner.ownerId
+        ) {
 
             return interaction.reply({
 
-                content: settings.emojis.cross + " Only the bot owner can use this command.",
+                content:
+                    "❌ Only the bot owner can use this command.",
 
-                flags: MessageFlags.Ephemeral
+                flags:
+                    MessageFlags.Ephemeral
 
             });
 
         }
 
-        const user = interaction.options.getUser("user");
-        const role = interaction.options.getRole("role");
+        const user =
+            interaction.options.getUser("user");
+
+        const role =
+            interaction.options.getRole("role");
 
         if (!user && !role) {
 
             return interaction.reply({
 
-                content: settings.emojis.cross + " Select either a user or a role.",
+                content:
+                    "❌ Select either a user or a role.",
 
-                flags: MessageFlags.Ephemeral
+                flags:
+                    MessageFlags.Ephemeral
 
             });
 
@@ -71,29 +79,40 @@ module.exports = {
 
             return interaction.reply({
 
-                content: settings.emojis.cross + " Choose only one: user OR role.",
+                content:
+                    "❌ Choose only one: user OR role.",
 
-                flags: MessageFlags.Ephemeral
+                flags:
+                    MessageFlags.Ephemeral
 
             });
 
         }
 
-        const targetId = user ? user.id : role.id;
-        const type = user ? "user" : "role";
+        const targetId =
+            user ? user.id : role.id;
 
-        const exists = await Trusted.findOne({
-            targetId,
-            type
-        });
+        const type =
+            user ? "user" : "role";
+
+        const exists =
+            await Trusted.findOne({
+
+                targetId,
+
+                type
+
+            });
 
         if (exists) {
 
             return interaction.reply({
 
-                content: `${settings.emojis.warning} Already trusted.`,
+                content:
+                    "⚠️ Already trusted.",
 
-                flags: MessageFlags.Ephemeral
+                flags:
+                    MessageFlags.Ephemeral
 
             });
 
@@ -102,31 +121,40 @@ module.exports = {
         await Trusted.create({
 
             targetId,
+
             type
 
         });
 
         await interaction.reply({
 
-            content: `${settings.emojis.check} ${user ? user.tag : role.name} is now trusted.`,
+            content:
+                `✅ ${user ? user.tag : role.name} is now trusted.`,
 
-            flags: MessageFlags.Ephemeral
+            flags:
+                MessageFlags.Ephemeral
 
         });
-        
+
         await logger({
 
-    guild: interaction.guild,
+            guild:
+                interaction.guild,
 
-    client: interaction.client,
+            client:
+                interaction.client,
 
-    type: "TRUST_ADD",
+            type:
+                "TRUST_ADD",
 
-    user: interaction.user,
+            user:
+                interaction.user,
 
-    title: user ? user.tag : role.name
+            title:
+                user ? user.tag : role.name
 
-});
+        });
+
     }
 
 };

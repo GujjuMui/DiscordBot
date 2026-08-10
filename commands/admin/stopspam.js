@@ -5,7 +5,6 @@ const {
 } = require("discord.js");
 
 const spamManager = require("../../services/spamManager");
-const settings = require("../../config/settings");
 
 module.exports = {
 
@@ -21,13 +20,18 @@ module.exports = {
 
     async execute(interaction) {
 
-        if (interaction.user.id !== "1466871611893219455") {
+        if (
+            interaction.user.id !==
+            "1466871611893219455"
+        ) {
 
             return interaction.reply({
 
-                content: settings.emojis.cross + " Owner only.",
+                content:
+                    "❌ Owner only.",
 
-                flags: MessageFlags.Ephemeral
+                flags:
+                    MessageFlags.Ephemeral
 
             });
 
@@ -37,9 +41,11 @@ module.exports = {
 
         await interaction.reply({
 
-            content: "🛑 Spam stopped.",
+            content:
+                "🛑 Spam stopped.",
 
-            flags: MessageFlags.Ephemeral
+            flags:
+                MessageFlags.Ephemeral
 
         });
 

@@ -63,7 +63,7 @@ module.exports = async (interaction) => {
 });
 
     await interaction.editReply({
-        content: settings.emojis.check + " Tags updated successfully.",
+        content: "✅" + " Tags updated successfully.",
         flags: MessageFlags.Ephemeral
     });
 
@@ -113,7 +113,7 @@ module.exports = async (interaction) => {
 });
 
     await interaction.editReply({
-        content: `${settings.emojis.check} Category updated to **${newCategory}**`,
+        content: `${"✅"} Category updated to **${newCategory}**`,
         flags: MessageFlags.Ephemeral
     });
 
@@ -163,7 +163,7 @@ module.exports = async (interaction) => {
 });
 
     await interaction.editReply({
-        content: `${settings.emojis.check} Artwork name updated to **${newName}**`,
+        content: `${"✅"} Artwork name updated to **${newName}**`,
         flags: MessageFlags.Ephemeral
     });
 

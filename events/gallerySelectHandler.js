@@ -14,15 +14,15 @@ module.exports = async (interaction) => {
     if (!interaction.isStringSelectMenu()) return false;
 
     if (
-        interaction.customId !== "art_category" &&
-        interaction.customId !== "card_category"
-    ) return false;
+    interaction.customId !== "arts_category" &&
+    interaction.customId !== "cards_category"
+) return false;
 
     // =========================
     // ART CATEGORY
     // =========================
 
-    if (interaction.customId === "art_category") {
+    if (interaction.customId === "arts_category") {
 
         await interaction.deferUpdate();
 
@@ -35,7 +35,7 @@ module.exports = async (interaction) => {
         if (!arts.length) {
 
             await interaction.editReply({
-                content: settings.emojis.cross + " No artwork found."
+                content: "❌" + " No artwork found."
             });
 
             return true;
@@ -76,7 +76,7 @@ console.log(gallery.get(interaction.message.id));
     // CARD CATEGORY
     // =========================
 
-    if (interaction.customId === "card_category") {
+    if (interaction.customId === "cards_category") {
 
         await interaction.deferUpdate();
 
@@ -89,7 +89,7 @@ console.log(gallery.get(interaction.message.id));
         if (!cards.length) {
 
             await interaction.editReply({
-                content: settings.emojis.cross + " No cards found."
+                content: "❌" + " No cards found."
             });
 
             return true;

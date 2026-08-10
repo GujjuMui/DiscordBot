@@ -18,6 +18,7 @@ const connectMongo = require("./database/mongo");
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
     ]
@@ -59,9 +60,31 @@ client.once(Events.ClientReady, () => {
     console.log(`🤖 Logged in as : ${client.user.tag}`);
     console.log("📦 MongoDB      : Connected");
     console.log(`⚡ Commands      : ${client.commands.size}`);
-    console.log("👨‍💻 Developer   : Vaibhav Choudhary");
+    console.log("👨‍💻 Developer   : Gujju Mui");
     console.log("🟢 Status       : Online");
     console.log("========================================");
+
+});
+
+client.on(Events.GuildMemberAdd, async member => {
+
+    try {
+
+        await require("./events/memberJoinHandler")(member);
+
+    } catch (err) {
+
+        console.error(
+            "========== MEMBER JOIN ERROR =========="
+        );
+
+        console.error(err);
+
+        console.error(
+            "======================================="
+        );
+
+    }
 
 });
 
@@ -105,6 +128,9 @@ client.on(Events.InteractionCreate, async interaction => {
         if (await require("./events/tryoutButtonHandler")(interaction))
             return;
 
+        if (await require("./events/categoryMenuButtonHandler")(interaction))
+            return;
+
         if (await require("./events/galleryButtonHandler")(interaction))
             return;
 
@@ -120,7 +146,7 @@ client.on(Events.InteractionCreate, async interaction => {
         if (!interaction.replied && !interaction.deferred) {
 
             await interaction.reply({
-                content: settings.emojis.cross + " Something went wrong.",
+                content: "❌" + " Something went wrong.",
                 flags: MessageFlags.Ephemeral
             }).catch(() => {});
 
@@ -207,13 +233,13 @@ if (
            if (interaction.deferred) {
 
     await interaction.editReply({
-        content: settings.emojis.cross + " Something went wrong."
+        content: "❌" + " Something went wrong."
     });
 
 } else if (!interaction.replied) {
 
     await interaction.reply({
-        content: settings.emojis.cross + " Something went wrong.",
+        content: "❌" + " Something went wrong.",
         flags: MessageFlags.Ephemeral
     });
 

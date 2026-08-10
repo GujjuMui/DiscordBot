@@ -15,9 +15,9 @@ function buildSelfRolePanel(guild) {
 
          const factionEmojis = {
 
-    "🎀 •  Legion": settings.emojis.faction.legion,
-    "🎀  •  Dynasty": settings.emojis.faction.dynasty,
-    "🎀  •  Heralds": settings.emojis.faction.herald
+    "🎀 •  Legion": "⚔️",
+    "🎀  •  Dynasty": "🏯",
+    "🎀  •  Heralds": "🛡️"
 
 };
 
@@ -66,7 +66,7 @@ const colorOptions = Object.values(settings.roles.color)
 
     value: role.id,
 
-    emoji: colorEmojis[role.name] ?? settings.emojis.color,
+    emoji: colorEmojis[role.name] ?? "🎨",
 
     description: `Choose the ${role.name} color role`,
 
@@ -82,22 +82,24 @@ const colorOptions = Object.values(settings.roles.color)
 
         const descriptions = {
 
-            giveaway: "Get notified about giveaways",
-            announcement: "Important server announcements",
-            clanUpdate: "Clan news and updates",
-            serverUpdate: "Server update notifications",
-            friendlyAS: "Asian friendly match pings",
-            friendlyEU: "European friendly match pings"
+    giveaway: "Get notified about giveaways",
+    videos: "Get notified about new SFA videos",
+    announcement: "Important server announcements",
+    clanUpdate: "Clan news and updates",
+    serverUpdate: "Server update notifications",
+    friendlyAS: "Asian friendly match pings",
+    friendlyEU: "European friendly match pings"
 
-        };
+};
 
-        const pingEmojis = {
-    "📌  •  Giveaway ping": settings.emojis.ping.giveaway,
-    "📌  •  Announcement Ping": settings.emojis.ping.speaker,
-    "📌  •  Clan Update Ping": settings.emojis.sword,
-    "📌  •  Server Update Ping": settings.emojis.ping.newspaper,
-    "Friendly ping": settings.emojis.ping.handshake,
-    "Friendly Ping (Europe)": settings.emojis.ping.handshake
+    const pingEmojis = {
+    "📌  •  Giveaway ping": "🎁",
+    "📌  •  SFA Videos Ping": "📸",
+    "📌  •  Announcement Ping": "📢",
+    "📌  •  Clan Update Ping": "⚔️",
+    "📌  •  Server Update Ping": "📰",
+    "Friendly ping": "🤝",
+    "Friendly Ping (Europe)": "🤝"
 };
 
        return {
@@ -106,7 +108,7 @@ const colorOptions = Object.values(settings.roles.color)
 
     value: role.id,
 
-    emoji: pingEmojis[role.name] ?? settings.emojis.ping.bellring,
+    emoji: pingEmojis[role.name] ?? "🔔",
 
     description: descriptions[key] ?? "Receive notifications",
 
@@ -138,7 +140,7 @@ const colorOptions = Object.values(settings.roles.color)
         .addTextDisplayComponents(
 
             text => text.setContent(
-`# ${settings.emojis.mask} HORNET SELF ROLES
+`# ${"🎭"} HORNET SELF ROLES
 
 Welcome to the self-role panel!
 
@@ -171,7 +173,7 @@ Personalize your profile by selecting:
         .addTextDisplayComponents(
 
             text => text.setContent(
-`### ${settings.emojis.color} Color Roles
+`### ${"🎨"} Color Roles
 
 Choose **one** color role. Selecting another color will automatically remove the previous one.`
             )
@@ -215,7 +217,7 @@ Choose **one** color role. Selecting another color will automatically remove the
         .addTextDisplayComponents(
 
             text => text.setContent(
-`### ${settings.emojis.sword} Faction Roles
+`### ${"⚔️"} Faction Roles
 
 Choose **one** faction role. Selecting another faction will automatically remove the previous one.`
             )
@@ -259,7 +261,7 @@ Choose **one** faction role. Selecting another faction will automatically remove
         .addTextDisplayComponents(
 
             text => text.setContent(
-`### ${settings.emojis.dankping} Ping Roles
+`### ${"🔔"} Ping Roles
 
 Select the notifications you would like to receive.
 

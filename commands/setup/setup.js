@@ -137,7 +137,7 @@ module.exports = {
 
             .setColor("#2ecc71")
 
-            .setTitle(settings.emojis.check + " HORNET Setup Complete")
+            .setTitle("✅" + " HORNET Setup Complete")
 
             .addFields(
 

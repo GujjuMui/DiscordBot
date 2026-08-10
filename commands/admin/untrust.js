@@ -5,12 +5,8 @@ const {
 } = require("discord.js");
 
 const Trusted = require("../../database/Trusted");
-
 const owner = require("../../config/owner");
-
 const logger = require("../../utils/logger");
-
-const settings = require("../../config/settings");
 
 module.exports = {
 
@@ -44,7 +40,8 @@ module.exports = {
 
             return interaction.reply({
 
-                content: settings.emojis.cross + " Only the bot owner can use this command.",
+                content:
+                    "❌ Only the bot owner can use this command.",
 
                 flags: MessageFlags.Ephemeral
 
@@ -52,14 +49,18 @@ module.exports = {
 
         }
 
-        const user = interaction.options.getUser("user");
-        const role = interaction.options.getRole("role");
+        const user =
+            interaction.options.getUser("user");
+
+        const role =
+            interaction.options.getRole("role");
 
         if (!user && !role) {
 
             return interaction.reply({
 
-                content: settings.emojis.cross + " Select either a user or a role.",
+                content:
+                    "❌ Select either a user or a role.",
 
                 flags: MessageFlags.Ephemeral
 
@@ -71,7 +72,8 @@ module.exports = {
 
             return interaction.reply({
 
-                content: settings.emojis.cross + " Choose only one: user OR role.",
+                content:
+                    "❌ Choose only one: user OR role.",
 
                 flags: MessageFlags.Ephemeral
 
@@ -79,21 +81,26 @@ module.exports = {
 
         }
 
-        const targetId = user ? user.id : role.id;
-        const type = user ? "user" : "role";
+        const targetId =
+            user ? user.id : role.id;
 
-        const result = await Trusted.deleteOne({
+        const type =
+            user ? "user" : "role";
 
-            targetId,
-            type
+        const result =
+            await Trusted.deleteOne({
 
-        });
+                targetId,
+                type
+
+            });
 
         if (result.deletedCount === 0) {
 
             return interaction.reply({
 
-                content: settings.emojis.cross + " Not found in trusted list.",
+                content:
+                    "❌ Not found in trusted list.",
 
                 flags: MessageFlags.Ephemeral
 
@@ -103,7 +110,8 @@ module.exports = {
 
         await interaction.reply({
 
-            content: `${settings.emojis.check} ${user ? user.tag : role.name} removed from trusted list.`,
+            content:
+                `✅ ${user ? user.tag : role.name} removed from trusted list.`,
 
             flags: MessageFlags.Ephemeral
 
@@ -111,17 +119,18 @@ module.exports = {
 
         await logger({
 
-    guild: interaction.guild,
+            guild: interaction.guild,
 
-    client: interaction.client,
+            client: interaction.client,
 
-    type: "TRUST_REMOVE",
+            type: "TRUST_REMOVE",
 
-    user: interaction.user,
+            user: interaction.user,
 
-    title: user ? user.tag : role.name
+            title:
+                user ? user.tag : role.name
 
-});
+        });
 
     }
 

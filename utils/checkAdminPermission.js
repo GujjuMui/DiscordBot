@@ -15,13 +15,13 @@ module.exports = async (interaction) => {
     if (interaction.deferred || interaction.replied) {
 
         await interaction.editReply({
-            content: settings.emojis.cross + " You must be an Administrator to use this command."
+            content: "❌" + " You must be an Administrator to use this command."
         });
 
     } else {
 
         await interaction.reply({
-            content: settings.emojis.cross + " You must be an Administrator to use this command.",
+            content: "❌" + " You must be an Administrator to use this command.",
             flags: MessageFlags.Ephemeral
         });
 

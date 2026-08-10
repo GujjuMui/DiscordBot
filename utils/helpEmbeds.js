@@ -20,11 +20,11 @@ function home() {
         .addFields({
             name: "Available Categories",
             value:
-                "<a:Discord:1528303361781137501> Public\n" +
-                "<a:sprinkle_gbn:1528808995807035482> Trusted\n" +
-                "<a:shields:1528808564200570880> Moderator\n" +
-                "<a:dream_crowns:1528808039870628091> Owner\n" +
-                "<a:info:1528638936082157589> About"
+                "💬 Public\n" +
+                "🛡️ Trusted\n" +
+                "🛡️ Moderator\n" +
+                "👑 Owner\n" +
+                "ℹ️ About"
         })
 
         .setFooter(footer)
@@ -39,7 +39,7 @@ function publicCommands() {
 
         .setColor("#2ecc71")
 
-        .setTitle("<a:Discord:1528303361781137501> Public Commands")
+        .setTitle("💬 Public Commands")
 
         .setDescription(
 
@@ -59,7 +59,7 @@ function trustedCommands() {
 
         .setColor("#3498db")
 
-        .setTitle("<a:sprinkle_gbn:1528808995807035482> Trusted Commands")
+        .setTitle("🛡️ Trusted Commands")
 
         .setDescription(
 
@@ -92,7 +92,7 @@ function moderatorCommands() {
 
         .setColor("#e67e22")
 
-        .setTitle("<a:shields:1528808564200570880> Moderator Commands")
+        .setTitle("🛡️ Moderator Commands")
 
         .setDescription(
 
@@ -128,7 +128,7 @@ function ownerCommands() {
 
         .setColor("#e74c3c")
 
-        .setTitle("<a:dream_crowns:1528808039870628091> Owner Commands")
+        .setTitle("👑 Owner Commands")
 
         .setDescription(
 
@@ -172,7 +172,7 @@ function about() {
 
         .setColor("#9b59b6")
 
-        .setTitle("<a:info:1528638936082157589> About HORNET")
+        .setTitle("ℹ️ About HORNET")
 
         .setDescription(
 

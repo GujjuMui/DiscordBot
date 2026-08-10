@@ -22,7 +22,7 @@ module.exports = async (interaction) => {
     if (!arts.length) {
 
         return interaction.reply({
-            content: settings.emojis.cross + " No artwork found in this category.",
+            content: "❌" + " No artwork found in this category.",
             flags: MessageFlags.Ephemeral
         });
 

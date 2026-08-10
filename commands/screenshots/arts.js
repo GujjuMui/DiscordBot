@@ -3,13 +3,13 @@ const {
 } = require("discord.js");
 
 const Art = require("../../database/Art");
-
-const gallery = require("../../services/galleryV2");
 const settings = require("../../config/settings");
 
 const {
-    createArtCategoryMenu,
+    createCategoryMenu
 } = require("../../utils/embedBuilder");
+
+const categoryMenu = require("../../services/categoryMenuService");
 
 module.exports = {
 
@@ -26,37 +26,46 @@ module.exports = {
         if (arts.length === 0) {
 
             return interaction.editReply({
-                content: settings.emojis.cross + " No artwork found."
+                content: "❌" + " No artwork found."
             });
 
         }
 
-        const categories = [...new Set(
+        const categories = [
+            ...new Set(
+                arts
+                    .map(art => art.category)
+                    .filter(Boolean)
+            )
+        ].sort();
 
-    arts
-        .map(art => art.category)
-        .filter(Boolean)
+        const embed = {
+            color: 0x8e44ad,
+            title: `${"🎨"} Browse SFA Artwork`,
+            description: "Select a category from the dropdown below."
+        };
 
-)].sort();
-
-
-
-    const embed = {
-    color: 0x8e44ad,
-    title: `${settings.emojis.color} Browse SFA Artwork`,
-    description:
-        "Select a category from the dropdown below."
-};
-
-    await interaction.editReply({
+        await interaction.editReply({
 
     embeds: [embed],
 
-    components: [
-        createArtCategoryMenu(categories)
-    ]
+    components: createCategoryMenu(
+        "arts",
+        categories,
+        0
+    )
 
-});    
+});
+
+const reply = await interaction.fetchReply();
+
+categoryMenu.open(reply.id, {
+
+    type: "arts",
+
+    categories
+
+});
 
     }
 

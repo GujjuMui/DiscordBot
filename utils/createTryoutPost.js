@@ -22,7 +22,7 @@ module.exports = async (
 
     const embed = new EmbedBuilder()
         .setColor("#5865F2")
-        .setTitle("<a:Medal:1528675928438476840> FATE Clan Tryouts")
+        .setTitle("🏅 FATE Clan Tryouts")
         .setDescription(
 `Submit a ranked gameplay video here
 or play with one of our tryout testers.
@@ -52,7 +52,7 @@ Good luck!`
             },
             {
                 name: "Status",
-                value: "<a:WA_orange_dot:1528677818324619385> Pending",
+                value: "🟠 Pending",
                 inline: false
             }
         );
@@ -62,13 +62,13 @@ Good luck!`
         new ButtonBuilder()
             .setCustomId(`tryout_pass_${member.id}`)
             .setLabel("Pass")
-            .setEmoji("<:Correct:1528079418424033331>")
+            .setEmoji("✅")
             .setStyle(ButtonStyle.Success),
 
         new ButtonBuilder()
             .setCustomId(`tryout_fail_${member.id}`)
             .setLabel("Fail")
-            .setEmoji("<:Cross99:1528675926555234447>")
+            .setEmoji("❌")
             .setStyle(ButtonStyle.Danger)
 
     );

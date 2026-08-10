@@ -36,13 +36,13 @@ module.exports = async (interaction) => {
     if (interaction.deferred || interaction.replied) {
 
         await interaction.editReply({
-            content: settings.emojis.cross + " You don't have permission to use this command."
+            content: "❌" + " You don't have permission to use this command."
         });
 
     } else {
 
         await interaction.reply({
-            content: settings.emojis.cross + " You don't have permission to use this command.",
+            content: "❌" + " You don't have permission to use this command.",
             flags: MessageFlags.Ephemeral
         });
 

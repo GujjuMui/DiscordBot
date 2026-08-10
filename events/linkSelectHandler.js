@@ -24,7 +24,7 @@ module.exports = async (interaction) => {
     if (!links.length) {
 
         await interaction.editReply({
-            content: settings.emojis.cross + " No links found."
+            content: "❌" + " No links found."
         });
 
         return true;

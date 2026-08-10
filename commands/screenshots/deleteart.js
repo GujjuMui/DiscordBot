@@ -41,7 +41,7 @@ module.exports = {
         if (!art) {
 
             return interaction.reply({
-                content: settings.emojis.cross + " Artwork not found.",
+                content: "❌" + " Artwork not found.",
                 flags: MessageFlags.Ephemeral
             });
 
@@ -66,7 +66,7 @@ module.exports = {
         await interaction.reply({
 
            content:
-`${settings.emojis.warning} Delete **${art.artName}**?\n\nArt ID: ${art.artId}\n\nPress Confirm or Cancel.`,
+`${"⚠️"} Delete **${art.artName}**?\n\nArt ID: ${art.artId}\n\nPress Confirm or Cancel.`,
 
             components: [
     createDeleteButtons()

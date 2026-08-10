@@ -32,17 +32,17 @@ module.exports = {
             .setColor("#5865F2")
 
             .setDescription(`
-                    # <a:a_setting:1528308900208709682> Server Verification
+                    # ⚙️ Server Verification
 
                     Welcome to **F A T E - SF**!
 
                     Before starting verification, please make sure you meet the following requirements:
 
-                    <a:anxiety2:1528307358705385472>  Your Discord account is phone verified.
+                    📱  Your Discord account is phone verified.
 
-                    <a:Rules:1528079131844018297>  Your Discord account is at least **30 days old**.
+                    📜  Your Discord account is at least **30 days old**.
 
-                    <a:Load:1528310853433299025>  You have been in this server for **more than 5 minutes**.
+                    ⏳  You have been in this server for **more than 5 minutes**.
 
                     Click the **Verify** button below and answer a few short questions to gain access to the server.`);
 
@@ -56,7 +56,7 @@ module.exports = {
 
                     .setLabel("Verify")
 
-                    .setEmoji("<a:emote:1528308473920487524>")
+                    .setEmoji("✅")
 
                     .setStyle(ButtonStyle.Success)
 
@@ -70,7 +70,7 @@ if (!verificationChannel) {
 
     return interaction.reply({
 
-        content: settings.emojis.cross + " Verification channel not found.",
+        content: "❌" + " Verification channel not found.",
 
         flags: MessageFlags.Ephemeral
 
@@ -88,7 +88,7 @@ await verificationChannel.send({
 
         await interaction.reply({
 
-            content: settings.emojis.check + " Verification panel created.",
+            content: "✅" + " Verification panel created.",
 
             flags: MessageFlags.Ephemeral
 

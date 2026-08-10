@@ -87,30 +87,30 @@ module.exports = {
             const contentEmbed = new EmbedBuilder()
 
                 .setColor("#00b894")
-                .setTitle(`${settings.emojis.allover.link} ${title}`)
+                .setTitle(`${"🔗"} ${title}`)
 
                 .addFields(
 
                     {
-                        name: `${settings.emojis.allover.file} Category`,
+                        name: `${"📄"} Category`,
                         value: category,
                         inline: true
                     },
 
                     {
-                        name: `${settings.emojis.allover.heart} Favorites`,
+                        name: `${"❤️"} Favorites`,
                         value: "0",
                         inline: true
                     },
 
                     {
-                        name: `${settings.emojis.allover.person} Added By`,
+                        name: `${"👤"} Added By`,
                         value: interaction.user.toString(),
                         inline: true
                     },
 
                     {
-    name: `${settings.emojis.allover.web} Link`,
+    name: `${"🌐"} Link`,
     value: url
 }
 
@@ -130,7 +130,7 @@ module.exports = {
         const embed = new EmbedBuilder()
 
             .setColor("#00b894")
-            .setTitle(`${settings.emojis.allover.link} Link Saved`)
+            .setTitle(`${"🔗"} Link Saved`)
 
             .addFields(
 

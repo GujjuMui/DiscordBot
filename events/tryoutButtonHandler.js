@@ -29,7 +29,7 @@ module.exports = async interaction => {
 
         await interaction.reply({
 
-            content: settings.emojis.cross + " Only tryout testers can use these buttons.",
+            content: "❌" + " Only tryout testers can use these buttons.",
 
             flags: MessageFlags.Ephemeral
 
@@ -47,7 +47,7 @@ if (!member) {
 
     await interaction.reply({
 
-        content: settings.emojis.cross + " That user is no longer in the server.",
+        content: "❌" + " That user is no longer in the server.",
 
         flags: MessageFlags.Ephemeral
 
@@ -64,7 +64,7 @@ if (!hasPendingAS && !hasPendingEU) {
 
     await interaction.reply({
 
-        content: settings.emojis.cross + " This user is no longer in the tryout process.",
+        content: "❌" + " This user is no longer in the tryout process.",
 
         flags: MessageFlags.Ephemeral
 

@@ -97,7 +97,7 @@ module.exports = {
         if (!channel) {
 
             return interaction.editReply(
-                settings.emojis.cross + " #sfa-arts channel not found."
+                "❌" + " #sfa-arts channel not found."
             );
 
         }
@@ -134,7 +134,7 @@ const message = await channel.send({
 });
 
         await interaction.editReply(
-            `${settings.emojis.check} Artwork saved!\n\nArt ID: **${art.artId}**`
+            `${"✅"} Artwork saved!\n\nArt ID: **${art.artId}**`
         );
 
     }

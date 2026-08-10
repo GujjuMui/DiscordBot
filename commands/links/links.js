@@ -21,7 +21,7 @@ module.exports = {
     if (!links.length) {
 
         return interaction.editReply({
-            content: settings.emojis.cross + " No links have been added yet."
+            content: "❌" + " No links have been added yet."
         });
 
     }
@@ -51,7 +51,7 @@ module.exports = {
 
                 .setColor("#00b894")
 
-                .setTitle(`${settings.emojis.allover.books} Browse Links`)
+                .setTitle(`${"📚"} Browse Links`)
 
                 .setDescription(
                     "Select a category from the dropdown below."

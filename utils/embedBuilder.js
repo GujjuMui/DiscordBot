@@ -50,100 +50,100 @@ function getImageData(folder, imageFile) {
 
 }
 
-function createCardEmbed(card, index, total) {
+    function createCardEmbed(card, index, total) {
 
-    const tags = Array.isArray(card.tags)
-        ? card.tags
-        : (card.tags ? [card.tags] : []);
+        const tags = Array.isArray(card.tags)
+            ? card.tags
+            : (card.tags ? [card.tags] : []);
 
-    const embed = new EmbedBuilder()
+        const embed = new EmbedBuilder()
 
-        .setColor("#ff9900")
+            .setColor("#ff9900")
 
-        .setTitle(`${settings.emojis.allover.cards} ${card.cardName}`)
+            .setTitle(`${"🎴"} ${card.cardName}`)
 
-        .setDescription(`**Character:** ${card.character}`)
+            .setDescription(`**Character:** ${card.character}`)
 
-        .addFields(
+            .addFields(
 
-            {
-                name: `${settings.emojis.allover.id} Card ID`,
-                value: card.cardId || "Unknown",
-                inline: true
-            },
+                {
+                    name: `${"🪪"} Card ID`,
+                    value: card.cardId || "Unknown",
+                    inline: true
+                },
 
-            {
-    name: `${settings.emojis.allover.heart} Favorites`,
-    value: String(card.favorites ?? 0),
-    inline: true
-},
-            {
-                name: `${settings.emojis.allover.tags} Tags`,
-                value: tags.length ? tags.join(", ") : "None"
-            }
+                {
+        name: `${"❤️"} Favorites`,
+        value: String(card.favorites ?? 0),
+        inline: true
+    },
+                {
+                    name: `${"🏷️"} Tags`,
+                    value: tags.length ? tags.join(", ") : "None"
+                }
 
-        )
+            )
 
-        const imageData = getImageData("cards", card.imageFile);
+            const imageData = getImageData("cards", card.imageFile);
 
-        embed.setImage(imageData.image)   
+            embed.setImage(imageData.image)   
 
-        .setFooter({
-            text: `Card ${index + 1} of ${total}`
-        })
+            .setFooter({
+                text: `Card ${index + 1} of ${total}`
+            })
 
-        .setTimestamp();
+            .setTimestamp();
 
-        return {
+            return {
 
-            embed,
+                embed,
 
-            files: imageData.files
+                files: imageData.files
 
-        };
+            };
 
-}
+    }
 
-function createArtEmbed(art, index, total) {
+    function createArtEmbed(art, index, total) {
 
-    const tags = Array.isArray(art.tags)
-        ? art.tags
-        : (art.tags ? [art.tags] : []);
+        const tags = Array.isArray(art.tags)
+            ? art.tags
+            : (art.tags ? [art.tags] : []);
 
-    const embed = new EmbedBuilder()
+        const embed = new EmbedBuilder()
 
-        .setColor("#8e44ad")
+            .setColor("#8e44ad")
 
-        .setTitle(`${settings.emojis.color} ${art.artName}`)
+            .setTitle(`${"🎨"} ${art.artName}`)
 
-        .setDescription(`**Category:** ${art.category}`)
+            .setDescription(`**Category:** ${art.category}`)
 
-        .addFields(
+            .addFields(
 
-            {
-                name: `${settings.emojis.allover.id} Art ID`,
-                value: art.artId || "Unknown",
-                inline: true
-            },
+                {
+                    name: `${"🪪"} Art ID`,
+                    value: art.artId || "Unknown",
+                    inline: true
+                },
 
-            {
-                name: `${settings.emojis.allover.heart} Favorites`,
-                value: String(art.favorites ?? 0),
-                inline: true
-            },
+                {
+                    name: `${"❤️"} Favorites`,
+                    value: String(art.favorites ?? 0),
+                    inline: true
+                },
 
-             {
-                name: `${settings.emojis.allover.file} Category`,
-                value: art.category || "General",
-                inline: true
-            },
+                {
+                    name: `${"📄"} Category`,
+                    value: art.category || "General",
+                    inline: true
+                },
 
-            {
-                name: `${settings.emojis.allover.tags} Tags`,
-                value: tags.length ? tags.join(", ") : "None"
-            }
+                {
+                    name: `${"🏷️"} Tags`,
+                    value: tags.length ? tags.join(", ") : "None"
+                }
 
-        )
+            )
 
         const imageData = getImageData("arts", art.imageFile);
 
@@ -180,28 +180,28 @@ function createLinkEmbed(link, index, total) {
 
         .setColor("#00b894")
 
-        .setTitle(`${settings.emojis.allover.link} ${link.title}`)
+        .setTitle(`${"🔗"} ${link.title}`)
 
         .setDescription(
-    `[${settings.emojis.allover.web} Open Link](${url})`
+    `[${"🌐"} Open Link](${url})`
 )
 
         .addFields(
 
             {
-                name: `${settings.emojis.allover.file} Category`,
+                name: `${"📄"} Category`,
                 value: link.category,
                 inline: true
             },
 
             {
-                name: `${settings.emojis.allover.heart} Favorites`,
+                name: `${"❤️"} Favorites`,
                 value: String(link.favorites ?? 0),
                 inline: true
             },
 
             {
-                name: `${settings.emojis.allover.person} Added By`,
+                name: `${"👤"} Added By`,
                 value: `<@${link.addedById}>`
             }
 
@@ -229,22 +229,22 @@ function createGalleryButtons() {
 
         new ButtonBuilder()
             .setCustomId("gallery_back")
-            .setEmoji(settings.emojis.allover.homebutton)
+            .setEmoji("🏠")
             .setStyle(ButtonStyle.Primary),
 
         new ButtonBuilder()
             .setCustomId("gallery_prev")
-            .setEmoji(settings.emojis.allover.leftarrow)
+            .setEmoji("◀️")
             .setStyle(ButtonStyle.Secondary),
 
         new ButtonBuilder()
             .setCustomId("gallery_favorite")
-            .setEmoji(settings.emojis.allover.heart)
+            .setEmoji("❤️")
             .setStyle(ButtonStyle.Danger),
 
         new ButtonBuilder()
             .setCustomId("gallery_next")
-            .setEmoji(settings.emojis.allover.rightarrow)
+            .setEmoji("▶️")
             .setStyle(ButtonStyle.Secondary)
 
     );
@@ -256,64 +256,99 @@ function createGalleryButtons() {
 
         new ButtonBuilder()
             .setCustomId("gallery_prev")
-            .setEmoji(settings.emojis.allover.leftarrow)
+            .setEmoji("◀️")
             .setStyle(ButtonStyle.Secondary),
 
         new ButtonBuilder()
             .setCustomId("gallery_favorite")
-            .setEmoji(settings.emojis.allover.heart)
+            .setEmoji("❤️")
             .setStyle(ButtonStyle.Danger),
 
         new ButtonBuilder()
             .setCustomId("gallery_next")
-            .setEmoji(settings.emojis.allover.rightarrow)
+            .setEmoji("▶️")
             .setStyle(ButtonStyle.Secondary)
 
     );
 
 }
 
-function createArtCategoryMenu(categories) {
+function createCategoryMenu(type, categories, page = 0) {
+
+    const PAGE_SIZE = 25;
+
+    const totalPages = Math.ceil(categories.length / PAGE_SIZE);
+
+    const start = page * PAGE_SIZE;
+
+    const pageCategories = categories.slice(
+        start,
+        start + PAGE_SIZE
+    );
 
     const menu = new StringSelectMenuBuilder()
 
-        .setCustomId("art_category")
+        .setCustomId(`${type}_category`)
 
-        .setPlaceholder("Choose an art category");
+        .setPlaceholder(
+            `Choose a ${type.slice(0, -1)} category (Page ${page + 1}/${totalPages})`
+        );
 
-    for (const category of categories) {
+    for (const category of pageCategories) {
 
         menu.addOptions(
+
             new StringSelectMenuOptionBuilder()
+
                 .setLabel(category)
+
                 .setValue(category)
+
         );
 
     }
 
-    return new ActionRowBuilder().addComponents(menu);
+    const row1 = new ActionRowBuilder()
 
-}
+        .addComponents(menu);
 
-function createCardCategoryMenu(categories) {
+    if (totalPages === 1)
 
-    const menu = new StringSelectMenuBuilder()
+        return [row1];
 
-        .setCustomId("card_category")
+    const row2 = new ActionRowBuilder()
 
-        .setPlaceholder("Choose a card category");
+        .addComponents(
 
-    for (const category of categories) {
+            new ButtonBuilder()
 
-        menu.addOptions(
-            new StringSelectMenuOptionBuilder()
-                .setLabel(category)
-                .setValue(category)
+                .setCustomId(`${type}_category_prev`)
+
+                .setLabel("◀ Previous")
+
+                .setStyle(ButtonStyle.Secondary)
+
+                .setDisabled(page === 0),
+
+            new ButtonBuilder()
+
+                .setCustomId(`${type}_category_next`)
+
+                .setLabel("Next ▶")
+
+                .setStyle(ButtonStyle.Secondary)
+
+                .setDisabled(page >= totalPages - 1)
+
         );
 
-    }
+    return [
 
-    return new ActionRowBuilder().addComponents(menu);
+        row1,
+
+        row2
+
+    ];
 
 }
 
@@ -411,12 +446,11 @@ module.exports = {
     createCardEmbed,
     createArtEmbed,
     createGalleryButtons,
-    createArtCategoryMenu,
+    createCategoryMenu,
     createLinkEmbed,
     createLinkCategoryMenu,
     createEditArtButtons,
     createDeleteButtons,
-    createCardCategoryMenu,
     createCardGalleryButtons,
     createEditCardButtons
                 };

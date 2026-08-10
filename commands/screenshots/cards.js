@@ -7,8 +7,10 @@ const Card = require("../../database/Card");
 const settings = require("../../config/settings");
 
 const {
-    createCardCategoryMenu
+    createCategoryMenu
 } = require("../../utils/embedBuilder");
+
+const categoryMenu = require("../../services/categoryMenuService");
 
 module.exports = {
 
@@ -23,31 +25,47 @@ module.exports = {
         const cards = await Card.find().sort({ createdAt: -1 });
 
         if (cards.length === 0) {
+
             return interaction.editReply({
-                content: `${settings.emojis.cross} No cards found.`
+                content: `${"❌"} No cards found.`
             });
+
         }
 
         const categories = [
             ...new Set(
-                cards.map(card => card.category || "General")
+                cards
+                    .map(card => card.category || "General")
+                    .filter(Boolean)
             )
-        ];
+        ].sort();
+
+        const embed = new EmbedBuilder()
+            .setColor(0x00b894)
+            .setTitle(`${"🎴"} Browse SFA Cards`)
+            .setDescription("Select a category from the dropdown below.");
 
         await interaction.editReply({
 
-            embeds: [
-                new EmbedBuilder()
-                    .setColor(0x00b894)
-                    .setTitle(`${settings.emojis.allover.cards} Browse SFA Cards`)
-                    .setDescription("Select a category from the dropdown below.")
-            ],
+    embeds: [embed],
 
-            components: [
-                createCardCategoryMenu(categories)
-            ]
+    components: createCategoryMenu(
+        "cards",
+        categories,
+        0
+    )
 
-        });
+});
+
+const reply = await interaction.fetchReply();
+
+categoryMenu.open(reply.id, {
+
+    type: "cards",
+
+    categories
+
+});
 
     }
 

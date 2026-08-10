@@ -37,112 +37,112 @@ switch (type) {
 
 case "CARD_CREATE":
     color = "#2ecc71";
-    heading = `${settings.emojis.success} CARD CREATED`;
+    heading = `${"✅"} CARD CREATED`;
     break;
 
 case "CARD_EDIT":
     color = "#f1c40f";
-    heading = `${settings.emojis.warning} CARD EDITED`;
+    heading = `${"⚠️"} CARD EDITED`;
     break;
 
 case "CARD_DELETE":
     color = "#e74c3c";
-    heading = `${settings.emojis.delete} CARD DELETED`;
+    heading = `${"🗑️"} CARD DELETED`;
     break;
 
 case "ART_CREATE":
     color = "#2ecc71";
-    heading = `${settings.emojis.success} ART CREATED`;
+    heading = `${"✅"} ART CREATED`;
     break;
 
 case "ART_EDIT":
     color = "#f1c40f";
-    heading = `${settings.emojis.warning} ART EDITED`;
+    heading = `${"⚠️"} ART EDITED`;
     break;
 
 case "ART_DELETE":
     color = "#e74c3c";
-    heading = `${settings.emojis.delete} ART DELETED`;
+    heading = `${"🗑️"} ART DELETED`;
     break;
 
 case "LINK_CREATE":
     color = "#2ecc71";
-    heading = `${settings.emojis.success} LINK CREATED`;
+    heading = `${"✅"} LINK CREATED`;
     break;
 
 case "LINK_DELETE":
     color = "#e74c3c";
-    heading = `${settings.emojis.delete} LINK DELETED`;
+    heading = `${"🗑️"} LINK DELETED`;
     break;
 
 case "TRUST_ADD":
     color = "#3498db";
-    heading = `${settings.emojis.info} TRUST ADDED`;
+    heading = `${"ℹ️"} TRUST ADDED`;
     break;
 
 case "TRUST_REMOVE":
     color = "#e67e22";
-    heading = `${settings.emojis.warning} TRUST REMOVED`;
+    heading = `${"⚠️"} TRUST REMOVED`;
     break;
 
 case "SETUP":
     color = "#9b59b6";
-    heading = `${settings.emojis.system} SETUP EXECUTED`;
+    heading = `${"⚙️"} SETUP EXECUTED`;
     break;
 
 case "VERIFY":
     color = "#2ecc71";
-    heading = `${settings.emojis.success} USER VERIFIED`;
+    heading = `${"✅"} USER VERIFIED`;
     break;
 
 case "CLAN_JOIN":
     color = "#2ecc71";
-    heading = `${settings.emojis.success} CLAN JOIN`;
+    heading = `${"✅"} CLAN JOIN`;
     break;
 
 case "TRYOUT_PASS":
     color = "#57F287";
-    heading =   `${settings.emojis.success} TRYOUT PASS`;
+    heading =   `${"✅"} TRYOUT PASS`;
     break;
 
 case "TRYOUT_FAIL":
     color = "#ED4245";
-    heading = `${settings.emojis.delete} TRYOUT FAIL` ;
+    heading = `${"🗑️"} TRYOUT FAIL` ;
     break;
 
 case "MEMBER_ADD":
     color = "#57F287";
-    heading = `${settings.emojis.success} MEMBER ADDED`;
+    heading = `${"✅"} MEMBER ADDED`;
     break;
 
 case "MEMBER_REMOVE":
     color = "#ED4245";
-    heading = `${settings.emojis.delete} MEMBER REMOVED`;
+    heading = `${"🗑️"} MEMBER REMOVED`;
     break;
 
 case "MEMBER_TRANSFER":
     color = "#FEE75C";
-    heading = `${settings.emojis.info} MEMBER TRANSFERRED`;
+    heading = `${"ℹ️"} MEMBER TRANSFERRED`;
     break;
 
 case "SELFROLE_COLOR":
     color = "#5865F2";
-    heading = `${settings.emojis.color} COLOR ROLE UPDATED`;
+    heading = `${"🎨"} COLOR ROLE UPDATED`;
     break;
 
 case "SELFROLE_FACTION":
     color = "#F1C40F";
-    heading = `${settings.emojis.sword} FACTION UPDATED`;
+    heading = `${"⚔️"} FACTION UPDATED`;
     break;
 
 case "SELFROLE_PING":
     color = "#3498DB";
-    heading = `${settings.emojis.ping.bellring} PING ROLES UPDATED`;
+    heading = `${"🔔"} PING ROLES UPDATED`;
     break;
 
 case "SELFROLE_PING_REMOVE":
     color = "#E74C3C";
-    heading = `${settings.emojis.allover.trash} PING ROLES CLEARED`;
+    heading = `${"🗑️"} PING ROLES CLEARED`;
     break;
 
 }
@@ -169,7 +169,7 @@ case "SELFROLE_PING_REMOVE":
 
         embed.addFields({
 
-            name: `${settings.emojis.allover.id} ID`,
+            name: `${"🪪"} ID`,
 
             value: id,
 
@@ -210,7 +210,7 @@ case "SELFROLE_PING_REMOVE":
 
     embed.addFields({
 
-        name: `${settings.emojis.allover.leftarrow} Old`,
+        name: `${"◀️"} Old`,
 
         value: String(oldValue),
 
@@ -223,7 +223,7 @@ case "SELFROLE_PING_REMOVE":
 
     embed.addFields({
 
-        name: `${settings.emojis.allover.rightarrow} New`,
+        name: `${"▶️"} New`,
 
         value: String(newValue),
 
@@ -240,7 +240,7 @@ case "SELFROLE_PING_REMOVE":
 
     embed.addFields({
 
-        name: `${settings.emojis.allover.person} Performed By`,
+        name: `${"👤"} Performed By`,
 
         value: `<@${user.id}>`
 

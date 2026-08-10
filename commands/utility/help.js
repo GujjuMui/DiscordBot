@@ -17,7 +17,7 @@ module.exports = {
 
             .setColor("#f1c40f")
 
-            .setTitle("<a:Rules:1528079131844018297>  HORNET Help")
+            .setTitle("📜  HORNET Help")
 
             .setDescription(
                 "Welcome to **HORNET**.\n\n" +
@@ -27,11 +27,11 @@ module.exports = {
             .addFields({
                 name: "Categories",
                 value:
-                    "<a:Discord:1528303361781137501> Public\n" +
-                    "<a:sprinkle_gbn:1528808995807035482> Trusted\n" +
-                    "<a:shields:1528808564200570880> Moderator\n" +
-                    "<a:dream_crowns:1528808039870628091> Owner\n" +
-                    "<a:info:1528638936082157589> About"
+                    "💬 Public\n" +
+                    "🛡️ Trusted\n" +
+                    "🛡️ Moderator\n" +
+                    "👑 Owner\n" +
+                    "ℹ️ About"
             })
 
             .setFooter({
@@ -51,31 +51,31 @@ module.exports = {
                 {
                     label: "Public Commands",
                     value: "public",
-                    emoji: "<a:Discord:1528303361781137501>"
+                    emoji: "💬"
                 },
 
                 {
                     label: "Trusted Commands",
                     value: "trusted",
-                    emoji: "<a:sprinkle_gbn:1528808995807035482>"
+                    emoji: "🛡️"
                 },
 
                 {
                     label: "Moderator Commands",
                     value: "moderator",
-                    emoji: "<a:shields:1528808564200570880>"
+                    emoji: "🛡️"
                 },
 
                 {
                     label: "Owner Commands",
                     value: "owner",
-                    emoji: "<a:dream_crowns:1528808039870628091>"
+                    emoji: "👑"
                 },
 
                 {
                     label: "About HORNET",
                     value: "about",
-                    emoji: "<a:info:1528638936082157589>"
+                    emoji: "ℹ️"
                 }
 
             );

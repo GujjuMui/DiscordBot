@@ -10,9 +10,7 @@ const settings = require("../../config/settings");
 
 const {
     createCardEmbed,
-    createArtEmbed,
-    createGalleryButtons,
-    createCardGalleryButtons
+    createArtEmbed
 } = require("../../utils/embedBuilder");
 
 module.exports = {
@@ -75,14 +73,20 @@ module.exports = {
                 );
 
             if (!channel)
-                throw new Error("Cards channel not found.");
+                throw new Error(
+                    "Cards channel not found."
+                );
 
             const cards =
                 await Card.find().sort({
                     createdAt: 1
                 });
 
-            for (let i = 0; i < cards.length; i++) {
+            for (
+                let i = 0;
+                i < cards.length;
+                i++
+            ) {
 
                 const card = cards[i];
 
@@ -105,19 +109,19 @@ module.exports = {
                         cards.length
                     );
 
-await message.edit({
+                    await message.edit({
 
-    content: null,
+                        content: null,
 
-    embeds: [embed],
+                        embeds: [embed],
 
-    attachments: [],
+                        attachments: [],
 
-    files,
+                        files,
 
-    components: []
+                        components: []
 
-});
+                    });
 
                     cardsUpdated++;
 
@@ -136,7 +140,7 @@ await message.edit({
 
         }
 
-                async function refreshArts() {
+        async function refreshArts() {
 
             const channel =
                 interaction.guild.channels.cache.find(
@@ -144,14 +148,20 @@ await message.edit({
                 );
 
             if (!channel)
-                throw new Error("Artwork channel not found.");
+                throw new Error(
+                    "Artwork channel not found."
+                );
 
             const arts =
                 await Art.find().sort({
                     createdAt: 1
                 });
 
-            for (let i = 0; i < arts.length; i++) {
+            for (
+                let i = 0;
+                i < arts.length;
+                i++
+            ) {
 
                 const art = arts[i];
 
@@ -174,19 +184,17 @@ await message.edit({
                         arts.length
                     );
 
-await message.edit({
+                    await message.edit({
 
-    content: null,
+                        content: null,
 
-    embeds: [embed],
+                        embeds: [embed],
 
-    attachments: [],
+                        files,
 
-    files,
+                        components: []
 
-    components: []
-
-}); 
+                    });
 
                     artsUpdated++;
 
@@ -218,6 +226,7 @@ await message.edit({
             } else {
 
                 await refreshCards();
+
                 await refreshArts();
 
             }
@@ -225,11 +234,10 @@ await message.edit({
             await interaction.editReply({
 
                 content:
-`${settings.emojis.success} Gallery refresh completed.
-
-🎴 Cards Updated: **${cardsUpdated}**
-🎨 Artwork Updated: **${artsUpdated}**
-❌ Failed: **${failed}**`
+                    `✅ Gallery refresh completed.\n\n` +
+                    `🎴 Cards Updated: **${cardsUpdated}**\n` +
+                    `🎨 Artwork Updated: **${artsUpdated}**\n` +
+                    `❌ Failed: **${failed}**`
 
             });
 
@@ -240,7 +248,7 @@ await message.edit({
             await interaction.editReply({
 
                 content:
-`${settings.emojis.cross} Gallery refresh failed.\n\n${err.message}`
+                    `❌ Gallery refresh failed.\n\n${err.message}`
 
             });
 
