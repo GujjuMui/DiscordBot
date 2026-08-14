@@ -29,8 +29,15 @@ module.exports = {
                 .addStringOption(option =>
                     option
                         .setName("reply")
-                        .setDescription("Bot reply")
-                        .setRequired(true)
+                        .setDescription("Reply when the configured user sends a message")
+                        .setRequired(false)
+                )
+
+                .addStringOption(option =>
+                    option
+                        .setName("mentionreply")
+                        .setDescription("Reply when someone mentions the configured user")
+                        .setRequired(false)
                 )
         )
 
@@ -102,7 +109,21 @@ module.exports = {
             }
 
             const reply =
-                interaction.options.getString("reply");
+                interaction.options.getString("reply") || "";
+
+            const mentionReply =
+                interaction.options.getString("mentionreply") || "";
+
+            if (!reply && !mentionReply) {
+
+                return interaction.editReply({
+
+                    content:
+                        "❌ You must provide at least a Normal Message Reply or a Mention Reply."
+
+                });
+
+            }
 
             const existing =
                 await AutoReply.findOne({
@@ -118,21 +139,19 @@ module.exports = {
 
             }
 
-            const autoReply =
-                new AutoReply({
+            const autoReply = new AutoReply({
 
-                    targetId:
-                        user.id,
+                targetId: user.id,
 
-                    reply,
+                reply,
 
-                    createdBy:
-                        interaction.user.username,
+                mentionReply,
 
-                    createdById:
-                        interaction.user.id
+                createdBy: interaction.user.username,
 
-                });
+                createdById: interaction.user.id
+
+            });
 
             await autoReply.save();
 
@@ -155,13 +174,18 @@ module.exports = {
 
                         {
                             name: "Cooldown",
-                            value: "1 Hour",
+                            value: "6 Hours",
                             inline: true
                         },
 
                         {
-                            name: "Reply",
+                            name: "Normal Message Reply",
                             value: reply
+                        },
+
+                        {
+                            name: "Mention Reply",
+                            value: mentionReply || "Not configured"
                         }
 
                     )
@@ -273,22 +297,20 @@ module.exports = {
 
                     .setTimestamp();
 
-            for (
-                const autoReply
-                of autoReplies
-            ) {
+            for (const autoReply of autoReplies) {
 
                 embed.addFields({
 
-                    name:
-                        `<@${autoReply.targetId}>`,
+                name: `<@${autoReply.targetId}>`,
 
-                    value:
-                        `💬 ${autoReply.reply}\n\n` +
-                        `⏱️ Cooldown: ` +
-                        `${Math.floor(
-                            autoReply.cooldown / 60000
-                        )} minutes`
+                value:
+                    `💬 **Normal Message Reply:**\n` +
+                    `${autoReply.reply || "Not configured"}\n\n` +
+
+                    `📢 **Mention Reply:**\n` +
+                    `${autoReply.mentionReply || "Not configured"}\n\n` +
+
+                    `⏱️ **Cooldown:** 6 Hours`
 
                 });
 

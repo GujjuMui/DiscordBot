@@ -8,14 +8,21 @@ const autoReplySchema = new mongoose.Schema({
         unique: true
     },
 
+    // Reply when the configured user sends a message
     reply: {
         type: String,
-        required: true
+        default: ""
+    },
+
+    // Reply when someone mentions the configured user
+    mentionReply: {
+        type: String,
+        default: ""
     },
 
     cooldown: {
         type: Number,
-        default: 32000000
+        default: 21600000
     },
 
     enabled: {
