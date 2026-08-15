@@ -109,6 +109,9 @@ client.on(Events.InteractionCreate, async interaction => {
    if (interaction.isButton()) {
 
     try {
+        
+        if (await require("./events/giveroleButtonHandler")(interaction))
+            return;
 
         if (await require("./events/editCardButtonHandler")(interaction))
             return;
