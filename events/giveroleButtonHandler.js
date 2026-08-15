@@ -47,28 +47,6 @@ module.exports = async (interaction) => {
 
     }
 
-    const hasDangerousPermission =
-    dangerousPermissions.some(permission =>
-        targetRole.permissions.has(permission)
-    );
-
-if (hasDangerousPermission) {
-
-    await interaction.update({
-
-        content:
-            "❌ **Assignment blocked.**\n\n" +
-            `The role ${targetRole} contains dangerous permissions, ` +
-            "so HORNET will not assign it.",
-
-        components: []
-
-    });
-
-    return true;
-
-}
-
     // =========================
     // CANCEL
     // =========================
@@ -105,12 +83,42 @@ if (hasDangerousPermission) {
             targetRoleId
         );
 
+    // =========================
+    // ROLE EXISTENCE CHECK
+    // =========================
+
     if (!sourceRole || !targetRole) {
 
         await interaction.update({
 
             content:
                 "❌ One of the roles no longer exists.",
+
+            components: []
+
+        });
+
+        return true;
+
+    }
+
+    // =========================
+    // DANGEROUS PERMISSION CHECK
+    // =========================
+
+    const hasDangerousPermission =
+        dangerousPermissions.some(permission =>
+            targetRole.permissions.has(permission)
+        );
+
+    if (hasDangerousPermission) {
+
+        await interaction.update({
+
+            content:
+                "❌ **Assignment blocked.**\n\n" +
+                `The role ${targetRole} contains dangerous permissions, ` +
+                "so HORNET will not assign it.",
 
             components: []
 
