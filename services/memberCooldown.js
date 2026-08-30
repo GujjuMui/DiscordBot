@@ -1,7 +1,7 @@
 const MemberCooldown = require("../database/MemberCooldown");
 
 const MAX_USES = 5;
-const COOLDOWN = 2 * 60 * 60 * 1000; // 2 hours
+const COOLDOWN = 12 * 60 * 60 * 1000; // 12 hours
 
 module.exports = async (userId) => {
 

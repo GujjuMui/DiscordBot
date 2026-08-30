@@ -22,7 +22,7 @@ const autoReplySchema = new mongoose.Schema({
 
     cooldown: {
         type: Number,
-        default: 21600000
+        default: 43200000
     },
 
     enabled: {

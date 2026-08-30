@@ -5,9 +5,9 @@ const settings = require("../config/settings");
 module.exports = async member => {
 
     const onboardingChannel =
-        member.guild.channels.cache.get(
-            settings.channels.onboarding
-        );
+    await member.guild.channels.fetch(
+        settings.channels.onboarding
+    ).catch(() => null);
 
     if (!onboardingChannel) {
 
@@ -21,9 +21,9 @@ module.exports = async member => {
     }
 
     const rulesChannel =
-        member.guild.channels.cache.get(
-            settings.channels.serverRules
-        );
+    await member.guild.channels.fetch(
+        settings.channels.serverRules
+    ).catch(() => null);
 
     const verificationChannel =
         member.guild.channels.cache.find(
@@ -32,14 +32,14 @@ module.exports = async member => {
         );
 
     const welcomeChannel =
-        member.guild.channels.cache.get(
-            settings.channels.main_welcome
-    );
+    await member.guild.channels.fetch(
+        settings.channels.main_welcome
+    ).catch(() => null);
 
     const supportChannel =
-        member.guild.channels.cache.get(
-            settings.channels.serverSupport
-        );
+    await member.guild.channels.fetch(
+        settings.channels.serverSupport
+    ).catch(() => null);
 
     const rulesMention =
         rulesChannel

@@ -174,7 +174,7 @@ module.exports = {
 
                         {
                             name: "Cooldown",
-                            value: "6 Hours",
+                            value: "12 Hours",
                             inline: true
                         },
 
@@ -310,7 +310,7 @@ module.exports = {
                     `📢 **Mention Reply:**\n` +
                     `${autoReply.mentionReply || "Not configured"}\n\n` +
 
-                    `⏱️ **Cooldown:** 6 Hours`
+                    `⏱️ **Cooldown:** 12 Hours`
 
                 });
 
