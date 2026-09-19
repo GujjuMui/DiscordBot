@@ -4,10 +4,15 @@ const cloudinary = require("./cloudinary");
 
 module.exports = async function saveImage(attachment, folder, fileName) {
 
+    if (!attachment?.url) {
+        throw new Error("Image attachment URL is missing.");
+    }
+
     const response = await fetch(attachment.url);
 
-    if (!response.ok)
-        throw new Error("Failed to download image.");
+    if (!response.ok) {
+        throw new Error(`Failed to download image (HTTP ${response.status}).`);
+    }
 
     const buffer = Buffer.from(
         await response.arrayBuffer()
