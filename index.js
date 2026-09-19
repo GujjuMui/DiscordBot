@@ -88,6 +88,7 @@ async function replyWithError(interaction) {
         }
     } catch (error) {
         logError("ERROR RESPONSE FAILED", error);
+        throw error;
     }
 }
 
