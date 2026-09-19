@@ -1,4 +1,3 @@
-const Card = require("./database/Card");
 const {
     Client,
     GatewayIntentBits,
@@ -9,11 +8,12 @@ const {
 
 const fs = require("fs");
 const path = require("path");
-const settings = require("./config/settings");
-const clanButtonHandler = require("./events/clanButtonHandler");
-
 const config = require("./config/config");
 const connectMongo = require("./database/mongo");
+const checkPermission = require("./utils/checkPermission");
+const checkAdminPermission = require("./utils/checkAdminPermission");
+const trustedCommands = require("./config/protectedCommands");
+const adminCommands = require("./config/adminCommands");
 
 const client = new Client({
     intents: [
@@ -23,6 +23,73 @@ const client = new Client({
         GatewayIntentBits.MessageContent
     ]
 });
+
+client.commands = new Collection();
+
+const handlerFiles = {
+    button: [
+        "giveroleButtonHandler",
+        "editCardButtonHandler",
+        "editArtButtonHandler",
+        "deleteArtButtonHandler",
+        "verificationButtonHandler",
+        "clanButtonHandler",
+        "tryoutButtonHandler",
+        "categoryMenuButtonHandler",
+        "galleryButtonHandler",
+        "selfRoleHandler"
+    ],
+    select: [
+        "helpMenuHandler",
+        "linkSelectHandler",
+        "gallerySelectHandler",
+        "selfRoleHandler",
+        "selectMenuHandler"
+    ],
+    modal: [
+        "editCardModalHandler",
+        "verificationModalHandler",
+        "editArtModalHandler",
+        "tryoutModalHandler"
+    ]
+};
+
+const handlerCache = new Map();
+
+function getHandler(name) {
+    if (!handlerCache.has(name)) {
+        handlerCache.set(name, require(path.join(__dirname, "events", name)));
+    }
+    return handlerCache.get(name);
+}
+
+async function runHandlers(names, interaction) {
+    for (const name of names) {
+        if (await getHandler(name)(interaction)) return true;
+    }
+    return false;
+}
+
+function logError(label, error) {
+    console.error("========== " + label + " ==========");
+    console.error(error?.stack || error);
+    console.error("=".repeat(label.length + 20));
+}
+
+async function replyWithError(interaction) {
+    try {
+        if (interaction.deferred) {
+            await interaction.editReply({ content: "❌ Something went wrong." });
+        } else if (!interaction.replied) {
+            await interaction.reply({
+                content: "❌ Something went wrong.",
+                flags: MessageFlags.Ephemeral
+            });
+        }
+    } catch (error) {
+        logError("ERROR RESPONSE FAILED", error);
+    }
+}
 
 // Collection to store commands
 client.commands = new Collection();
@@ -105,186 +172,44 @@ client.on(Events.MessageCreate, async message => {
 });
 
 client.on(Events.InteractionCreate, async interaction => {
-
-    // Preserve existing routing and local error responses while also containing
-    // select-menu, modal, and permission-check failures.
     try {
-
-   if (interaction.isButton()) {
-
-    try {
-        
-        if (await require("./events/giveroleButtonHandler")(interaction))
+        if (interaction.isButton()) {
+            await runHandlers(handlerFiles.button, interaction);
             return;
-
-        if (await require("./events/editCardButtonHandler")(interaction))
-            return;
-
-        if (await require("./events/editArtButtonHandler")(interaction))
-            return;
-
-        if (await require("./events/deleteArtButtonHandler")(interaction))
-            return;
-
-        if (await require("./events/verificationButtonHandler")(interaction))
-            return;
-
-        if (await require("./events/clanButtonHandler")(interaction))
-            return;
-
-        if (await require("./events/tryoutButtonHandler")(interaction))
-            return;
-
-        if (await require("./events/categoryMenuButtonHandler")(interaction))
-            return;
-
-        if (await require("./events/galleryButtonHandler")(interaction))
-            return;
-
-        if (await require("./events/selfRoleHandler")(interaction))
-            return;
-
-    } catch (err) {
-
-        console.error("========== BUTTON ERROR ==========");
-        console.error(err);
-        console.error("==================================");
-
-        if (!interaction.replied && !interaction.deferred) {
-
-            await interaction.reply({
-                content: "❌" + " Something went wrong.",
-                flags: MessageFlags.Ephemeral
-            }).catch(() => {});
-
         }
 
-        return;
-
-    }
-
-}
-
- if (interaction.isStringSelectMenu()) {
-
-    if (await require("./events/helpMenuHandler")(interaction))
-        return;
-
-    if (await require("./events/linkSelectHandler")(interaction))
-        return;
-
-    if (await require("./events/gallerySelectHandler")(interaction))
-        return;
-
-    if (await require("./events/selfRoleHandler")(interaction))
-    return;
-
-    // Await here so rejected promises reach the interaction error handler.
-    return await require("./events/selectMenuHandler")(interaction);
-
-}
-
-    if (interaction.isModalSubmit()) {
-
-    if (await require("./events/editCardModalHandler")(interaction)) return;
-
-    if (await require("./events/verificationModalHandler")(interaction))
-    return;
-
-    if (await require("./events/editArtModalHandler")(interaction)) return;
-
-    if (await require("./events/tryoutModalHandler")(interaction))
+        if (interaction.isStringSelectMenu()) {
+            await runHandlers(handlerFiles.select, interaction);
             return;
-}
+        }
 
+        if (interaction.isModalSubmit()) {
+            await runHandlers(handlerFiles.modal, interaction);
+            return;
+        }
 
-    if (!interaction.isChatInputCommand()) return;
+        if (!interaction.isChatInputCommand()) return;
 
-    const command = client.commands.get(interaction.commandName);
+        const command = client.commands.get(interaction.commandName);
+        if (!command) return;
 
-    if (!command) return;
+        if (
+            trustedCommands.includes(interaction.commandName) &&
+            !(await checkPermission(interaction))
+        ) return;
 
-const checkPermission = require("./utils/checkPermission");
-const checkAdminPermission = require("./utils/checkAdminPermission");
-
-const trustedCommands = require("./config/protectedCommands");
-const adminCommands = require("./config/adminCommands");
-
-if (
-
-    trustedCommands.includes(interaction.commandName) &&
-
-    !(await checkPermission(interaction))
-
-) return;
-
-if (
-
-    adminCommands.includes(interaction.commandName) &&
-
-    !(await checkAdminPermission(interaction))
-
-) return;
-
-    try {
+        if (
+            adminCommands.includes(interaction.commandName) &&
+            !(await checkAdminPermission(interaction))
+        ) return;
 
         await command.execute(interaction);
-
     } catch (error) {
-
-        console.error("========== REAL ERROR ==========");
-        console.error(error.stack || error);
-        console.error("===============================");
-
-        try {
-
-           if (interaction.deferred) {
-
-    await interaction.editReply({
-        content: "❌" + " Something went wrong."
-    });
-
-} else if (!interaction.replied) {
-
-    await interaction.reply({
-        content: "❌" + " Something went wrong.",
-        flags: MessageFlags.Ephemeral
-    });
-
-}
-
-        } catch (e) {
-
-            console.error("Failed to send error message:");
-            console.error(e);
-
-        }
-
+        logError("INTERACTION ERROR", error);
+        await replyWithError(interaction);
     }
+});
 
-    } catch (error) {
-        console.error("========== INTERACTION ERROR ==========");
-        console.error(error);
-        console.error("=======================================");
-
-        try {
-            if (interaction.deferred) {
-                await interaction.editReply({
-                    content: "❌" + " Something went wrong."
-                });
-            } else if (!interaction.replied) {
-                await interaction.reply({
-                    content: "❌" + " Something went wrong.",
-                    flags: MessageFlags.Ephemeral
-                });
-            }
-        } catch (replyError) {
-            console.error("Failed to send error message:");
-            console.error(replyError);
-        }
-    }
-
-} );
 
 // Register diagnostics before starting asynchronous database/login work.
 process.on("unhandledRejection", (reason) => {
