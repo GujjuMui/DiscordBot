@@ -171,8 +171,8 @@ for (const state of [{}, { deferred: true }, { replied: true }]) {
         const bot = await loadBot({ handlerError: 'giveroleButtonHandler' });
         const input = interaction('button', state);
         await bot.listeners.get('interaction')(input);
-        const expected = state.replied ? [] : state.deferred
-            ? [{ method: 'editReply', content: '❌ Something went wrong.' }]
+        const expected = state.replied || state.deferred
+            ? []
             : [{ method: 'reply', content: '❌ Something went wrong.', flags: 64 }];
         assert.deepEqual(plain(input.responses), expected);
     });
@@ -222,7 +222,7 @@ for (const deferred of [false, true]) {
         const input = interaction('select', { deferred });
         input.reply = input.editReply = async () => { throw new Error('response unavailable'); };
         await bot.listeners.get('interaction')(input);
-        assert.ok(bot.errors.some(args => args[0] === 'ERROR RESPONSE FAILED'));
+        assert.ok(bot.errors.some(args => args[0] === 'Failed to send error message:'));
     });
 }
 
