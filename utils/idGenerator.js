@@ -1,45 +1,35 @@
 const Card = require("../database/Card");
 const Art = require("../database/Art");
 
-async function generateCardId() {
-
-    const lastCard = await Card.findOne()
-        .sort({ cardId: -1 });
+async function generateNextId(Model, field, prefix) {
+    const lastDocument = await Model.findOne({
+        [field]: new RegExp("^" + prefix + "-\\d+$", "i")
+    })
+        .sort({ [field]: -1 })
+        .select({ [field]: 1 })
+        .lean();
 
     let nextNumber = 1;
 
-    if (lastCard) {
-
-        nextNumber =
-            parseInt(lastCard.cardId.split("-")[1], 10) + 1;
-
+    if (lastDocument?.[field]) {
+        const match = String(lastDocument[field]).match(/-(\d+)$/);
+        if (match) {
+            nextNumber = Number.parseInt(match[1], 10) + 1;
+        }
     }
 
-    return `SFA-${String(nextNumber).padStart(6, "0")}`;
+    return prefix + "-" + String(nextNumber).padStart(6, "0");
+}
 
+async function generateCardId() {
+    return generateNextId(Card, "cardId", "SFA");
 }
 
 async function generateArtId() {
-
-    const lastArt = await Art.findOne()
-        .sort({ artId: -1 });
-
-    let nextNumber = 1;
-
-    if (lastArt) {
-
-        nextNumber =
-            parseInt(lastArt.artId.split("-")[1], 10) + 1;
-
-    }
-
-    return `ART-${String(nextNumber).padStart(6, "0")}`;
-
+    return generateNextId(Art, "artId", "ART");
 }
 
 module.exports = {
-
     generateCardId,
     generateArtId
-
 };
