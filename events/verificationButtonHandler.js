@@ -122,9 +122,6 @@ module.exports = async interaction => {
 
     );
 
-    console.log("Showing verification modal...");
-    console.log("Replied:", interaction.replied);
-    console.log("Deferred:", interaction.deferred);
 
     await interaction.showModal(modal);
 

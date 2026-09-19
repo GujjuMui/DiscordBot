@@ -47,8 +47,6 @@ module.exports = async (interaction) => {
             categories: true
         });
 
-console.log("Opened ART gallery with key:", interaction.message.id);
-console.log(gallery.get(interaction.message.id));
 
         const { embed, files } = createArtEmbed(
             arts[0],
@@ -101,8 +99,6 @@ console.log(gallery.get(interaction.message.id));
             categories: true
         });
 
-console.log("Opened CARD gallery with key:", interaction.message.id);
-console.log(gallery.get(interaction.message.id));
 
         const { embed, files } = createCardEmbed(
             cards[0],

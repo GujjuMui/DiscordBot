@@ -62,17 +62,9 @@ module.exports = {
 
     async execute(interaction) {
 
-        console.log(
-            "AUTOREPLY EXECUTE:",
-            interaction.commandName,
-            interaction.options.getSubcommand()
-        );
-
         await interaction.deferReply({
             flags: MessageFlags.Ephemeral
         });
-
-        console.log("AUTOREPLY DEFERRED");
 
         // Owner Only
         if (
