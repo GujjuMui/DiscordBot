@@ -54,7 +54,8 @@ async function loadBot(options = {}) {
         };
         if (id === 'path') return path;
         if (id === './config/config') return { token: 'test-token' };
-        if (id === './config/settings' || id === './database/Card') return {};
+        if (id === './database/Card') return {};
+        if (id === './config/settings') return {};
         if (id === './database/mongo') return async () => {
             diagnosticsReadyAtConnect = processListeners.has('unhandledRejection') && processListeners.has('uncaughtException');
             calls.push('mongo');
