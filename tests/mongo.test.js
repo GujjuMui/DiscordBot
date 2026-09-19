@@ -51,3 +51,13 @@ test('connection failure retains the failure message and exit status', async () 
     assert.deepEqual(db.exits, [1]);
     assert.ok(!db.logs.some(args => args[0] === '✅ Connected to MongoDB'));
 });
+
+for (const failure of [undefined, new Error('connection refused')]) {
+    test(`does not print the connection URI on ${failure ? 'failure' : 'success'}`, async () => {
+        const db = loadMongo(failure);
+        await db.connect();
+        const output = [...db.logs, ...db.errors].flat().map(String).join('\n');
+        assert.ok(!output.includes(db.uri));
+        assert.ok(!output.includes('test-password'));
+    });
+}
