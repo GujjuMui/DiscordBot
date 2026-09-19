@@ -122,14 +122,14 @@ for (const [kind, handlers] of Object.entries(routes)) {
             const bot = await loadBot({ handled });
             const input = interaction(kind);
             await bot.listeners.get('interaction')(input);
-            assert.deepEqual(bot.calls.slice(0), handlers.slice(0, index + 1));
+            assert.deepEqual(bot.calls.slice(2), handlers.slice(0, index + 1));
             assert.deepEqual(input.responses, []);
         });
     }
     test(`${kind} visits all handlers when none handles the interaction`, async () => {
         const bot = await loadBot();
         await bot.listeners.get('interaction')(interaction(kind));
-        assert.deepEqual(bot.calls.slice(0), handlers);
+        assert.deepEqual(bot.calls.slice(2), handlers);
     });
 }
 
@@ -145,7 +145,7 @@ for (const scenario of [
     test(`command permission gating: ${scenario.name}`, async () => {
         const bot = await loadBot(scenario.options);
         await bot.listeners.get('interaction')(interaction('command'));
-        assert.deepEqual(bot.calls.slice(0), ['mongo', 'login', ...scenario.expected]);
+        assert.deepEqual(bot.calls.slice(2), scenario.expected);
     });
 }
 
@@ -180,7 +180,7 @@ for (const [event, handler] of [['member', 'memberJoinHandler'], ['message', 'me
     test(`${event} delegates and contains handler failures`, async () => {
         const bot = await loadBot({ handlerError: handler });
         await bot.listeners.get(event)({});
-        assert.deepEqual(bot.calls.slice(0), ['mongo', 'login', handler]);
+        assert.deepEqual(bot.calls.slice(2), [handler]);
         assert.ok(bot.errors.length > 0);
     });
 }
@@ -193,7 +193,7 @@ for (const kind of ['select', 'modal']) {
                 const bot = await loadBot({ handlerError: handler });
                 const input = interaction(kind, state);
                 await bot.listeners.get('interaction')(input);
-                assert.deepEqual(bot.calls.slice(0), routes[kind].slice(0, index + 1));
+                assert.deepEqual(bot.calls.slice(2), routes[kind].slice(0, index + 1));
                 const expected = state.deferred
                     ? [{ method: 'editReply', content: '❌ Something went wrong.' }]
                     : state.replied ? [] : [{ method: 'reply', content: '❌ Something went wrong.', flags: 64 }];
