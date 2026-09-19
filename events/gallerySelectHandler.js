@@ -1,6 +1,5 @@
 const Art = require("../database/Art");
 const Card = require("../database/Card");
-const settings = require("../config/settings");
 const gallery = require("../services/galleryV2");
 
 const {
