@@ -106,6 +106,10 @@ client.on(Events.MessageCreate, async message => {
 
 client.on(Events.InteractionCreate, async interaction => {
 
+    // Preserve existing routing and local error responses while also containing
+    // select-menu, modal, and permission-check failures.
+    try {
+
    if (interaction.isButton()) {
 
     try {
@@ -175,7 +179,8 @@ client.on(Events.InteractionCreate, async interaction => {
     if (await require("./events/selfRoleHandler")(interaction))
     return;
 
-    return require("./events/selectMenuHandler")(interaction);
+    // Await here so rejected promises reach the interaction error handler.
+    return await require("./events/selectMenuHandler")(interaction);
 
 }
 
@@ -257,15 +262,32 @@ if (
 
     }
 
+    } catch (error) {
+        console.error("========== INTERACTION ERROR ==========");
+        console.error(error);
+        console.error("=======================================");
+
+        try {
+            if (interaction.deferred) {
+                await interaction.editReply({
+                    content: "❌" + " Something went wrong."
+                });
+            } else if (!interaction.replied) {
+                await interaction.reply({
+                    content: "❌" + " Something went wrong.",
+                    flags: MessageFlags.Ephemeral
+                });
+            }
+        } catch (replyError) {
+            console.error("Failed to send error message:");
+            console.error(replyError);
+        }
+    }
+
 } );
 
-(async () => {
-
-    await connectMongo();
-
-    await client.login(config.token);
-
-    process.on("unhandledRejection", (reason) => {
+// Register diagnostics before starting asynchronous database/login work.
+process.on("unhandledRejection", (reason) => {
 
     console.error("========== UNHANDLED REJECTION ==========");
     console.error(reason);
@@ -281,4 +303,16 @@ process.on("uncaughtException", (err) => {
 
 });
 
-})();
+(async () => {
+
+    await connectMongo();
+
+    await client.login(config.token);
+
+})().catch((error) => {
+    console.error("========== STARTUP ERROR ==========");
+    console.error(error);
+    console.error("===================================");
+    // A failed login must not leave an idle process with an open MongoDB socket.
+    process.exit(1);
+});
