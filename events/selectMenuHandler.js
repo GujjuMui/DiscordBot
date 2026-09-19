@@ -1,5 +1,5 @@
 const Art = require("../database/Art");
-const settings = require("../config/settings");
+const { MessageFlags } = require("discord.js");
 const gallery = require("../services/galleryService");
 
 const {

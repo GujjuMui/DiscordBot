@@ -1,230 +1,120 @@
 const settings = require("../config/settings");
 const logger = require("../utils/logger");
 
-const colorRoles = Object.values(settings.roles.color);
-const factionRoles = Object.values(settings.roles.faction);
+const ROLE_GROUPS = {
+    selfroles_color: {
+        roles: Object.values(settings.roles.color),
+        logType: "SELFROLE_COLOR",
+        fieldName: "Role",
+        label: "color role"
+    },
+    selfroles_faction: {
+        roles: Object.values(settings.roles.faction),
+        logType: "SELFROLE_FACTION",
+        fieldName: "Faction",
+        label: "faction"
+    }
+};
+
 const pingRoles = Object.values(settings.roles.ping);
 
-module.exports = async interaction => {
-
-    const validIds = [
-        "selfroles_color",
-        "selfroles_faction",
-        "selfroles_ping",
-        "selfroles_remove_ping"
-    ];
-
-    if (!validIds.includes(interaction.customId))
-        return false;
-
+async function updateExclusiveRoles(interaction, config) {
+    const selectedRole = interaction.values[0];
     const member = interaction.member;
 
-    if (!member)
-        return true;
-
-    await interaction.deferReply({
-
-    ephemeral: true
-
-});
-
-    let replyMessage = null;
-
-    // =====================================
-    // COLOR ROLES
-    // =====================================
-
-    if (interaction.customId === "selfroles_color") {
-
-    const selectedRole = interaction.values[0];
-
-    // Remove all current color roles
-    const rolesToRemove = colorRoles.filter(roleId =>
-        member.roles.cache.has(roleId)
+    const rolesToRemove = config.roles.filter(roleId =>
+        roleId !== selectedRole && member.roles.cache.has(roleId)
     );
 
     if (rolesToRemove.length) {
-
         await member.roles.remove(rolesToRemove);
-
     }
 
-    // Add the selected color role
-    if (!member.roles.cache.has(selectedRole)) {
-
-        await member.roles.add(selectedRole);
-
-        await logger({
-    guild: interaction.guild,
-    type: "SELFROLE_COLOR",
-    user: interaction.user,
-    fields: [
-        {
-            name: "Role",
-            value: `<@&${selectedRole}>`
-        }
-    ]
-});
-
-    }
-
-    await interaction.followUp({
-
-    content: `${"✅"} Your color role has been updated to <@&${selectedRole}>.`,
-
-    ephemeral: true
-
-});
-
-return true;
-
-}
-
-// =====================================
-// FACTION ROLES
-// =====================================
-
-if (interaction.customId === "selfroles_faction") {
-
-    const selectedRole = interaction.values[0];
-
-    // Remove all current faction roles
-    const rolesToRemove = factionRoles.filter(roleId =>
-        member.roles.cache.has(roleId)
-    );
-
-    if (rolesToRemove.length) {
-
-        await member.roles.remove(rolesToRemove);
-
-    }
-
-    // Add selected faction role
-    if (!member.roles.cache.has(selectedRole)) {
+    if (member.roles.cache.has(selectedRole)) return;
 
     await member.roles.add(selectedRole);
 
     await logger({
-    guild: interaction.guild,
-    type: "SELFROLE_FACTION",
-    user: interaction.user,
-    fields: [
-        {
-            name: "Faction",
+        guild: interaction.guild,
+        type: config.logType,
+        user: interaction.user,
+        fields: [{
+            name: config.fieldName,
             value: `<@&${selectedRole}>`
-        }
-    ]
-});
-
-        
-
-    }
-
-    await interaction.followUp({
-
-    content: `${"✅"} Your faction has been updated to <@&${selectedRole}>.`,
-
-    ephemeral: true
-
-});
-
-return true;
-
+        }]
+    });
 }
 
-// =====================================
-// PING ROLES
-// =====================================
-
-if (interaction.customId === "selfroles_ping") {
-
+async function updatePingRoles(interaction) {
+    const member = interaction.member;
     const selectedRoles = interaction.values;
 
-    // Remove ping roles that were unselected
-    for (const roleId of pingRoles) {
+    const rolesToRemove = pingRoles.filter(roleId =>
+        member.roles.cache.has(roleId) && !selectedRoles.includes(roleId)
+    );
 
-        if (
-            member.roles.cache.has(roleId) &&
-            !selectedRoles.includes(roleId)
-        ) {
+    const rolesToAdd = selectedRoles.filter(
+        roleId => !member.roles.cache.has(roleId)
+    );
 
-            await member.roles.remove(roleId);
+    if (rolesToRemove.length) await member.roles.remove(rolesToRemove);
+    if (rolesToAdd.length) await member.roles.add(rolesToAdd);
 
-        }
-
-    }
-
-    // Add newly selected ping roles
-for (const roleId of selectedRoles) {
-
-    if (!member.roles.cache.has(roleId)) {
-
-        await member.roles.add(roleId);
-
-    }
-
-}
-
-await logger({
-    guild: interaction.guild,
-    type: "SELFROLE_PING",
-    user: interaction.user,
-    fields: [
-        {
+    await logger({
+        guild: interaction.guild,
+        type: "SELFROLE_PING",
+        user: interaction.user,
+        fields: [{
             name: "Selected Roles",
             value: selectedRoles.length
                 ? selectedRoles.map(id => `<@&${id}>`).join("\n")
                 : "None"
-        }
-    ]
-});
-
-    await interaction.followUp({
-
-    content: "✅" + " Your notification roles have been updated.",
-
-    ephemeral: true
-
-});
-
-return true;
-
+        }]
+    });
 }
 
-// =====================================
-// REMOVE ALL PING ROLES
-// =====================================
+module.exports = async interaction => {
+    const config = ROLE_GROUPS[interaction.customId];
+    const isPing = interaction.customId === "selfroles_ping";
+    const isPingRemove = interaction.customId === "selfroles_remove_ping";
 
-if (interaction.customId === "selfroles_remove_ping") {
+    if (!config && !isPing && !isPingRemove) return false;
+    if (!interaction.member) return true;
+
+    await interaction.deferReply({ ephemeral: true });
+
+    if (config) {
+        await updateExclusiveRoles(interaction, config);
+        await interaction.editReply({
+            content: `✅ Your ${config.label} has been updated to <@&${interaction.values[0]}>.`
+        });
+        return true;
+    }
+
+    if (isPing) {
+        await updatePingRoles(interaction);
+        await interaction.editReply({
+            content: "✅ Your notification roles have been updated."
+        });
+        return true;
+    }
 
     const rolesToRemove = pingRoles.filter(roleId =>
-        member.roles.cache.has(roleId)
+        interaction.member.roles.cache.has(roleId)
     );
 
     if (rolesToRemove.length) {
-
-        await member.roles.remove(rolesToRemove);
-
+        await interaction.member.roles.remove(rolesToRemove);
         await logger({
-    guild: interaction.guild,
-    type: "SELFROLE_PING_REMOVE",
-    user: interaction.user
-});
-
+            guild: interaction.guild,
+            type: "SELFROLE_PING_REMOVE",
+            user: interaction.user
+        });
     }
 
-    await interaction.followUp({
+    await interaction.editReply({
+        content: "🗑️ All ping roles have been removed."
+    });
 
-    content: `${"🗑️"} All ping roles have been removed.`,
-
-    ephemeral: true
-
-});
-
-return true;
-
-}
-
-    return false;
-
+    return true;
 };

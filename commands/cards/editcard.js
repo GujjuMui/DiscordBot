@@ -1,5 +1,3 @@
-console.log("EDITCARD EXECUTED");
-
 const {
     SlashCommandBuilder,
     PermissionFlagsBits,

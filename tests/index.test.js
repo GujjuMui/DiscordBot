@@ -54,7 +54,8 @@ async function loadBot(options = {}) {
         };
         if (id === 'path') return path;
         if (id === './config/config') return { token: 'test-token' };
-        if (id === './config/settings' || id === './database/Card') return {};
+        if (id === './database/Card') return {};
+        if (id === './config/settings') return {};
         if (id === './database/mongo') return async () => {
             diagnosticsReadyAtConnect = processListeners.has('unhandledRejection') && processListeners.has('uncaughtException');
             calls.push('mongo');
@@ -86,6 +87,11 @@ async function loadBot(options = {}) {
     await new Promise(resolve => setImmediate(resolve));
     return { listeners, calls, errors, client, exits, processListeners, diagnosticsReadyAtConnect };
 }
+
+async function invokeEvent(bot, eventName, input) {
+    return bot.listeners.get(eventName)(input);
+}
+
 
 function interaction(kind, state = {}) {
     const responses = [];
@@ -165,7 +171,9 @@ for (const state of [{}, { deferred: true }, { replied: true }]) {
         const bot = await loadBot({ handlerError: 'giveroleButtonHandler' });
         const input = interaction('button', state);
         await bot.listeners.get('interaction')(input);
-        const expected = state.deferred || state.replied ? [] : [{ method: 'reply', content: '❌ Something went wrong.', flags: 64 }];
+        const expected = state.replied || state.deferred
+            ? []
+            : [{ method: 'reply', content: '❌ Something went wrong.', flags: 64 }];
         assert.deepEqual(plain(input.responses), expected);
     });
 }
