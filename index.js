@@ -92,7 +92,7 @@ async function replyWithError(interaction) {
 }
 
 // Collection to store commands
-client.commands = new Collection();
+
 
 // Load commands from all folders
 const foldersPath = path.join(__dirname, "commands");
