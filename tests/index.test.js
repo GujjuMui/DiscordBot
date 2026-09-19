@@ -88,6 +88,11 @@ async function loadBot(options = {}) {
     return { listeners, calls, errors, client, exits, processListeners, diagnosticsReadyAtConnect };
 }
 
+async function invokeEvent(bot, eventName, input) {
+    return bot.listeners.get(eventName)(input);
+}
+
+
 function interaction(kind, state = {}) {
     const responses = [];
     return {
