@@ -58,7 +58,7 @@ const handlerCache = new Map();
 
 function getHandler(name) {
     if (!handlerCache.has(name)) {
-        handlerCache.set(name, require(path.join(__dirname, "events", name)));
+        handlerCache.set(name, require(`./events/${name}`));
     }
     return handlerCache.get(name);
 }
@@ -76,9 +76,10 @@ function logError(label, error) {
     console.error("=".repeat(label.length + 20));
 }
 
-async function replyWithError(interaction) {
+async function replyWithError(interaction, respondToDeferred = true) {
     try {
         if (interaction.deferred) {
+            if (!respondToDeferred) return;
             await interaction.editReply({ content: "❌ Something went wrong." });
         } else if (!interaction.replied) {
             await interaction.reply({
@@ -87,8 +88,8 @@ async function replyWithError(interaction) {
             });
         }
     } catch (error) {
-        logError("ERROR RESPONSE FAILED", error);
-        throw error;
+        console.error("Failed to send error message:");
+        console.error(error);
     }
 }
 
@@ -175,7 +176,12 @@ client.on(Events.MessageCreate, async message => {
 client.on(Events.InteractionCreate, async interaction => {
     try {
         if (interaction.isButton()) {
-            await runHandlers(handlerFiles.button, interaction);
+            try {
+                await runHandlers(handlerFiles.button, interaction);
+            } catch (error) {
+                logError("BUTTON ERROR", error);
+                await replyWithError(interaction, false);
+            }
             return;
         }
 
