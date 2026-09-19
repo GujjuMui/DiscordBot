@@ -1,103 +1,50 @@
 const MemberCooldown = require("../database/MemberCooldown");
 
 const MAX_USES = 5;
-const COOLDOWN = 12 * 60 * 60 * 1000; // 12 hours
+const COOLDOWN_MS = 12 * 60 * 60 * 1000;
 
-module.exports = async (userId) => {
-
-    let data = await MemberCooldown.findOne({
-        userId
-    });
+module.exports = async userId => {
+    let data = await MemberCooldown.findOne({ userId });
 
     if (!data) {
-
         data = await MemberCooldown.create({
-
             userId,
-
             uses: 0,
-
-            cooldownUntil: null
-
+            cooldownUntil: null,
         });
-
     }
 
-    // ===========================
-    // Cooldown expired
-    // ===========================
+    const now = new Date();
 
-    if (
-
-        data.cooldownUntil &&
-        data.cooldownUntil <= new Date()
-
-    ) {
-
+    if (data.cooldownUntil && data.cooldownUntil <= now) {
         data.uses = 0;
-
         data.cooldownUntil = null;
-
     }
 
-    // ===========================
-    // Still on cooldown
-    // ===========================
-
-    if (
-
-        data.cooldownUntil &&
-        data.cooldownUntil > new Date()
-
-    ) {
-
-        const remaining =
-            data.cooldownUntil.getTime() - Date.now();
-
-        const hours =
-            Math.floor(remaining / 3600000);
-
-        const minutes =
-            Math.floor((remaining % 3600000) / 60000);
+    if (data.cooldownUntil && data.cooldownUntil > now) {
+        const remainingMs = data.cooldownUntil.getTime() - now.getTime();
+        const hours = Math.floor(remainingMs / 3600000);
+        const minutes = Math.floor((remainingMs % 3600000) / 60000);
 
         return {
-
             allowed: false,
-
             message:
-    `${"⏱️"} You have reached the limit of **${MAX_USES}** member commands.\n\nTry again in **${hours}h ${minutes}m**.`
-
+                `⏱️ You have reached the limit of **${MAX_USES}** member commands.\n\nTry again in **${hours}h ${minutes}m**.`,
+        };
     }
 
-    // ===========================
-    // Count this usage
-    // ===========================
-
-    data.uses++;
+    data.uses += 1;
 
     if (data.uses >= MAX_USES) {
-
-        data.cooldownUntil =
-            new Date(Date.now() + COOLDOWN);
-
+        data.cooldownUntil = new Date(now.getTime() + COOLDOWN_MS);
     }
 
     await data.save();
 
     return {
-
         allowed: true,
-
         uses: data.uses,
-
-        remaining: Math.max(
-            MAX_USES - data.uses,
-            0
-        ),
-
-        cooldownStarted:
-            data.cooldownUntil !== null
-
+        remaining: Math.max(MAX_USES - data.uses, 0),
+        cooldownStarted: data.cooldownUntil !== null,
     };
-
-}};
+};
