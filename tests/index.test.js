@@ -220,7 +220,7 @@ for (const deferred of [false, true]) {
         const input = interaction('select', { deferred });
         input.reply = input.editReply = async () => { throw new Error('response unavailable'); };
         await bot.listeners.get('interaction')(input);
-        assert.ok(bot.errors.some(args => args[0] === 'Failed to send error message:'));
+        assert.ok(bot.errors.some(args => args[0] === 'ERROR RESPONSE FAILED'));
     });
 }
 
