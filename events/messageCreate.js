@@ -2,113 +2,58 @@ const AutoReply = require("../database/AutoReply");
 const cooldown = require("../services/autoReplyCooldown");
 const spamManager = require("../services/spamManager");
 
-module.exports = async (message) => {
+async function sendAutoReply(message, text, key, cooldownMs) {
+    if (!text || !cooldown.canReply(key, cooldownMs)) {
+        return false;
+    }
 
-    // Ignore bots
-    if (message.author.bot) return;
+    await message.reply(text);
+    cooldown.update(key);
+    return true;
+}
 
-    // Ignore DMs
-    if (!message.guild) return;
-
-    // =========================
-    // SPAM AUTO-STOP
-    // =========================
+module.exports = async message => {
+    if (message.author.bot || !message.guild) return;
 
     if (spamManager.isTargetReply(message)) {
-
         console.log(
             `🛑 Spam stopped because ${message.author.tag} replied in the spam channel.`
         );
-
         spamManager.stop();
-
         return;
-
     }
 
-    // =========================
-    // MENTION AUTO REPLY
-    // =========================
+    for (const [userId] of message.mentions.users) {
+        if (userId === message.author.id) continue;
 
-    const mentionedUsers = message.mentions.users;
+        const autoReply = await AutoReply.findOne({
+            targetId: userId,
+            enabled: true
+        });
 
-    if (mentionedUsers.size > 0) {
+        if (!autoReply?.mentionReply) continue;
 
-        for (const [userId] of mentionedUsers) {
+        const sent = await sendAutoReply(
+            message,
+            autoReply.mentionReply,
+            `mention:${userId}`,
+            autoReply.cooldown
+        );
 
-            // Don't trigger if the mentioned user is the person
-            // who sent the message
-            if (userId === message.author.id) continue;
-
-            const mentionedAutoReply =
-                await AutoReply.findOne({
-
-                    targetId: userId,
-
-                    enabled: true
-
-                });
-
-            if (!mentionedAutoReply) continue;
-
-            // No mention reply configured
-            if (!mentionedAutoReply.mentionReply) continue;
-
-            const cooldownKey =
-                `mention:${userId}`;
-
-            if (!cooldown.canReply(
-                cooldownKey,
-                mentionedAutoReply.cooldown
-            )) {
-
-                continue;
-
-            }
-
-            await message.reply(
-                mentionedAutoReply.mentionReply
-            );
-
-            cooldown.update(cooldownKey);
-
-            // Only one automatic mention reply per message
-            break;
-
-        }
-
+        if (sent) break;
     }
-
-    // =========================
-    // NORMAL MESSAGE AUTO REPLY
-    // =========================
 
     const autoReply = await AutoReply.findOne({
-
         targetId: message.author.id,
-
         enabled: true
-
     });
 
-    if (!autoReply) return;
+    if (!autoReply?.reply) return;
 
-// No normal-message reply configured
-if (!autoReply.reply) return;
-
-if (!cooldown.canReply(
-    `normal:${message.author.id}`,
-    autoReply.cooldown
-)) {
-
-    return;
-
-}
-
-await message.reply(autoReply.reply);
-
-cooldown.update(
-    `normal:${message.author.id}`
-);
-
+    await sendAutoReply(
+        message,
+        autoReply.reply,
+        `normal:${message.author.id}`,
+        autoReply.cooldown
+    );
 };
