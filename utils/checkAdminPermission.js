@@ -1,5 +1,4 @@
 const owner = require("../config/owner");
-const settings = require("../config/settings");
 const { MessageFlags } = require("discord.js");
 
 module.exports = async (interaction) => {
