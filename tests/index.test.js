@@ -171,7 +171,9 @@ for (const state of [{}, { deferred: true }, { replied: true }]) {
         const bot = await loadBot({ handlerError: 'giveroleButtonHandler' });
         const input = interaction('button', state);
         await bot.listeners.get('interaction')(input);
-        const expected = state.deferred || state.replied ? [] : [{ method: 'reply', content: '❌ Something went wrong.', flags: 64 }];
+        const expected = state.replied ? [] : state.deferred
+            ? [{ method: 'editReply', content: '❌ Something went wrong.' }]
+            : [{ method: 'reply', content: '❌ Something went wrong.', flags: 64 }];
         assert.deepEqual(plain(input.responses), expected);
     });
 }
