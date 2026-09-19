@@ -18,8 +18,13 @@ async function loadBot(options = {}) {
     const listeners = new Map();
     const calls = [];
     const errors = [];
+    const exits = [];
     const processListeners = new Map();
-    const processMock = { on: (event, handler) => processListeners.set(event, handler), exitCode: undefined };
+    let diagnosticsReadyAtConnect = false;
+    const processMock = {
+        on: (event, handler) => processListeners.set(event, handler),
+        exit: code => exits.push(code)
+    };
     const command = { data: { name: 'sample' }, execute: async interaction => {
         calls.push('execute');
         assert.equal(interaction.commandName, 'sample');
@@ -35,7 +40,6 @@ async function loadBot(options = {}) {
             calls.push('login');
             if (options.loginError) throw new Error('login failed');
         }
-        destroy() { calls.push('destroy'); }
     }
     function mockRequire(id) {
         if (id === 'discord.js') return {
@@ -52,6 +56,7 @@ async function loadBot(options = {}) {
         if (id === './config/config') return { token: 'test-token' };
         if (id === './config/settings' || id === './database/Card') return {};
         if (id === './database/mongo') return async () => {
+            diagnosticsReadyAtConnect = processListeners.has('unhandledRejection') && processListeners.has('uncaughtException');
             calls.push('mongo');
             if (options.mongoError) throw new Error('mongo failed');
         };
@@ -79,7 +84,7 @@ async function loadBot(options = {}) {
         console: { log() {}, clear() {}, error: (...args) => errors.push(args) }
     }, { filename: 'index.js' });
     await new Promise(resolve => setImmediate(resolve));
-    return { listeners, calls, errors, client, processMock, processListeners };
+    return { listeners, calls, errors, client, exits, processListeners, diagnosticsReadyAtConnect };
 }
 
 function interaction(kind, state = {}) {
@@ -171,5 +176,59 @@ for (const [event, handler] of [['member', 'memberJoinHandler'], ['message', 'me
         await bot.listeners.get(event)({});
         assert.deepEqual(bot.calls.slice(2), [handler]);
         assert.ok(bot.errors.length > 0);
+    });
+}
+
+// New failure-path regressions. These intentionally extend error handling only.
+for (const kind of ['select', 'modal']) {
+    for (const [index, handler] of routes[kind].entries()) {
+        for (const state of [{}, { deferred: true }, { replied: true }]) {
+            test(`${kind} contains ${handler} rejection: ${JSON.stringify(state)}`, async () => {
+                const bot = await loadBot({ handlerError: handler });
+                const input = interaction(kind, state);
+                await bot.listeners.get('interaction')(input);
+                assert.deepEqual(bot.calls.slice(2), routes[kind].slice(0, index + 1));
+                const expected = state.deferred
+                    ? [{ method: 'editReply', content: '❌ Something went wrong.' }]
+                    : state.replied ? [] : [{ method: 'reply', content: '❌ Something went wrong.', flags: 64 }];
+                assert.deepEqual(plain(input.responses), expected);
+                assert.ok(bot.errors.length > 0);
+            });
+        }
+    }
+}
+
+for (const permission of ['trusted', 'admin']) {
+    test(`${permission} lookup rejection is contained and never executes the command`, async () => {
+        const bot = await loadBot({ [permission]: true, permissionError: permission });
+        const input = interaction('command');
+        await bot.listeners.get('interaction')(input);
+        assert.deepEqual(bot.calls.slice(2), [permission]);
+        assert.deepEqual(plain(input.responses), [{ method: 'reply', content: '❌ Something went wrong.', flags: 64 }]);
+    });
+}
+
+for (const deferred of [false, true]) {
+    test(`failed error responses remain contained (deferred=${deferred})`, async () => {
+        const bot = await loadBot({ handlerError: 'selectMenuHandler' });
+        const input = interaction('select', { deferred });
+        input.reply = input.editReply = async () => { throw new Error('response unavailable'); };
+        await bot.listeners.get('interaction')(input);
+        assert.ok(bot.errors.some(args => args[0] === 'Failed to send error message:'));
+    });
+}
+
+test('process diagnostics are registered before asynchronous startup', async () => {
+    const bot = await loadBot();
+    assert.equal(bot.diagnosticsReadyAtConnect, true);
+    assert.deepEqual(bot.exits, []);
+});
+
+for (const failure of ['mongoError', 'loginError']) {
+    test(`${failure} is logged and terminates with status 1`, async () => {
+        const bot = await loadBot({ [failure]: true });
+        assert.deepEqual(bot.exits, [1]);
+        assert.deepEqual(bot.calls, failure === 'mongoError' ? ['mongo'] : ['mongo', 'login']);
+        assert.ok(bot.errors.some(args => args[0] === '========== STARTUP ERROR =========='));
     });
 }
