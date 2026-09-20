@@ -7,7 +7,6 @@ const {
 
 const Art = require("../../database/Art");
 const settings = require("../../config/settings");
-const path = require("path");
 
 const { createEditArtButtons } = require("../../utils/embedBuilder");
 
@@ -84,28 +83,22 @@ module.exports = {
 
     )
 
-    .setImage(`attachment://${art.imageFile}`)
+    .setImage(
+        art.imageFile?.startsWith("http://") ||
+        art.imageFile?.startsWith("https://")
+            ? art.imageFile
+            : `attachment://${art.imageFile}`
+    );
+
+const files = art.imageFile?.startsWith("http://") ||
+    art.imageFile?.startsWith("https://")
+    ? []
+    : undefined;
 
 await interaction.editReply({
-
     embeds: [embed],
-
-    files: [
-        {
-            attachment: path.join(
-                process.cwd(),
-                "uploads",
-                "arts",
-                art.imageFile
-            ),
-            name: art.imageFile
-        }
-    ],
-
-    components: [
-        createEditArtButtons()
-    ],
-
+    ...(files ? { files } : {}),
+    components: [createEditArtButtons()]
 });
 
 
