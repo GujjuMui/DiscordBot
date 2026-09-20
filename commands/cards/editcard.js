@@ -6,13 +6,9 @@ const {
 } = require("discord.js");
 
 const Card = require("../../database/Card");
-const settings = require("../../config/settings");
-
 const {
     createEditCardButtons
 } = require("../../utils/embedBuilder");
-
-const path = require("path");
 
 module.exports = {
 
@@ -89,29 +85,31 @@ module.exports = {
 
             )
 
-            .setImage(`attachment://${card.imageFile}`);
+            .setImage(
+                card.imageFile?.startsWith("http://") ||
+                card.imageFile?.startsWith("https://")
+                    ? card.imageFile
+                    : `attachment://${card.imageFile}`
+            );
 
-       await interaction.editReply({
+        const files = card.imageFile?.startsWith("http://") ||
+            card.imageFile?.startsWith("https://")
+            ? []
+            : [{
+                attachment: require("path").join(
+                    process.cwd(),
+                    "uploads",
+                    "cards",
+                    card.imageFile
+                ),
+                name: card.imageFile
+            }];
 
-    embeds: [embed],
-
-    files: [
-        {
-            attachment: path.join(
-                process.cwd(),
-                "uploads",
-                "cards",
-                card.imageFile
-            ),
-            name: card.imageFile
-        }
-    ],
-
-    components: [
-        createEditCardButtons()
-    ],
-
-});
+        await interaction.editReply({
+            embeds: [embed],
+            files,
+            components: [createEditCardButtons()]
+        });
 
     }
 
