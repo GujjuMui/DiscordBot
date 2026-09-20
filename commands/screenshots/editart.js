@@ -6,8 +6,6 @@ const {
 } = require("discord.js");
 
 const Art = require("../../database/Art");
-const settings = require("../../config/settings");
-
 const { createEditArtButtons } = require("../../utils/embedBuilder");
 
 module.exports = {
@@ -93,11 +91,19 @@ module.exports = {
 const files = art.imageFile?.startsWith("http://") ||
     art.imageFile?.startsWith("https://")
     ? []
-    : undefined;
+    : [{
+        attachment: require("path").join(
+            process.cwd(),
+            "uploads",
+            "arts",
+            art.imageFile
+        ),
+        name: art.imageFile
+    }];
 
 await interaction.editReply({
     embeds: [embed],
-    ...(files ? { files } : {}),
+    files,
     components: [createEditArtButtons()]
 });
 
