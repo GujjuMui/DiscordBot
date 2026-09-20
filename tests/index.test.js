@@ -318,3 +318,31 @@ test('link category handler keys gallery state by message id', async () => {
     assert.ok(source.includes('gallery.open(interaction.message.id'));
     assert.ok(!source.includes('gallery.open(interaction.user.id'));
 });
+
+
+// Phase 4 runtime safety coverage.
+test('onboarding handler ignores invalid configured channel ids without fetching', async () => {
+    const source = fs.readFileSync(
+        path.join(root, 'events', 'memberJoinHandler.js'),
+        'utf8'
+    );
+
+    assert.ok(source.includes('getConfiguredChannelId'));
+    assert.ok(source.includes('return null'));
+    assert.ok(source.includes('Onboarding channel is unavailable; skipping welcome message.'));
+    assert.ok(!source.includes('Onboarding channel not found:'));
+});
+
+test('Discord interaction responses use flags instead of deprecated ephemeral option', async () => {
+    const files = [
+        path.join(root, 'commands', 'admin', 'autoreply.js'),
+        path.join(root, 'events', 'giveroleButtonHandler.js')
+    ];
+
+    for (const file of files) {
+        const source = fs.readFileSync(file, 'utf8');
+        assert.ok(source.includes('MessageFlags.Ephemeral'));
+        assert.ok(!source.includes('ephemeral: true'));
+        assert.ok(!source.includes('ephemeral: false'));
+    }
+});
