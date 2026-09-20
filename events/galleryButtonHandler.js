@@ -4,8 +4,6 @@ const Art = require("../database/Art");
 const Card = require("../database/Card");
 const Link = require("../database/Link");
 
-const settings = require("../config/settings");
-
 const {
     createArtEmbed,
     createCardEmbed,
@@ -189,9 +187,6 @@ module.exports = async (interaction) => {
                         .filter(Boolean)
                 )
             ].sort();
-
-            console.log("Categories:", categories);
-            console.log("Category count:", categories.length);
 
             await interaction.editReply({
 

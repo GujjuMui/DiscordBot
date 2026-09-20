@@ -3,6 +3,8 @@ const {
     PermissionsBitField
 } = require("discord.js");
 
+const owner = require("../config/owner");
+
 const dangerousPermissions = [
     PermissionsBitField.Flags.Administrator,
     PermissionsBitField.Flags.ManageGuild,
@@ -32,7 +34,7 @@ module.exports = async (interaction) => {
     // OWNER ONLY
     // =========================
 
-    if (interaction.user.id !== "1466871611893219455") {
+    if (interaction.user.id !== owner.ownerId) {
 
         await interaction.reply({
 

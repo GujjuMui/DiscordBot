@@ -73,11 +73,6 @@ module.exports = {
 
 });
 
-        console.log("Looking for:", settings.channels.links);
-        console.log(
-            interaction.guild.channels.cache.map(c => `${c.type} | ${c.name}`)
-        );
-
         const contentChannel = interaction.guild.channels.cache.find(
             c => c.name === settings.channels.links
         );
