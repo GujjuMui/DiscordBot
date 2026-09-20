@@ -1,6 +1,5 @@
 const Link = require("../database/Link");
 const gallery = require("../services/galleryV2");
-const settings = require("../config/settings");
 
 const {
     createLinkEmbed,
@@ -31,7 +30,7 @@ module.exports = async (interaction) => {
 
     }
 
-    gallery.open(interaction.user.id, {
+    gallery.open(interaction.message.id, {
 
         type: "links",
 
@@ -41,7 +40,7 @@ module.exports = async (interaction) => {
 
     });
 
-    const { embed, components } =
+    const { embed, files } =
         createLinkEmbed(
             links[0],
             0,
@@ -51,6 +50,8 @@ module.exports = async (interaction) => {
     await interaction.editReply({
 
         embeds: [embed],
+
+        files,
 
         components: [
             createGalleryButtons()

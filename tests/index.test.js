@@ -294,3 +294,27 @@ test('gallery and link handlers contain no diagnostic console logging', async ()
         assert.ok(!source.includes('console.log("Looking for:"'));
     }
 });
+
+
+// Phase 3 gallery runtime regression coverage.
+test('art category handler uses galleryV2 and keys state by message id', async () => {
+    const source = fs.readFileSync(
+        path.join(root, 'events', 'selectMenuHandler.js'),
+        'utf8'
+    );
+
+    assert.ok(source.includes('../services/galleryV2'));
+    assert.ok(source.includes('gallery.open(interaction.message.id'));
+    assert.ok(!source.includes('../services/galleryService'));
+    assert.ok(!source.includes('gallery.open(\n        interaction.user.id'));
+});
+
+test('link category handler keys gallery state by message id', async () => {
+    const source = fs.readFileSync(
+        path.join(root, 'events', 'linkSelectHandler.js'),
+        'utf8'
+    );
+
+    assert.ok(source.includes('gallery.open(interaction.message.id'));
+    assert.ok(!source.includes('gallery.open(interaction.user.id'));
+});
