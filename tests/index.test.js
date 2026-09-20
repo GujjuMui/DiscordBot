@@ -240,3 +240,57 @@ for (const failure of ['mongoError', 'loginError']) {
         assert.ok(bot.errors.some(args => args[0] === '========== STARTUP ERROR =========='));
     });
 }
+
+
+// Phase 2 regression coverage.
+test('owner-only handlers use centralized owner configuration', async () => {
+    const ownerConfig = fs.readFileSync(
+        path.join(root, 'config', 'owner.js'),
+        'utf8'
+    );
+
+    const ownerIdMatch = ownerConfig.match(/ownerId:\s*"([^"]+)"/);
+    assert.ok(ownerIdMatch);
+
+    for (const eventFile of [
+        path.join(root, 'events', 'giveroleButtonHandler.js'),
+        path.join(root, 'commands', 'admin', 'autoreply.js')
+    ]) {
+        const source = fs.readFileSync(eventFile, 'utf8');
+        assert.ok(source.includes('owner.ownerId'));
+        assert.ok(!source.includes(ownerIdMatch[1]));
+    }
+});
+
+test('card and art edit commands support remote image URLs without local upload files', async () => {
+    const fixtures = [
+        {
+            file: path.join(root, 'commands', 'cards', 'editcard.js'),
+            model: 'card.imageFile'
+        },
+        {
+            file: path.join(root, 'commands', 'screenshots', 'editart.js'),
+            model: 'art.imageFile'
+        }
+    ];
+
+    for (const fixture of fixtures) {
+        const source = fs.readFileSync(fixture.file, 'utf8');
+        assert.ok(source.includes('startsWith("https://")'));
+        assert.ok(source.includes('attachment://'));
+    }
+});
+
+test('gallery and link handlers contain no diagnostic console logging', async () => {
+    const files = [
+        path.join(root, 'events', 'galleryButtonHandler.js'),
+        path.join(root, 'events', 'gallerySelectHandler.js'),
+        path.join(root, 'commands', 'links', 'addlink.js')
+    ];
+
+    for (const file of files) {
+        const source = fs.readFileSync(file, 'utf8');
+        assert.ok(!source.includes('console.log("Categories:"'));
+        assert.ok(!source.includes('console.log("Looking for:"'));
+    }
+});
