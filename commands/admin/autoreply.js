@@ -5,6 +5,7 @@ const {
 } = require("discord.js");
 
 const AutoReply = require("../../database/AutoReply");
+const owner = require("../../config/owner");
 
 module.exports = {
 
@@ -67,10 +68,7 @@ module.exports = {
         });
 
         // Owner Only
-        if (
-            interaction.user.id !==
-            "1466871611893219455"
-        ) {
+        if (interaction.user.id !== owner.ownerId) {
 
             return interaction.editReply({
                 content:
