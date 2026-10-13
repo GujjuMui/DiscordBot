@@ -4,9 +4,6 @@ const {
     PermissionFlagsBits
 } = require("discord.js");
 
-const fs = require("fs");
-const path = require("path");
-
 const Card = require("../../database/Card");
 
 const settings = require("../../config/settings");
@@ -78,36 +75,6 @@ if (channel && card.discordMessageId) {
 
     }
 
-}
-
-    try {
-
-    const imagePath = path.join(
-        process.cwd(),
-        "uploads",
-        "cards",
-        card.imageFile
-    );
-
-    if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-    }
-
-} catch (err) {
-
-    console.log("Couldn't delete local image.");
-
-}
-
-    const imagePath = path.join(
-    process.cwd(),
-    "uploads",
-    "cards",
-    card.imageFile
-);
-
-if (fs.existsSync(imagePath)) {
-    fs.unlinkSync(imagePath);
 }
 
 await Card.deleteOne({

@@ -5,6 +5,7 @@ const {
 } = require("discord.js");
 
 const memberCooldown = require("../../services/memberCooldown");
+const owner = require("../../config/owner");
 const settings = require("../../config/settings");
 const logger = require("../../utils/logger");
 
@@ -176,7 +177,7 @@ module.exports = {
         // Bot owner bypass
         if (
             interaction.user.id !==
-            "1466871611893219455"
+            owner.ownerId
         ) {
 
             const cooldown =

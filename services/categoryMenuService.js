@@ -1,12 +1,28 @@
 const menus = new Map();
 
+// Prune category menu entries older than 30 minutes to prevent indefinite growth.
+const MENU_TTL_MS = 30 * 60 * 1000;
+
+function pruneExpired() {
+    const cutoff = Date.now() - MENU_TTL_MS;
+    for (const [id, menu] of menus) {
+        if (menu.openedAt < cutoff) {
+            menus.delete(id);
+        }
+    }
+}
+
 module.exports = {
 
     open(messageId, data) {
 
+        pruneExpired();
+
         menus.set(messageId, {
 
             page: 0,
+
+            openedAt: Date.now(),
 
             ...data
 

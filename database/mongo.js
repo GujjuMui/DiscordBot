@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const settings = require("../config/settings");
 
 async function connectMongo() {
     try {

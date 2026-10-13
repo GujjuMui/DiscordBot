@@ -4,6 +4,7 @@ const {
     MessageFlags
 } = require("discord.js");
 
+const owner = require("../../config/owner");
 const settings = require("../../config/settings");
 
 const SelfRoleMessage = require("../../database/SelfRoleMessage");
@@ -51,7 +52,7 @@ module.exports = {
 
         if (
             interaction.user.id !==
-            settings.ownerId
+            owner.ownerId
         ) {
 
             return interaction.reply({

@@ -276,10 +276,6 @@ module.exports = {
 
     ["CLIENT_ID", process.env.CLIENT_ID],
 
-    ["TEST_GUILD_ID", process.env.TEST_GUILD_ID],
-
-    ["MAIN_GUILD_ID", process.env.MAIN_GUILD_ID],
-
     ["MONGO_URI", process.env.MONGO_URI],
 
     [

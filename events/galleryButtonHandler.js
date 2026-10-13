@@ -70,6 +70,9 @@ module.exports = async (interaction) => {
 
     if (id === "gallery_back") {
 
+        // Close the gallery entry — user is returning to the category menu.
+        gallery.close(messageId);
+
         // --------------------------------------
         // ARTS
         // --------------------------------------

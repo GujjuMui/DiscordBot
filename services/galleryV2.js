@@ -1,9 +1,24 @@
 const galleries = new Map();
 
+// Prune gallery entries older than 30 minutes. Discord interactions expire
+// after 15 minutes, so any entry older than 30 minutes is guaranteed stale.
+const GALLERY_TTL_MS = 30 * 60 * 1000;
+
+function pruneExpired() {
+    const cutoff = Date.now() - GALLERY_TTL_MS;
+    for (const [id, gallery] of galleries) {
+        if (gallery.openedAt < cutoff) {
+            galleries.delete(id);
+        }
+    }
+}
+
 function open(messageId, data) {
+    pruneExpired();
     galleries.set(messageId, {
         ...data,
         index: 0,
+        openedAt: Date.now()
     });
 }
 

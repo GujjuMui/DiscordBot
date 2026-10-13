@@ -60,4 +60,6 @@ const cardSchema = new mongoose.Schema({
     timestamps: true
 });
 
+cardSchema.index({ category: 1 });
+
 module.exports = mongoose.model("Card", cardSchema);

@@ -127,7 +127,7 @@ module.exports = {
 
                 } catch (err) {
 
-                    console.log(
+                    console.error(
                         `Failed to refresh card ${card.cardId}:`,
                         err.message
                     );
@@ -200,7 +200,7 @@ module.exports = {
 
                 } catch (err) {
 
-                    console.log(
+                    console.error(
                         `Failed to refresh art ${art.artId}:`,
                         err.message
                     );
@@ -243,12 +243,12 @@ module.exports = {
 
         } catch (err) {
 
-            console.error(err);
+            console.error("Gallery refresh failed:", err);
 
             await interaction.editReply({
 
                 content:
-                    `❌ Gallery refresh failed.\n\n${err.message}`
+                    "❌ Gallery refresh failed. Check the console logs for details."
 
             });
 
