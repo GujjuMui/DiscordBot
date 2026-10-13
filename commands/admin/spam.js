@@ -5,6 +5,7 @@ const {
 } = require("discord.js");
 
 const spamManager = require("../../services/spamManager");
+const owner = require("../../config/owner");
 const settings = require("../../config/settings");
 
 module.exports = {
@@ -51,7 +52,7 @@ module.exports = {
         // Owner Only
         if (
             interaction.user.id !==
-            "1466871611893219455"
+            owner.ownerId
         ) {
 
             return interaction.editReply({

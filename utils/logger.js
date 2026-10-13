@@ -105,5 +105,9 @@ module.exports = async ({
         value: `<@${user.id}>`
     });
 
-    await channel.send({ embeds: [embed] });
+    try {
+        await channel.send({ embeds: [embed] });
+    } catch (err) {
+        console.error("[logger] Failed to send log message:", err.message);
+    }
 };

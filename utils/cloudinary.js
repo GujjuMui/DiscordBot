@@ -6,8 +6,4 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-cloudinary.api.ping()
-    .then(() => console.log("✅ CLOUDINARY TEST: AUTH OK"))
-    .catch(err => console.log("❌ CLOUDINARY TEST:", err.message));
-
 module.exports = cloudinary;

@@ -1,3 +1,4 @@
+const { MessageFlags } = require("discord.js");
 const settings = require("../config/settings");
 const logger = require("../utils/logger");
 
@@ -81,7 +82,7 @@ module.exports = async interaction => {
     if (!config && !isPing && !isPingRemove) return false;
     if (!interaction.member) return true;
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (config) {
         await updateExclusiveRoles(interaction, config);

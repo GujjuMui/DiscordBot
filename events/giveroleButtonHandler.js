@@ -1,21 +1,9 @@
 const {
-    MessageFlags,
-    PermissionsBitField
+    MessageFlags
 } = require("discord.js");
 
 const owner = require("../config/owner");
-
-const dangerousPermissions = [
-    PermissionsBitField.Flags.Administrator,
-    PermissionsBitField.Flags.ManageGuild,
-    PermissionsBitField.Flags.ManageRoles,
-    PermissionsBitField.Flags.ManageChannels,
-    PermissionsBitField.Flags.ManageWebhooks,
-    PermissionsBitField.Flags.BanMembers,
-    PermissionsBitField.Flags.KickMembers,
-    PermissionsBitField.Flags.ModerateMembers,
-    PermissionsBitField.Flags.MentionEveryone
-];
+const dangerousPermissions = require("../config/dangerousPermissions");
 
 module.exports = async (interaction) => {
 

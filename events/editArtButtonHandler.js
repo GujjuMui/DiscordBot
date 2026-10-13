@@ -14,11 +14,7 @@ module.exports = async (interaction) => {
         "edit_art_name",
         "edit_art_category",
         "edit_art_tags",
-        "edit_art_image",
-        "edit_card_name",
-        "edit_card_character",
-        "edit_card_tags",
-        "edit_card_image"
+        "edit_art_image"
     ].includes(interaction.customId)
 ) return false;
 

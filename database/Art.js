@@ -56,4 +56,6 @@ const artSchema = new mongoose.Schema({
     timestamps: true
 });
 
+artSchema.index({ category: 1 });
+
 module.exports = mongoose.model("Art", artSchema);

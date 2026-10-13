@@ -12,7 +12,7 @@ const config = require("./config/config");
 const connectMongo = require("./database/mongo");
 const checkPermission = require("./utils/checkPermission");
 const checkAdminPermission = require("./utils/checkAdminPermission");
-const trustedCommands = require("./config/protectedCommands");
+const protectedCommands = require("./config/protectedCommands");
 const adminCommands = require("./config/adminCommands");
 
 const client = new Client({
@@ -201,7 +201,7 @@ client.on(Events.InteractionCreate, async interaction => {
         if (!command) return;
 
         if (
-            trustedCommands.includes(interaction.commandName) &&
+            protectedCommands.includes(interaction.commandName) &&
             !(await checkPermission(interaction))
         ) return;
 

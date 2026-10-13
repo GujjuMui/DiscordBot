@@ -346,3 +346,257 @@ test('Discord interaction responses use flags instead of deprecated ephemeral op
         assert.ok(!source.includes('ephemeral: false'));
     }
 });
+
+
+// Phase 1 systematization regression coverage.
+test('selfRoleHandler uses MessageFlags.Ephemeral not deprecated ephemeral option', () => {
+    const source = fs.readFileSync(
+        path.join(root, 'events', 'selfRoleHandler.js'),
+        'utf8'
+    );
+    assert.ok(source.includes('MessageFlags.Ephemeral'), 'selfRoleHandler must use MessageFlags.Ephemeral');
+    assert.ok(!source.includes('ephemeral: true'), 'selfRoleHandler must not use deprecated ephemeral: true');
+});
+
+test('cloudinary utility does not fire a network ping on module load', () => {
+    const source = fs.readFileSync(
+        path.join(root, 'utils', 'cloudinary.js'),
+        'utf8'
+    );
+    assert.ok(!source.includes('api.ping()'), 'cloudinary.js must not call api.ping() at module scope');
+    assert.ok(!source.includes('CLOUDINARY TEST'), 'cloudinary.js must not contain debug ping log messages');
+});
+
+test('index.js uses protectedCommands variable name not trustedCommands', () => {
+    const source = fs.readFileSync(path.join(root, 'index.js'), 'utf8');
+    assert.ok(source.includes('protectedCommands'), 'index.js must declare protectedCommands');
+    assert.ok(!source.includes('trustedCommands'), 'index.js must not use old trustedCommands alias');
+});
+
+test('dead config and utils permission files have been removed', () => {
+    const deadFiles = [
+        path.join(root, 'config', 'trustedCommands.js'),
+        path.join(root, 'config', 'permissions.js'),
+        path.join(root, 'utils', 'permissions.js')
+    ];
+    for (const file of deadFiles) {
+        assert.ok(!fs.existsSync(file), `Dead file must not exist: ${file}`);
+    }
+});
+
+
+// Phase 2 systematization regression coverage.
+test('owner-dependent commands import config/owner not settings.ownerId', () => {
+    const files = [
+        path.join(root, 'commands', 'admin', 'selfroles.js'),
+        path.join(root, 'commands', 'utility', 'say.js'),
+        path.join(root, 'commands', 'admin', 'member.js'),
+        path.join(root, 'commands', 'admin', 'spam.js'),
+        path.join(root, 'commands', 'admin', 'stopspam.js'),
+        path.join(root, 'commands', 'admin', 'giverole.js')
+    ];
+    for (const file of files) {
+        const source = fs.readFileSync(file, 'utf8');
+        assert.ok(source.includes('config/owner'), `${path.basename(file)} must import config/owner`);
+        assert.ok(source.includes('owner.ownerId'), `${path.basename(file)} must use owner.ownerId`);
+        assert.ok(!source.includes('settings.ownerId'), `${path.basename(file)} must not use settings.ownerId`);
+        assert.ok(!source.includes('"1466871611893219455"'), `${path.basename(file)} must not hardcode the owner ID`);
+    }
+});
+
+test('config/settings.js does not duplicate ownerId', () => {
+    const source = fs.readFileSync(path.join(root, 'config', 'settings.js'), 'utf8');
+    assert.ok(!source.includes('ownerId'), 'settings.js must not contain ownerId — use config/owner.js instead');
+});
+
+test('package.json does not list unused dependencies', () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+    const deps = Object.keys(pkg.dependencies || {});
+    assert.ok(!deps.includes('@discordjs/builders'), 'package.json must not list unused @discordjs/builders');
+    assert.ok(!deps.includes('@discordjs/rest'), 'package.json must not list unused @discordjs/rest');
+    assert.ok(!deps.includes('uuid'), 'package.json must not list unused uuid');
+});
+
+
+// Batch 1 deep-cleanup regression coverage (P0 + P1).
+
+test('editArtButtonHandler does not intercept card button custom IDs', () => {
+    const source = fs.readFileSync(
+        path.join(root, 'events', 'editArtButtonHandler.js'),
+        'utf8'
+    );
+    assert.ok(!source.includes('edit_card_name'), 'editArtButtonHandler must not handle edit_card_name');
+    assert.ok(!source.includes('edit_card_character'), 'editArtButtonHandler must not handle edit_card_character');
+    assert.ok(!source.includes('edit_card_tags'), 'editArtButtonHandler must not handle edit_card_tags');
+    assert.ok(!source.includes('edit_card_image'), 'editArtButtonHandler must not handle edit_card_image');
+});
+
+test('logger.js wraps channel.send in try/catch to prevent propagation', () => {
+    const source = fs.readFileSync(
+        path.join(root, 'utils', 'logger.js'),
+        'utf8'
+    );
+    assert.ok(source.includes('try {'), 'logger must wrap channel.send in try/catch');
+    assert.ok(source.includes('catch (err)'), 'logger must catch errors from channel.send');
+    assert.ok(source.includes('[logger]'), 'logger must log failures with [logger] prefix');
+});
+
+test('deleteart.js defers reply before DB query', () => {
+    const source = fs.readFileSync(
+        path.join(root, 'commands', 'screenshots', 'deleteart.js'),
+        'utf8'
+    );
+    const deferPos = source.indexOf('deferReply');
+    const findPos = source.indexOf('Art.findOne');
+    assert.ok(deferPos > -1, 'deleteart must call deferReply');
+    assert.ok(findPos > -1, 'deleteart must call Art.findOne');
+    assert.ok(deferPos < findPos, 'deferReply must come before Art.findOne');
+});
+
+test('diagnostics does not check non-existent TEST_GUILD_ID or MAIN_GUILD_ID', () => {
+    const source = fs.readFileSync(
+        path.join(root, 'commands', 'admin', 'diagnostics.js'),
+        'utf8'
+    );
+    assert.ok(!source.includes('TEST_GUILD_ID'), 'diagnostics must not check for TEST_GUILD_ID');
+    assert.ok(!source.includes('MAIN_GUILD_ID'), 'diagnostics must not check for MAIN_GUILD_ID');
+});
+
+test('deletecard.js does not contain dead local file deletion code', () => {
+    const source = fs.readFileSync(
+        path.join(root, 'commands', 'screenshots', 'deletecard.js'),
+        'utf8'
+    );
+    assert.ok(!source.includes('fs.existsSync'), 'deletecard must not use fs.existsSync (dead code)');
+    assert.ok(!source.includes('fs.unlinkSync'), 'deletecard must not use fs.unlinkSync (dead code)');
+    assert.ok(!source.includes('require("fs")'), 'deletecard must not import fs (no longer needed)');
+});
+
+test('refreshgallery.js does not leak err.message to Discord users', () => {
+    const source = fs.readFileSync(
+        path.join(root, 'commands', 'admin', 'refreshgallery.js'),
+        'utf8'
+    );
+    // err.message must not appear inside an editReply/reply content template literal
+    assert.ok(!source.includes('`❌ Gallery refresh failed.\\n\\n${err.message}`'), 'refreshgallery must not send err.message to users via editReply');
+    assert.ok(source.includes('Check the console logs'), 'refreshgallery should direct admin to console logs');
+    // Also upgrade the per-item console.log to console.error — both must use console.error
+    assert.ok(!source.includes("console.log(\n                        `Failed to refresh"), 'refreshgallery per-item errors should use console.error not console.log');
+});
+
+
+// Batch 2 deep-cleanup regression coverage (P0-1, P2-x).
+
+test('clan.js uses settings.clan.embedImage not a hardcoded CDN URL', () => {
+    const source = fs.readFileSync(
+        path.join(root, 'commands', 'clan', 'clan.js'),
+        'utf8'
+    );
+    assert.ok(source.includes('settings.clan.embedImage'), 'clan.js must use settings.clan.embedImage');
+    assert.ok(!source.includes('?ex='), 'clan.js must not contain a CDN URL with expiry parameters');
+    assert.ok(!source.includes('&hm='), 'clan.js must not contain a CDN URL with hash parameters');
+});
+
+test('settings.js defines clan.embedImage for the clan join panel', () => {
+    const settings = require(path.join(root, 'config', 'settings.js'));
+    assert.ok(settings.clan, 'settings must have a clan section');
+    assert.ok(typeof settings.clan.embedImage === 'string' && settings.clan.embedImage.length > 0,
+        'settings.clan.embedImage must be a non-empty string');
+});
+
+test('about.js reads version from package.json not a hardcoded string', () => {
+    const source = fs.readFileSync(
+        path.join(root, 'commands', 'utility', 'about.js'),
+        'utf8'
+    );
+    assert.ok(source.includes('package.json'), 'about.js must import version from package.json');
+    assert.ok(!source.includes('"1.2.0"'), 'about.js must not hardcode version string');
+    assert.ok(!source.includes('"1.0.0"'), 'about.js must not hardcode version string');
+});
+
+test('config/version.js has been removed (replaced by package.json version)', () => {
+    assert.ok(!fs.existsSync(path.join(root, 'config', 'version.js')),
+        'config/version.js must not exist — version is read from package.json');
+});
+
+test('config/characters.js has been removed (was unused)', () => {
+    assert.ok(!fs.existsSync(path.join(root, 'config', 'characters.js')),
+        'config/characters.js must not exist — it was never used');
+});
+
+test('database/mongo.js does not import unused settings module', () => {
+    const source = fs.readFileSync(path.join(root, 'database', 'mongo.js'), 'utf8');
+    assert.ok(!source.includes("require('../config/settings')") && !source.includes('require("../config/settings")'),
+        'mongo.js must not import settings (it was unused)');
+});
+
+test('addlink.js has logger imported at top level not inline', () => {
+    const source = fs.readFileSync(path.join(root, 'commands', 'links', 'addlink.js'), 'utf8');
+    const topRequirePos = source.indexOf("require('../../utils/logger')") !== -1
+        ? source.indexOf("require('../../utils/logger')")
+        : source.indexOf('require("../../utils/logger")');
+    const executePos = source.indexOf('async execute');
+    assert.ok(topRequirePos > -1, 'addlink.js must require logger');
+    assert.ok(topRequirePos < executePos, 'logger require must be at top level before execute()');
+});
+
+test('addlink.js validates URL before saving', () => {
+    const source = fs.readFileSync(path.join(root, 'commands', 'links', 'addlink.js'), 'utf8');
+    assert.ok(source.includes('new URL('), 'addlink.js must validate URL with new URL()');
+    assert.ok(source.includes('Invalid URL'), 'addlink.js must return an invalid URL error message');
+});
+
+test('dangerousPermissions is extracted to config/dangerousPermissions.js', () => {
+    assert.ok(fs.existsSync(path.join(root, 'config', 'dangerousPermissions.js')),
+        'config/dangerousPermissions.js must exist');
+    const giverole = fs.readFileSync(path.join(root, 'commands', 'admin', 'giverole.js'), 'utf8');
+    const handler = fs.readFileSync(path.join(root, 'events', 'giveroleButtonHandler.js'), 'utf8');
+    assert.ok(giverole.includes('config/dangerousPermissions'), 'giverole.js must import from config/dangerousPermissions');
+    assert.ok(handler.includes('config/dangerousPermissions'), 'giveroleButtonHandler.js must import from config/dangerousPermissions');
+    assert.ok(!giverole.includes('PermissionsBitField.Flags.Administrator'), 'giverole.js must not define the array inline');
+    assert.ok(!handler.includes('PermissionsBitField.Flags.Administrator'), 'giveroleButtonHandler.js must not define the array inline');
+});
+
+
+// Batch 3 deep-cleanup regression coverage (P1-1, P3-1, P3-2).
+
+test('Card schema has a category index', () => {
+    const source = fs.readFileSync(path.join(root, 'database', 'Card.js'), 'utf8');
+    assert.ok(source.includes("cardSchema.index({ category: 1 })"), 'Card must index category field');
+});
+
+test('Art schema has a category index', () => {
+    const source = fs.readFileSync(path.join(root, 'database', 'Art.js'), 'utf8');
+    assert.ok(source.includes("artSchema.index({ category: 1 })"), 'Art must index category field');
+});
+
+test('Link schema has title and category indexes', () => {
+    const source = fs.readFileSync(path.join(root, 'database', 'Link.js'), 'utf8');
+    assert.ok(source.includes("linkSchema.index({ title: 1 })"), 'Link must index title field');
+    assert.ok(source.includes("linkSchema.index({ category: 1 })"), 'Link must index category field');
+});
+
+test('autoReplyCooldown prunes expired entries on canReply', () => {
+    const source = fs.readFileSync(path.join(root, 'services', 'autoReplyCooldown.js'), 'utf8');
+    assert.ok(source.includes('pruneExpired'), 'autoReplyCooldown must have a pruneExpired function');
+    assert.ok(source.includes('MAX_TTL_MS'), 'autoReplyCooldown must define a max TTL');
+});
+
+test('galleryV2 prunes stale entries and tracks openedAt timestamp', () => {
+    const source = fs.readFileSync(path.join(root, 'services', 'galleryV2.js'), 'utf8');
+    assert.ok(source.includes('pruneExpired'), 'galleryV2 must have a pruneExpired function');
+    assert.ok(source.includes('openedAt'), 'galleryV2 must record openedAt on each entry');
+    assert.ok(source.includes('GALLERY_TTL_MS'), 'galleryV2 must define a TTL constant');
+});
+
+test('categoryMenuService prunes stale entries and tracks openedAt timestamp', () => {
+    const source = fs.readFileSync(path.join(root, 'services', 'categoryMenuService.js'), 'utf8');
+    assert.ok(source.includes('pruneExpired'), 'categoryMenuService must have a pruneExpired function');
+    assert.ok(source.includes('openedAt'), 'categoryMenuService must record openedAt on each entry');
+    assert.ok(source.includes('MENU_TTL_MS'), 'categoryMenuService must define a TTL constant');
+});
+
+test('galleryButtonHandler calls gallery.close() on gallery_back', () => {
+    const source = fs.readFileSync(path.join(root, 'events', 'galleryButtonHandler.js'), 'utf8');
+    assert.ok(source.includes('gallery.close(messageId)'), 'galleryButtonHandler must call gallery.close() when navigating back');
+});

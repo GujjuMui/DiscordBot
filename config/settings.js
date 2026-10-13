@@ -41,8 +41,6 @@ module.exports = {
 
     },
 
-    ownerId: "1466871611893219455",
-
     roles: {
 
         admin: "Admin",
@@ -109,6 +107,14 @@ module.exports = {
 
     }
 },
+
+    // WARNING: Discord CDN attachment URLs with ?ex=...&hm=... query parameters expire.
+    // The URL below has had its expiry parameters stripped; if the image stops showing,
+    // replace this URL with a Cloudinary-hosted permanent link or a fresh Discord CDN URL.
+    // To update without a redeploy, host the image on Cloudinary and update this value.
+    clan: {
+        embedImage: "https://cdn.discordapp.com/attachments/1506280626607886346/1528640829327933501/image.png"
+    }
 
 };
 

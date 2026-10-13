@@ -45,7 +45,7 @@ Accept the clan rules.
 Basically clan tryouts are the process where we check the player is capable of joining the clan or not, you can play with our tryout tester to complete the tryouts.
 `)
 
-            .setImage("https://cdn.discordapp.com/attachments/1506280626607886346/1528640829327933501/image.png?ex=6a5f0936&is=6a5db7b6&hm=63cf842bc2d799c6bbc180d21b351f4afe8ac141fbf0b1de7eba395668f26fde&");
+            .setImage(settings.clan.embedImage);
 
        const row = new ActionRowBuilder().addComponents(
 

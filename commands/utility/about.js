@@ -3,6 +3,8 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
+const { version } = require("../../package.json");
+
 module.exports = {
 
     data: new SlashCommandBuilder()
@@ -33,7 +35,7 @@ module.exports = {
 
                 {
                     name: "📦 Version",
-                    value: "1.2.0",
+                    value: version,
                     inline: true
                 },
 

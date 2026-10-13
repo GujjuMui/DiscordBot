@@ -41,4 +41,7 @@ const linkSchema = new mongoose.Schema({
     timestamps: true
 });
 
+linkSchema.index({ title: 1 });
+linkSchema.index({ category: 1 });
+
 module.exports = mongoose.model("Link", linkSchema);

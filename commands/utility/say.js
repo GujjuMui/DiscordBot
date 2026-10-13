@@ -6,6 +6,7 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
+const owner = require("../../config/owner");
 const settings = require("../../config/settings");
 
 module.exports = {
@@ -61,7 +62,7 @@ module.exports = {
         flags: MessageFlags.Ephemeral
     });
 
-    if (interaction.user.id !== settings.ownerId) {
+    if (interaction.user.id !== owner.ownerId) {
 
             return interaction.editReply({
                 content: "❌" + " Only the bot owner can use this command."

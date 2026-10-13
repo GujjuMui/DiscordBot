@@ -5,6 +5,7 @@ const {
 
 const Link = require("../../database/Link");
 const settings = require("../../config/settings");
+const { createLinkCategoryMenu } = require("../../utils/embedBuilder");
 
 module.exports = {
 
@@ -39,9 +40,6 @@ module.exports = {
         )
 
     ].sort();
-
-    const { createLinkCategoryMenu } =
-        require("../../utils/embedBuilder");
 
     await interaction.editReply({
 

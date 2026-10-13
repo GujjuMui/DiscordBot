@@ -3,21 +3,11 @@ const {
     MessageFlags,
     ActionRowBuilder,
     ButtonBuilder,
-    ButtonStyle,
-    PermissionsBitField
+    ButtonStyle
 } = require("discord.js");
 
-const dangerousPermissions = [
-    PermissionsBitField.Flags.Administrator,
-    PermissionsBitField.Flags.ManageGuild,
-    PermissionsBitField.Flags.ManageRoles,
-    PermissionsBitField.Flags.ManageChannels,
-    PermissionsBitField.Flags.ManageWebhooks,
-    PermissionsBitField.Flags.BanMembers,
-    PermissionsBitField.Flags.KickMembers,
-    PermissionsBitField.Flags.ModerateMembers,
-    PermissionsBitField.Flags.MentionEveryone
-];
+const owner = require("../../config/owner");
+const dangerousPermissions = require("../../config/dangerousPermissions");
 
 module.exports = {
 
@@ -55,7 +45,7 @@ module.exports = {
 
         if (
             interaction.user.id !==
-            "1466871611893219455"
+            owner.ownerId
         ) {
 
             return interaction.reply({

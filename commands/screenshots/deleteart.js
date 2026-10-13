@@ -30,6 +30,10 @@ module.exports = {
 
     async execute(interaction) {
 
+        await interaction.deferReply({
+            flags: MessageFlags.Ephemeral
+        });
+
         const id = interaction.options
             .getString("id")
             .toUpperCase();
@@ -40,9 +44,8 @@ module.exports = {
 
         if (!art) {
 
-            return interaction.reply({
-                content: "❌" + " Artwork not found.",
-                flags: MessageFlags.Ephemeral
+            return interaction.editReply({
+                content: "❌ Artwork not found."
             });
 
         }
@@ -63,16 +66,14 @@ module.exports = {
 
 });
 
-        await interaction.reply({
+        await interaction.editReply({
 
            content:
 `${"⚠️"} Delete **${art.artName}**?\n\nArt ID: ${art.artId}\n\nPress Confirm or Cancel.`,
 
             components: [
     createDeleteButtons()
-    ],
-
-            flags: MessageFlags.Ephemeral
+    ]
 
         });
 

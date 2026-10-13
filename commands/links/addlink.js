@@ -6,6 +6,7 @@ const {
 
 const Link = require("../../database/Link");
 const settings = require("../../config/settings");
+const logger = require("../../utils/logger");
 
 module.exports = {
 
@@ -45,6 +46,15 @@ module.exports = {
         const url = interaction.options.getString("url");
         const category = interaction.options.getString("category");
 
+        // Validate URL format before saving
+        try {
+            new URL(url);
+        } catch {
+            return interaction.editReply({
+                content: "❌ Invalid URL. Please provide a valid URL starting with `https://` or `http://`."
+            });
+        }
+
         const link = new Link({
 
             title,
@@ -57,8 +67,6 @@ module.exports = {
         });
 
         await link.save();
-
-        const logger = require("../../utils/logger");
 
         await logger({
 
