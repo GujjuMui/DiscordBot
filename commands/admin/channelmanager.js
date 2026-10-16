@@ -105,7 +105,7 @@ module.exports = {
 
             const collector = response.createMessageComponentCollector({
                 filter: i => i.user.id === interaction.user.id && i.customId === "cm_guild_select",
-                time: 60000
+                time: 300000 // 5 minutes
             });
 
             collector.on("collect", async i => {
@@ -141,7 +141,7 @@ module.exports = {
 
                     const actCollector = actMsg.createMessageComponentCollector({
                         filter: ci => ci.user.id === interaction.user.id && ci.customId.startsWith("cm_action_"),
-                        time: 60000
+                        time: 300000 // 5 minutes
                     });
 
                     actCollector.on("collect", async ci => {
@@ -171,7 +171,7 @@ module.exports = {
 
                                 const submitted = await ci.awaitModalSubmit({
                                     filter: ms => ms.user.id === interaction.user.id && ms.customId === `cm_create_modal_${guildId}`,
-                                    time: 60000
+                                    time: 300000
                                 }).catch(() => null);
 
                                 if (submitted) {
@@ -205,7 +205,7 @@ module.exports = {
 
                                 const submitted = await ci.awaitModalSubmit({
                                     filter: ms => ms.user.id === interaction.user.id && ms.customId === `cm_bulk_create_modal_${guildId}`,
-                                    time: 60000
+                                    time: 300000
                                 }).catch(() => null);
 
                                 if (submitted) {
@@ -263,7 +263,7 @@ module.exports = {
 
                                 const delCollector = delMsg.createMessageComponentCollector({
                                     filter: di => di.user.id === interaction.user.id && di.customId === `cm_delete_select_${guildId}`,
-                                    time: 60000
+                                    time: 300000
                                 });
 
                                 delCollector.on("collect", async di => {
@@ -312,12 +312,14 @@ module.exports = {
 
                                 const bCollector = bMsg.createMessageComponentCollector({
                                     filter: bi => bi.user.id === interaction.user.id && bi.customId === `cm_bulk_delete_select_${guildId}`,
-                                    time: 60000
+                                    time: 300000
                                 });
 
                                 bCollector.on("collect", async bi => {
                                     try {
+                                        // Acknowledge interaction immediately before performing deletion loop
                                         await bi.deferUpdate();
+
                                         const selectedIds = bi.values;
                                         let deletedCount = 0;
                                         const deletedNames = [];
@@ -326,9 +328,13 @@ module.exports = {
                                             const targetCh = guild.channels.cache.get(id);
                                             if (targetCh) {
                                                 const name = targetCh.name;
-                                                await targetCh.delete(`Bulk deleted by bot owner ${interaction.user.tag}`);
-                                                deletedCount++;
-                                                deletedNames.push(`#${name}`);
+                                                try {
+                                                    await targetCh.delete(`Bulk deleted by bot owner ${interaction.user.tag}`);
+                                                    deletedCount++;
+                                                    deletedNames.push(`#${name}`);
+                                                } catch (delErr) {
+                                                    console.error(`Failed to delete channel ${name}:`, delErr);
+                                                }
                                             }
                                         }
 
