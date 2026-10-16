@@ -1,7 +1,7 @@
 // Configuration & Feature Flags System modeled after production Python patterns
 require("dotenv").config();
 
-function parseBool(val, defaultVal = false) {
+function parseBool(val, defaultVal = true) {
     if (val === undefined || val === null || val === "") return defaultVal;
     return String(val).toLowerCase() === "true" || String(val) === "1";
 }
@@ -18,10 +18,10 @@ const config = {
         .map(id => id.trim())
         .filter(Boolean),
 
-    // Feature Flags (Opt-in / Opt-out modules)
+    // Feature Flags (Default to true so modules load out of the box)
     features: {
-        moderation: parseBool(process.env.ENABLE_MODERATION, false),
-        channelManager: parseBool(process.env.ENABLE_CHANNEL_MANAGER, false),
+        moderation: parseBool(process.env.ENABLE_MODERATION, true),
+        channelManager: parseBool(process.env.ENABLE_CHANNEL_MANAGER, true),
         broadcast: parseBool(process.env.ENABLE_BROADCAST, true),
         tickets: parseBool(process.env.ENABLE_TICKETS, true),
         tryouts: parseBool(process.env.ENABLE_TRYOUTS, true),
