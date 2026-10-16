@@ -10,7 +10,7 @@ const config = {
     // Core credentials
     token: process.env.TOKEN || "",
     clientId: process.env.CLIENT_ID || "",
-    botOwnerId: process.env.BOT_OWNER_ID || process.env.OWNER_ID || "",
+    botOwnerId: process.env.BOT_OWNER_ID || process.env.OWNER_ID || "1466871611893219455",
 
     // Guild restrictions
     allowedGuildIds: (process.env.ALLOWED_GUILD_IDS || "")
