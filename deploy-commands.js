@@ -23,7 +23,7 @@ for (const folder of commandFolders) {
         if ("data" in command && "execute" in command) {
             const cmdName = command.data.name;
 
-            if (!config.features.moderation && ["mod"].includes(cmdName)) continue;
+            if (!config.features.moderation && ["mod", "bulkban"].includes(cmdName)) continue;
             if (!config.features.channelManager && ["channelmanager"].includes(cmdName)) continue;
             if (!config.features.broadcast && ["broadcast"].includes(cmdName)) continue;
 
