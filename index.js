@@ -12,6 +12,7 @@ const config = require("./config/config");
 const connectMongo = require("./database/mongo");
 const checkPermission = require("./utils/checkPermission");
 const checkAdminPermission = require("./utils/checkAdminPermission");
+const checkGuildAuth = require("./utils/checkGuildAuth");
 const protectedCommands = require("./config/protectedCommands");
 const adminCommands = require("./config/adminCommands");
 
@@ -93,36 +94,44 @@ async function replyWithError(interaction, respondToDeferred = true) {
     }
 }
 
-// Collection to store commands
-
-
-// Load commands from all folders
+// Load commands from all folders with Feature Flag checks
 const foldersPath = path.join(__dirname, "commands");
 const commandFolders = fs.readdirSync(foldersPath);
 
 for (const folder of commandFolders) {
-
     const commandsPath = path.join(foldersPath, folder);
-
     if (!fs.statSync(commandsPath).isDirectory()) continue;
 
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"));
 
     for (const file of commandFiles) {
-
         const filePath = path.join(commandsPath, file);
         const command = require(filePath);
 
         if ("data" in command && "execute" in command) {
-            client.commands.set(command.data.name, command);
+            const cmdName = command.data.name;
+
+            // Feature flag filters
+            if (!config.features.moderation && ["mod"].includes(cmdName)) {
+                console.log(`[FeatureFlag] Skipping command '${cmdName}' (ENABLE_MODERATION is false)`);
+                continue;
+            }
+            if (!config.features.channelManager && ["channelmanager"].includes(cmdName)) {
+                console.log(`[FeatureFlag] Skipping command '${cmdName}' (ENABLE_CHANNEL_MANAGER is false)`);
+                continue;
+            }
+            if (!config.features.broadcast && ["broadcast"].includes(cmdName)) {
+                console.log(`[FeatureFlag] Skipping command '${cmdName}' (ENABLE_BROADCAST is false)`);
+                continue;
+            }
+
+            client.commands.set(cmdName, command);
         }
     }
 }
 
 client.once(Events.ClientReady, () => {
-
     console.clear();
-
     console.log("========================================");
     console.log("          HORNET BOT v1.2.0");
     console.log("========================================");
@@ -132,49 +141,33 @@ client.once(Events.ClientReady, () => {
     console.log("👨‍💻 Developer   : Gujju Mui");
     console.log("🟢 Status       : Online");
     console.log("========================================");
-
 });
 
 client.on(Events.GuildMemberAdd, async member => {
-
     try {
-
         await require("./events/memberJoinHandler")(member);
-
     } catch (err) {
-
-        console.error(
-            "========== MEMBER JOIN ERROR =========="
-        );
-
+        console.error("========== MEMBER JOIN ERROR ==========");
         console.error(err);
-
-        console.error(
-            "======================================="
-        );
-
+        console.error("=======================================");
     }
-
 });
 
 client.on(Events.MessageCreate, async message => {
-
     try {
-
         await require("./events/messageCreate")(message);
-
     } catch (err) {
-
         console.error("========== MESSAGE ERROR ==========");
         console.error(err);
         console.error("===================================");
-
     }
-
 });
 
 client.on(Events.InteractionCreate, async interaction => {
     try {
+        // Guild authorization check
+        if (!(await checkGuildAuth(interaction))) return;
+
         if (interaction.isButton()) {
             try {
                 await runHandlers(handlerFiles.button, interaction);
@@ -217,34 +210,24 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 });
 
-
-// Register diagnostics before starting asynchronous database/login work.
 process.on("unhandledRejection", (reason) => {
-
     console.error("========== UNHANDLED REJECTION ==========");
     console.error(reason);
     console.error("=========================================");
-
 });
 
 process.on("uncaughtException", (err) => {
-
     console.error("========== UNCAUGHT EXCEPTION ==========");
     console.error(err);
     console.error("========================================");
-
 });
 
 (async () => {
-
     await connectMongo();
-
     await client.login(config.token);
-
 })().catch((error) => {
     console.error("========== STARTUP ERROR ==========");
     console.error(error);
     console.error("===================================");
-    // A failed login must not leave an idle process with an open MongoDB socket.
     process.exit(1);
 });
