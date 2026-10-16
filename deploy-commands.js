@@ -1,6 +1,5 @@
 const { REST, Routes } = require("discord.js");
 const fs = require("fs");
-const settings = require("./config/settings");
 const path = require("path");
 require("dotenv").config();
 
@@ -25,7 +24,7 @@ for (const folder of commandFolders) {
         if ("data" in command && "execute" in command) {
             commands.push(command.data.toJSON());
         } else {
-            console.log(`${"⚠️"} ${file} is missing "data" or "execute".`);
+            console.log(`⚠️ ${file} is missing "data" or "execute".`);
         }
     }
 }
@@ -34,44 +33,15 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
 (async () => {
     try {
-        console.log(`Registering ${commands.length} slash command(s)...`);
+        console.log(`Registering ${commands.length} slash command(s) globally...`);
 
-       const guilds = [
+        await rest.put(
+            Routes.applicationCommands(process.env.CLIENT_ID),
+            { body: commands }
+        );
 
-    process.env.TEST_GUILD_ID,
-
-    process.env.MAIN_GUILD_ID
-
-];
-
-for (const guildId of guilds) {
-
-    console.log(`📦 Registering commands for ${guildId}...`);
-
-    await rest.put(
-
-        Routes.applicationGuildCommands(
-
-            process.env.CLIENT_ID,
-
-            guildId
-
-        ),
-
-        {
-
-            body: commands
-
-        }
-
-    );
-
-    console.log(`${"✅"} Registered in ${guildId}`);
-
-}
-
-console.log("🎉 All guild commands registered.");
+        console.log("🎉 All global slash commands registered successfully.");
     } catch (error) {
-        console.error(error);
+        console.error("❌ Failed to register commands:", error);
     }
 })();

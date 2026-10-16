@@ -5,7 +5,8 @@ const {
     ButtonBuilder,
     ButtonStyle,
     MessageFlags,
-    DiscordAPIError
+    InteractionContextType,
+    ApplicationIntegrationType
 } = require("discord.js");
 
 // Helper to check bot owner
@@ -44,6 +45,17 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName("botadmin")
         .setDescription("Bot owner management commands")
+        // Enable command in Guilds, Bot DMs, and Private Channels
+        .setContexts(
+            InteractionContextType.Guild,
+            InteractionContextType.BotDM,
+            InteractionContextType.PrivateChannel
+        )
+        // Enable user install and guild install
+        .setIntegrationTypes(
+            ApplicationIntegrationType.GuildInstall,
+            ApplicationIntegrationType.UserInstall
+        )
         .addSubcommand(sub =>
             sub
                 .setName("guildlist")
@@ -86,7 +98,6 @@ module.exports = {
 
                     let inviteLink = "N/A";
                     try {
-                        // Find a channel to create invite
                         const channels = await guild.channels.fetch();
                         const textChannel = channels.find(c => c && c.isTextBased() && c.permissionsFor(guild.members.me)?.has("CreateInstantInvite"));
 
