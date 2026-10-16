@@ -202,7 +202,7 @@ module.exports = {
                             .setLabel("Yes, leave")
                             .setStyle(ButtonStyle.Danger);
 
-                        const cancelButton = new ButtonBuilder()
+                        const cancelButtongit  = new ButtonBuilder()
                             .setCustomId("leaveguild_cancel")
                             .setLabel("Cancel")
                             .setStyle(ButtonStyle.Secondary);
