@@ -16,7 +16,6 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName("bulkban")
         .setDescription("Bulk ban multiple members at once (Bot Owner / Admin)")
-        .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
         .setContexts(InteractionContextType.Guild)
         .setIntegrationTypes(ApplicationIntegrationType.GuildInstall)
         .addStringOption(opt =>
@@ -46,7 +45,6 @@ module.exports = {
             const rawInput = interaction.options.getString("user_ids");
             const reason = interaction.options.getString("reason") || "Bulk ban executed by admin/owner";
 
-            // Extract valid user IDs or mentions
             const userIds = rawInput
                 .split(/[\s,]+/)
                 .map(id => id.replace(/[<@!>]/g, "").trim())
@@ -62,7 +60,6 @@ module.exports = {
 
             for (const userId of userIds) {
                 try {
-                    // Skip banning self or bot
                     if (userId === interaction.client.user.id || userId === interaction.user.id) {
                         failCount++;
                         continue;
