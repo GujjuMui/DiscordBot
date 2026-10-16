@@ -42,7 +42,7 @@ function handleApiError(error, interaction) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("channelmanager")
-        .setDescription("Bot owner cross-guild channel management suite")
+        .setDescription("Bot owner cross-guild channel management suite (with bulk add & delete)")
         .setContexts(
             InteractionContextType.Guild,
             InteractionContextType.BotDM,
@@ -71,7 +71,6 @@ module.exports = {
         try {
             await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-            // Find mutual guilds where bot has Manage Channels permission
             const guilds = Array.from(interaction.client.guilds.cache.values());
             const manageableGuilds = [];
 
@@ -120,15 +119,17 @@ module.exports = {
                     }
 
                     const channels = await guild.channels.fetch();
-                    const textChannels = channels.filter(c => c && c.type === ChannelType.GuildText).first(25);
+                    const textChannels = channels.filter(c => c && c.type === ChannelType.GuildText);
 
                     const actionSelect = new StringSelectMenuBuilder()
                         .setCustomId(`cm_action_${guildId}`)
                         .setPlaceholder("Choose channel management action")
                         .addOptions([
                             { label: "List Channels", description: "View text channels in this server", value: "list" },
-                            { label: "Create Channel", description: "Create a new text channel", value: "create" },
-                            { label: "Delete Channel", description: "Delete an existing text channel", value: "delete" }
+                            { label: "Create Single Channel", description: "Create a new text channel", value: "create" },
+                            { label: "Bulk Add Channels", description: "Create multiple channels at once (comma-separated)", value: "bulk_create" },
+                            { label: "Delete Single Channel", description: "Delete an existing text channel", value: "delete" },
+                            { label: "Bulk Delete Channels", description: "Delete multiple text channels at once", value: "bulk_delete" }
                         ]);
 
                     const actRow = new ActionRowBuilder().addComponents(actionSelect);
@@ -148,9 +149,9 @@ module.exports = {
                             const action = ci.values[0];
                             if (action === "list") {
                                 await ci.deferUpdate();
-                                const listStr = textChannels.map(c => `- **${c.name}** (\`${c.id}\`)`).join("\n") || "No text channels found.";
+                                const listStr = textChannels.map(c => `- **${c.name}** (\`${c.id}\`)`).slice(0, 30).join("\n") || "No text channels found.";
                                 await ci.editReply({
-                                    content: `📋 **Channels in ${guild.name}**:\n${listStr}`,
+                                    content: `📋 **Channels in ${guild.name}** (showing up to 30):\n${listStr}`,
                                     components: []
                                 });
                             } else if (action === "create") {
@@ -187,9 +188,59 @@ module.exports = {
                                         components: []
                                     });
                                 }
+                            } else if (action === "bulk_create") {
+                                const modal = new ModalBuilder()
+                                    .setCustomId(`cm_bulk_create_modal_${guildId}`)
+                                    .setTitle(`Bulk Add Channels`);
+
+                                const namesInput = new TextInputBuilder()
+                                    .setCustomId("channel_names")
+                                    .setLabel("Channel Names (Comma Separated)")
+                                    .setPlaceholder("general, chat, bots, announcements")
+                                    .setStyle(TextInputStyle.Paragraph)
+                                    .setRequired(true);
+
+                                modal.addComponents(new ActionRowBuilder().addComponents(namesInput));
+                                await ci.showModal(modal);
+
+                                const submitted = await ci.awaitModalSubmit({
+                                    filter: ms => ms.user.id === interaction.user.id && ms.customId === `cm_bulk_create_modal_${guildId}`,
+                                    time: 60000
+                                }).catch(() => null);
+
+                                if (submitted) {
+                                    await submitted.deferUpdate();
+                                    const rawInput = submitted.fields.getTextInputValue("channel_names");
+                                    const names = rawInput.split(",").map(n => n.trim()).filter(Boolean);
+
+                                    if (names.length === 0) {
+                                        return submitted.editReply({ content: "❌ No valid channel names provided.", components: [] });
+                                    }
+
+                                    let createdCount = 0;
+                                    const createdNames = [];
+
+                                    for (const name of names.slice(0, 10)) {
+                                        try {
+                                            const ch = await guild.channels.create({
+                                                name,
+                                                type: ChannelType.GuildText,
+                                                reason: `Bulk created by bot owner ${interaction.user.tag}`
+                                            });
+                                            createdCount++;
+                                            createdNames.push(`#${ch.name}`);
+                                        } catch {}
+                                    }
+
+                                    await submitted.editReply({
+                                        content: `✅ Successfully bulk created **${createdCount}** channel(s): ${createdNames.join(", ")} in **${guild.name}**.`,
+                                        components: []
+                                    });
+                                }
                             } else if (action === "delete") {
                                 await ci.deferUpdate();
-                                if (textChannels.length === 0) {
+                                const arrChannels = Array.from(textChannels.values()).slice(0, 25);
+                                if (arrChannels.length === 0) {
                                     return ci.editReply({ content: "❌ No text channels available to delete.", components: [] });
                                 }
 
@@ -197,7 +248,7 @@ module.exports = {
                                     .setCustomId(`cm_delete_select_${guildId}`)
                                     .setPlaceholder("Select channel to delete")
                                     .addOptions(
-                                        textChannels.map(c => ({
+                                        arrChannels.map(c => ({
                                             label: `#${c.name}`.substring(0, 100),
                                             description: `ID: ${c.id}`,
                                             value: c.id
@@ -227,6 +278,62 @@ module.exports = {
                                         await targetCh.delete(`Requested by bot owner ${interaction.user.tag}`);
                                         await di.editReply({
                                             content: `✅ Successfully deleted channel **#${chName}** (\`${chId}\`) from **${guild.name}**.`,
+                                            components: []
+                                        });
+                                    } catch (err) {
+                                        handleApiError(err, interaction);
+                                    }
+                                });
+                            } else if (action === "bulk_delete") {
+                                await ci.deferUpdate();
+                                const arrChannels = Array.from(textChannels.values()).slice(0, 25);
+                                if (arrChannels.length === 0) {
+                                    return ci.editReply({ content: "❌ No text channels available to delete.", components: [] });
+                                }
+
+                                const bulkDelSelect = new StringSelectMenuBuilder()
+                                    .setCustomId(`cm_bulk_delete_select_${guildId}`)
+                                    .setPlaceholder("Select channels to bulk delete (up to 25)")
+                                    .setMinValues(1)
+                                    .setMaxValues(Math.min(arrChannels.length, 25))
+                                    .addOptions(
+                                        arrChannels.map(c => ({
+                                            label: `#${c.name}`.substring(0, 100),
+                                            description: `ID: ${c.id}`,
+                                            value: c.id
+                                        }))
+                                    );
+
+                                const bRow = new ActionRowBuilder().addComponents(bulkDelSelect);
+                                const bMsg = await ci.editReply({
+                                    content: `Select one or more channels in **${guild.name}** to bulk delete:`,
+                                    components: [bRow]
+                                });
+
+                                const bCollector = bMsg.createMessageComponentCollector({
+                                    filter: bi => bi.user.id === interaction.user.id && bi.customId === `cm_bulk_delete_select_${guildId}`,
+                                    time: 60000
+                                });
+
+                                bCollector.on("collect", async bi => {
+                                    try {
+                                        await bi.deferUpdate();
+                                        const selectedIds = bi.values;
+                                        let deletedCount = 0;
+                                        const deletedNames = [];
+
+                                        for (const id of selectedIds) {
+                                            const targetCh = guild.channels.cache.get(id);
+                                            if (targetCh) {
+                                                const name = targetCh.name;
+                                                await targetCh.delete(`Bulk deleted by bot owner ${interaction.user.tag}`);
+                                                deletedCount++;
+                                                deletedNames.push(`#${name}`);
+                                            }
+                                        }
+
+                                        await bi.editReply({
+                                            content: `✅ Successfully bulk deleted **${deletedCount}** channel(s): ${deletedNames.join(", ")} from **${guild.name}**.`,
                                             components: []
                                         });
                                     } catch (err) {
