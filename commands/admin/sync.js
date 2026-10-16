@@ -2,20 +2,32 @@ const {
     SlashCommandBuilder,
     REST,
     Routes,
-    MessageFlags
+    MessageFlags,
+    InteractionContextType,
+    ApplicationIntegrationType
 } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
+const config = require("../../config/config");
 
 function isOwner(userId) {
-    const ownerId = process.env.BOT_OWNER_ID;
+    const ownerId = config.botOwnerId;
     return ownerId && userId === ownerId;
 }
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("sync")
-        .setDescription("Sync slash commands globally (Bot Owner Only)"),
+        .setDescription("Sync all global slash commands instantly with Discord (Bot Owner Only)")
+        .setContexts(
+            InteractionContextType.Guild,
+            InteractionContextType.BotDM,
+            InteractionContextType.PrivateChannel
+        )
+        .setIntegrationTypes(
+            ApplicationIntegrationType.GuildInstall,
+            ApplicationIntegrationType.UserInstall
+        ),
 
     async execute(interaction) {
         if (!isOwner(interaction.user.id)) {
@@ -28,7 +40,7 @@ module.exports = {
         try {
             await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-            const commands = [];
+            const commandMap = new Map();
             const foldersPath = path.join(__dirname, "../../commands");
             const commandFolders = fs.readdirSync(foldersPath);
 
@@ -41,20 +53,28 @@ module.exports = {
                     const filePath = path.join(commandsPath, file);
                     const command = require(filePath);
                     if ("data" in command && "execute" in command) {
-                        commands.push(command.data.toJSON());
+                        const cmdName = command.data.name;
+                        if (!config.features.moderation && ["mod"].includes(cmdName)) continue;
+                        if (!config.features.channelManager && ["channelmanager"].includes(cmdName)) continue;
+                        if (!config.features.broadcast && ["broadcast"].includes(cmdName)) continue;
+
+                        if (!commandMap.has(cmdName)) {
+                            commandMap.set(cmdName, command.data.toJSON());
+                        }
                     }
                 }
             }
 
-            const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+            const commands = Array.from(commandMap.values());
+            const rest = new REST({ version: "10" }).setToken(config.token);
 
             await rest.put(
-                Routes.applicationCommands(process.env.CLIENT_ID),
+                Routes.applicationCommands(config.clientId),
                 { body: commands }
             );
 
             await interaction.editReply({
-                content: `✅ Successfully synced ${commands.length} global slash command(s) with Discord.`
+                content: `✅ Successfully synced **${commands.length}** global slash command(s) with Discord.`
             });
         } catch (error) {
             console.error("Failed to sync commands:", error);
