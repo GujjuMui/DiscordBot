@@ -34,7 +34,7 @@ module.exports = {
             return interaction.reply({
                 content: "❌ You don't have permission to use this command.",
                 flags: MessageFlags.Ephemeral
-            });
+            }).catch(() => {});
         }
 
         try {
@@ -80,9 +80,20 @@ module.exports = {
             });
         } catch (error) {
             console.error("Failed to sync commands:", error);
-            await interaction.editReply({
-                content: `❌ Failed to sync commands: ${error.message}`
-            });
+            try {
+                if (interaction.deferred || interaction.replied) {
+                    await interaction.editReply({
+                        content: `❌ Failed to sync commands: ${error.message}`
+                    });
+                } else {
+                    await interaction.reply({
+                        content: `❌ Failed to sync commands: ${error.message}`,
+                        flags: MessageFlags.Ephemeral
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to send error reply:", err);
+            }
         }
     }
 };
