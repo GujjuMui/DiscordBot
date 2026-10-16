@@ -28,6 +28,8 @@ function handleApiError(error, interaction) {
 
     if (code === 50013) {
         message = "❌ Missing Permissions: I do not have permission to manage channels in that server.";
+    } else if (code === 50074) {
+        message = "❌ Cannot delete a channel required for community servers.";
     }
 
     try {
@@ -317,11 +319,11 @@ module.exports = {
 
                                 bCollector.on("collect", async bi => {
                                     try {
-                                        // Acknowledge interaction immediately before performing deletion loop
                                         await bi.deferUpdate();
 
                                         const selectedIds = bi.values;
                                         let deletedCount = 0;
+                                        let skippedCommunityCount = 0;
                                         const deletedNames = [];
 
                                         for (const id of selectedIds) {
@@ -329,17 +331,36 @@ module.exports = {
                                             if (targetCh) {
                                                 const name = targetCh.name;
                                                 try {
+                                                    // Prevent deleting Community required channels (system channel, rules channel, public updates, etc.)
+                                                    if (
+                                                        guild.systemChannelId === id ||
+                                                        guild.rulesChannelId === id ||
+                                                        guild.publicUpdatesChannelId === id
+                                                    ) {
+                                                        skippedCommunityCount++;
+                                                        continue;
+                                                    }
+
                                                     await targetCh.delete(`Bulk deleted by bot owner ${interaction.user.tag}`);
                                                     deletedCount++;
                                                     deletedNames.push(`#${name}`);
                                                 } catch (delErr) {
-                                                    console.error(`Failed to delete channel ${name}:`, delErr);
+                                                    if (delErr.code === 50074) {
+                                                        skippedCommunityCount++;
+                                                    } else {
+                                                        console.error(`Failed to delete channel ${name}:`, delErr);
+                                                    }
                                                 }
                                             }
                                         }
 
+                                        let replyMsg = `✅ Successfully bulk deleted **${deletedCount}** channel(s): ${deletedNames.join(", ") || "None"} from **${guild.name}**.`;
+                                        if (skippedCommunityCount > 0) {
+                                            replyMsg += `\n⚠️ Skipped **${skippedCommunityCount}** community-required channel(s).`;
+                                        }
+
                                         await bi.editReply({
-                                            content: `✅ Successfully bulk deleted **${deletedCount}** channel(s): ${deletedNames.join(", ")} from **${guild.name}**.`,
+                                            content: replyMsg,
                                             components: []
                                         });
                                     } catch (err) {
