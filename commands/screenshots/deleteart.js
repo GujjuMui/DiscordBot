@@ -6,7 +6,7 @@ const {
     PermissionFlagsBits
 } = require("discord.js");
 
-const Art = require("../../database/Art");
+const ArtRepository = require("../../repositories/ArtRepository");
 const settings = require("../../config/settings");
 const logger = require("../../utils/logger");
 
@@ -38,9 +38,7 @@ module.exports = {
             .getString("id")
             .toUpperCase();
 
-        const art = await Art.findOne({
-            artId: id
-        });
+        const art = await ArtRepository.findByCode(id);
 
         if (!art) {
 

@@ -20,7 +20,6 @@ const config = {
 
     // Feature Flags (Default to true so modules load out of the box)
     features: {
-        moderation: parseBool(process.env.ENABLE_MODERATION, true),
         channelManager: parseBool(process.env.ENABLE_CHANNEL_MANAGER, true),
         broadcast: parseBool(process.env.ENABLE_BROADCAST, true),
         tickets: parseBool(process.env.ENABLE_TICKETS, true),
@@ -43,7 +42,6 @@ const config = {
 console.log("========================================");
 console.log("          FEATURE FLAGS STATUS          ");
 console.log("========================================");
-console.log(`- Moderation Suite    : ${config.features.moderation ? "✅ ENABLED" : "❌ DISABLED"}`);
 console.log(`- Channel Manager     : ${config.features.channelManager ? "✅ ENABLED" : "❌ DISABLED"}`);
 console.log(`- Broadcast System    : ${config.features.broadcast ? "✅ ENABLED" : "❌ DISABLED"}`);
 console.log(`- Allowed Guilds      : ${config.allowedGuildIds.length > 0 ? config.allowedGuildIds.join(", ") : "All Guilds (Unrestricted)"}`);

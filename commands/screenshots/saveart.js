@@ -3,7 +3,7 @@ const {
     MessageFlags
 } = require("discord.js");
 
-const Art = require("../../database/Art");
+const ArtRepository = require("../../repositories/ArtRepository");
 
 const { generateArtId } = require("../../utils/idGenerator");
 
@@ -74,7 +74,7 @@ module.exports = {
             artId
         );
 
-        const art = new Art({
+        const art = await ArtRepository.create({
 
             artId,
             artName: name,
@@ -87,8 +87,6 @@ module.exports = {
             uploaderId: interaction.user.id
 
         });
-
-        await art.save();
 
         const channel = interaction.guild.channels.cache.find(
             c => c.name === settings.channels.arts
@@ -115,7 +113,7 @@ const message = await channel.send({
         art.discordMessageId = message.id;
         art.messageUrl = message.url;
 
-        await art.save();
+        await ArtRepository.update(art.artId, { discordMessageId: message.id, messageUrl: message.url });
 
         await logger({
 

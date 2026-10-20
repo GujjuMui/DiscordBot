@@ -53,7 +53,7 @@ async function loadBot(options = {}) {
             statSync: entry => ({ isDirectory: () => !entry.endsWith('.txt') })
         };
         if (id === 'path') return path;
-        if (id === './config/config') return { token: 'test-token' };
+        if (id === './config/config') return { token: 'test-token', features: { channelManager: true, broadcast: true } };
         if (id === './database/Card') return {};
         if (id === './config/settings') return {};
         if (id === './database/mongo') return async () => {
@@ -69,6 +69,7 @@ async function loadBot(options = {}) {
             if (options.permissionError === name) throw new Error('permission failed');
             return options.denied !== name;
         };
+        if (id === './utils/checkGuildAuth') return async () => true;
         if (id.startsWith('./events/')) return async interaction => {
             const name = id.slice('./events/'.length);
             calls.push(name);
@@ -447,10 +448,10 @@ test('deleteart.js defers reply before DB query', () => {
         'utf8'
     );
     const deferPos = source.indexOf('deferReply');
-    const findPos = source.indexOf('Art.findOne');
+    const findPos = source.indexOf('ArtRepository.findByCode');
     assert.ok(deferPos > -1, 'deleteart must call deferReply');
-    assert.ok(findPos > -1, 'deleteart must call Art.findOne');
-    assert.ok(deferPos < findPos, 'deferReply must come before Art.findOne');
+    assert.ok(findPos > -1, 'deleteart must call ArtRepository.findByCode');
+    assert.ok(deferPos < findPos, 'deferReply must come before ArtRepository.findByCode');
 });
 
 test('diagnostics does not check non-existent TEST_GUILD_ID or MAIN_GUILD_ID', () => {

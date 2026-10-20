@@ -4,7 +4,7 @@ const {
     PermissionFlagsBits
 } = require("discord.js");
 
-const Link = require("../../database/Link");
+const LinkRepository = require("../../repositories/LinkRepository");
 const settings = require("../../config/settings");
 const logger = require("../../utils/logger");
 
@@ -34,9 +34,7 @@ module.exports = {
 
         const title = interaction.options.getString("title");
 
-        const deleted = await Link.findOneAndDelete({
-            title
-        });
+        const deleted = await LinkRepository.delete(title);
 
         if (!deleted) {
 

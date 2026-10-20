@@ -1,0 +1,26 @@
+const Art = require("../models/Art");
+
+class ArtRepository {
+    async findByCode(code) {
+        return await Art.findOne({ code }).lean();
+    }
+
+    async create(data) {
+        const art = new Art(data);
+        return await art.save();
+    }
+
+    async update(code, updateData) {
+        return await Art.findOneAndUpdate({ code }, updateData, { new: true }).lean();
+    }
+
+    async delete(code) {
+        return await Art.findOneAndDelete({ code }).lean();
+    }
+
+    async findAll() {
+        return await Art.find({}).lean();
+    }
+}
+
+module.exports = new ArtRepository();

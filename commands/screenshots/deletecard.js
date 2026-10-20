@@ -4,7 +4,7 @@ const {
     PermissionFlagsBits
 } = require("discord.js");
 
-const Card = require("../../database/Card");
+const CardRepository = require("../../repositories/CardRepository");
 
 const settings = require("../../config/settings");
 
@@ -39,9 +39,7 @@ module.exports = {
         .getString("id")
         .toUpperCase();
 
-    const card = await Card.findOne({
-        cardId
-    });
+    const card = await CardRepository.findByCode(cardId);
 
     if (!card) {
 
@@ -77,9 +75,7 @@ if (channel && card.discordMessageId) {
 
 }
 
-await Card.deleteOne({
-    cardId
-});
+await CardRepository.delete(cardId);
 
 await logger({
 

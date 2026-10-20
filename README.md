@@ -18,8 +18,7 @@ A modular, production-grade Discord.js v14 bot built for competitive gaming clan
 - **Guild Whitelisting**: Restricts bot execution to authorized guilds (`ALLOWED_GUILD_IDS`) to prevent unauthorized usage.
 
 ### 2. 🔨 Moderation Suite
-- **Bulk Ban (`/bulkban`)**: Instantly ban multiple rule-breakers or inactive members by providing a comma-separated list of User IDs. Includes automatic audit logging and reason tracking.
-- **Claim Admin (`/claimadmin`)**: Secure recovery command restricted to the designated Bot Owner (`BOT_OWNER_ID`) that instantly provisions a high-privilege role with Administrator, Ban Members, and Kick Members permissions, assigning it directly to the owner.
+- **Channel Moderation & Safety**: Built-in channel safeguards and bulk channel management tools.
 - **Diagnostics & Permission Checkers**: Inspect server permissions, bot operational health, and guild security configurations.
 
 ### 3. 📁 Channel Manager
@@ -81,7 +80,6 @@ MAIN_GUILD_ID=your_main_guild_id_here
 ALLOWED_GUILD_IDS=guild_id_1,guild_id_2
 
 # Feature Flags
-ENABLE_MODERATION=true
 ENABLE_CHANNEL_MANAGER=true
 ENABLE_BROADCAST=true
 

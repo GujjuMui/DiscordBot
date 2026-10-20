@@ -5,7 +5,7 @@ const {
 
 const { createCardEmbed } = require("../../utils/embedBuilder");
 
-const Card = require("../../database/Card");
+const CardRepository = require("../../repositories/CardRepository");
 
 const { generateCardId } = require("../../utils/idGenerator");
 
@@ -90,7 +90,7 @@ module.exports = {
                 });
         }
 
-        const card = new Card({
+        const card = await CardRepository.create({
 
                 cardId,
                 cardName: name,
@@ -98,13 +98,11 @@ module.exports = {
                 category: interaction.options.getString("category"),
                 tags,
                 imageFile,
-                
+
                 uploader: interaction.user.username,
                 uploaderId: interaction.user.id
 
                 });
-
-            await card.save();
 
 const { embed, files } = createCardEmbed(card, 0, 1);
 
@@ -120,7 +118,7 @@ const message = await channel.send({
 
         card.messageUrl = message.url;
 
-        await card.save();
+        await CardRepository.update(card.cardId, { discordMessageId: message.id, messageUrl: message.url });
 
         await logger({
 

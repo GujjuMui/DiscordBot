@@ -112,10 +112,6 @@ for (const folder of commandFolders) {
             const cmdName = command.data.name;
 
             // Feature flag filters
-            if (!config.features.moderation && ["mod"].includes(cmdName)) {
-                console.log(`[FeatureFlag] Skipping command '${cmdName}' (ENABLE_MODERATION is false)`);
-                continue;
-            }
             if (!config.features.channelManager && ["channelmanager"].includes(cmdName)) {
                 console.log(`[FeatureFlag] Skipping command '${cmdName}' (ENABLE_CHANNEL_MANAGER is false)`);
                 continue;

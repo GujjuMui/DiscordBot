@@ -4,7 +4,7 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
-const Link = require("../../database/Link");
+const LinkRepository = require("../../repositories/LinkRepository");
 const settings = require("../../config/settings");
 const logger = require("../../utils/logger");
 
@@ -55,7 +55,7 @@ module.exports = {
             });
         }
 
-        const link = new Link({
+        const link = await LinkRepository.create({
 
             title,
             url,
@@ -65,8 +65,6 @@ module.exports = {
             addedById: interaction.user.id
 
         });
-
-        await link.save();
 
         await logger({
 
@@ -126,7 +124,7 @@ module.exports = {
             });
 
             link.discordMessageId = message.id;
-            await link.save();
+            await LinkRepository.update(link.title, { discordMessageId: message.id });
 
         }
 
