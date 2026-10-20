@@ -1,4 +1,4 @@
-const Card = require("../models/Card");
+const Card = require("../database/Card");
 
 class CardRepository {
     async findByCode(code) {

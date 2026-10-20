@@ -1,4 +1,4 @@
-const Art = require("../models/Art");
+const Art = require("../database/Art");
 
 class ArtRepository {
     async findByCode(code) {

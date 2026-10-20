@@ -1,4 +1,4 @@
-const Link = require("../models/Link");
+const Link = require("../database/Link");
 
 class LinkRepository {
     async findByTitle(title) {
