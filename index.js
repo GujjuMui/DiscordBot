@@ -110,17 +110,6 @@ for (const folder of commandFolders) {
 
         if ("data" in command && "execute" in command) {
             const cmdName = command.data.name;
-
-            // Feature flag filters
-            if (!config.features.channelManager && ["channelmanager"].includes(cmdName)) {
-                console.log(`[FeatureFlag] Skipping command '${cmdName}' (ENABLE_CHANNEL_MANAGER is false)`);
-                continue;
-            }
-            if (!config.features.broadcast && ["broadcast"].includes(cmdName)) {
-                console.log(`[FeatureFlag] Skipping command '${cmdName}' (ENABLE_BROADCAST is false)`);
-                continue;
-            }
-
             client.commands.set(cmdName, command);
         }
     }

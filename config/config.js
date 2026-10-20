@@ -18,10 +18,8 @@ const config = {
         .map(id => id.trim())
         .filter(Boolean),
 
-    // Feature Flags (Default to true so modules load out of the box)
+    // Feature Flags
     features: {
-        channelManager: parseBool(process.env.ENABLE_CHANNEL_MANAGER, true),
-        broadcast: parseBool(process.env.ENABLE_BROADCAST, true),
         tickets: parseBool(process.env.ENABLE_TICKETS, true),
         tryouts: parseBool(process.env.ENABLE_TRYOUTS, true),
         verification: parseBool(process.env.ENABLE_VERIFICATION, true)
@@ -42,8 +40,6 @@ const config = {
 console.log("========================================");
 console.log("          FEATURE FLAGS STATUS          ");
 console.log("========================================");
-console.log(`- Channel Manager     : ${config.features.channelManager ? "✅ ENABLED" : "❌ DISABLED"}`);
-console.log(`- Broadcast System    : ${config.features.broadcast ? "✅ ENABLED" : "❌ DISABLED"}`);
 console.log(`- Allowed Guilds      : ${config.allowedGuildIds.length > 0 ? config.allowedGuildIds.join(", ") : "All Guilds (Unrestricted)"}`);
 console.log("========================================");
 

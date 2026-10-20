@@ -53,7 +53,7 @@ async function loadBot(options = {}) {
             statSync: entry => ({ isDirectory: () => !entry.endsWith('.txt') })
         };
         if (id === 'path') return path;
-        if (id === './config/config') return { token: 'test-token', features: { channelManager: true, broadcast: true } };
+        if (id === './config/config') return { token: 'test-token', features: {} };
         if (id === './database/Card') return {};
         if (id === './config/settings') return {};
         if (id === './database/mongo') return async () => {
