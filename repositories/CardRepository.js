@@ -18,8 +18,8 @@ class CardRepository {
         return await Card.findOneAndDelete({ code }).lean();
     }
 
-    async findAll() {
-        return await Card.find({}).lean();
+    async findAll(limit = 100) {
+        return await Card.find({}).limit(limit).lean();
     }
 }
 

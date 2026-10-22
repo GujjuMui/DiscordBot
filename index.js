@@ -167,12 +167,22 @@ client.on(Events.InteractionCreate, async interaction => {
         }
 
         if (interaction.isStringSelectMenu()) {
-            await runHandlers(handlerFiles.select, interaction);
+            try {
+                await runHandlers(handlerFiles.select, interaction);
+            } catch (error) {
+                logError("SELECT MENU ERROR", error);
+                await replyWithError(interaction, false);
+            }
             return;
         }
 
         if (interaction.isModalSubmit()) {
-            await runHandlers(handlerFiles.modal, interaction);
+            try {
+                await runHandlers(handlerFiles.modal, interaction);
+            } catch (error) {
+                logError("MODAL ERROR", error);
+                await replyWithError(interaction, false);
+            }
             return;
         }
 

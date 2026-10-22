@@ -18,8 +18,8 @@ class ArtRepository {
         return await Art.findOneAndDelete({ code }).lean();
     }
 
-    async findAll() {
-        return await Art.find({}).lean();
+    async findAll(limit = 100) {
+        return await Art.find({}).limit(limit).lean();
     }
 }
 
