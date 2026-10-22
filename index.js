@@ -127,8 +127,8 @@ client.once(Events.ClientReady, () => {
     console.log("🟢 Status       : Online");
     console.log("========================================");
 
-    // Set initial presence (Listening to Karan Aujla)
-    require("./utils/presence")(client);
+    // Set initial presence
+    // require("./utils/presence")(client);
 });
 
 client.on(Events.GuildMemberAdd, async member => {
