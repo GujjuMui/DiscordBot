@@ -70,6 +70,17 @@ module.exports = {
             const commands = Array.from(commandMap.values());
             const rest = new REST({ version: "10" }).setToken(config.token);
 
+            // Clear guild-specific commands first to remove duplicates
+            const guildId = interaction.guildId;
+            if (guildId) {
+                try {
+                    await rest.put(
+                        Routes.applicationGuildCommands(config.clientId, guildId),
+                        { body: [] }
+                    );
+                } catch (_) {}
+            }
+
             await rest.put(
                 Routes.applicationCommands(config.clientId),
                 { body: commands }

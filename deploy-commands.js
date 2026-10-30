@@ -23,8 +23,8 @@ for (const folder of commandFolders) {
         if ("data" in command && "execute" in command) {
             const cmdName = command.data.name;
 
-            if (!config.features.channelManager && ["channelmanager"].includes(cmdName)) continue;
-            if (!config.features.broadcast && ["broadcast"].includes(cmdName)) continue;
+            if (!config.features.channelManager && cmdName === "channelmanager") continue;
+            if (!config.features.broadcast && cmdName === "broadcast") continue;
 
             if (commandMap.has(cmdName)) {
                 console.log(`⚠️ Duplicate command name "${cmdName}" found in ${file}. Skipping.`);
@@ -43,6 +43,25 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
 (async () => {
     try {
+        // Step 1: Clear guild-specific commands from all allowed guilds to remove duplicates
+        const allowedGuilds = (process.env.ALLOWED_GUILD_IDS || "")
+            .split(",")
+            .map(id => id.trim())
+            .filter(Boolean);
+
+        for (const guildId of allowedGuilds) {
+            try {
+                await rest.put(
+                    Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
+                    { body: [] }
+                );
+                console.log(`🧹 Cleared guild commands for ${guildId}`);
+            } catch (err) {
+                console.warn(`⚠️ Could not clear guild ${guildId}: ${err.message}`);
+            }
+        }
+
+        // Step 2: Register all commands globally
         console.log(`Registering ${commands.length} unique slash command(s) globally...`);
 
         await rest.put(
