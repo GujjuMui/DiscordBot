@@ -7,7 +7,7 @@ async function sendAutoReply(message, text, key, cooldownMs) {
         return false;
     }
 
-    await message.reply(text);
+    await message.reply({ content: text, allowedMentions: { parse: [] } });
     cooldown.update(key);
     return true;
 }

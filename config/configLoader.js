@@ -13,11 +13,11 @@ async function getSettings(guildId) {
             channels: { ...staticSettings.channels, ...(record.channels || {}) },
             roles: { ...staticSettings.roles, ...(record.roles || {}) },
             selfRoles: {
-                channel: record.channels?.get?.("selfRolesChannel") || staticSettings.selfRoles.channel,
+                channel: record.channels?.selfRolesChannel || staticSettings.selfRoles.channel,
                 banners: { ...staticSettings.selfRoles.banners, ...(record.banners || {}) }
             },
             clan: {
-                embedImage: record.extras?.get?.("clanEmbedImage") || staticSettings.clan.embedImage
+                embedImage: record.extras?.clanEmbedImage || staticSettings.clan.embedImage
             }
         };
     } catch (err) {

@@ -18,7 +18,6 @@ function loadMongo(failure) {
     vm.runInNewContext(source, {
         module: moduleMock,
         require(id) {
-            if (id === '../config/settings') return {};
             if (id === 'mongoose') return { connect: async value => {
                 calls.push(value);
                 if (failure) throw failure;

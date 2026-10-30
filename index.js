@@ -89,6 +89,8 @@ async function replyWithError(interaction, respondToDeferred = true) {
             });
         }
     } catch (error) {
+        // Silently ignore expired interactions (10062 = Unknown interaction)
+        if (error.code === 10062) return;
         console.error("Failed to send error message:");
         console.error(error);
     }
@@ -160,6 +162,7 @@ client.on(Events.InteractionCreate, async interaction => {
             try {
                 await runHandlers(handlerFiles.button, interaction);
             } catch (error) {
+                if (error.code === 10062) return; // expired interaction, ignore
                 logError("BUTTON ERROR", error);
                 await replyWithError(interaction, false);
             }
@@ -203,6 +206,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
         await command.execute(interaction);
     } catch (error) {
+        if (error.code === 10062) return; // expired interaction, ignore
         logError("INTERACTION ERROR", error);
         await replyWithError(interaction);
     }
