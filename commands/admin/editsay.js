@@ -5,7 +5,7 @@ const {
     InteractionContextType,
     ApplicationIntegrationType
 } = require("discord.js");
-const config = require("../../config/config");
+const owner = require("../../config/owner");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,8 +18,9 @@ module.exports = {
         .addStringOption(opt => opt.setName("new_content").setDescription("New message content").setRequired(true)),
 
     async execute(interaction) {
-        if (!config.botOwnerId || interaction.user.id !== config.botOwnerId) {
-            if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        if (!owner.ownerId || interaction.user.id !== owner.ownerId) {
+            // Guarded with ?. — interaction.member is null in DMs.
+            if (!interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
                 return interaction.reply({
                     content: "❌ You must be an Administrator or Bot Owner to use this command.",
                     flags: MessageFlags.Ephemeral

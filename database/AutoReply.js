@@ -22,7 +22,7 @@ const autoReplySchema = new mongoose.Schema({
 
     cooldown: {
         type: Number,
-        default: 43200000
+        default: require("../config/constants").AUTOREPLY_DEFAULT_COOLDOWN_MS
     },
 
     enabled: {
@@ -43,5 +43,7 @@ const autoReplySchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+autoReplySchema.index({ targetId: 1, enabled: 1 });
 
 module.exports = mongoose.model("AutoReply", autoReplySchema);

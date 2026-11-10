@@ -7,6 +7,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const root = path.resolve(__dirname, '..');
+const OWNER_ID_LITERAL = '1466871611' + '893219455';
+
 const source = fs.readFileSync(path.join(root, 'index.js'), 'utf8');
 const routes = {
     button: ['giveroleButtonHandler', 'editCardButtonHandler', 'editArtButtonHandler', 'deleteArtButtonHandler', 'verificationButtonHandler', 'clanButtonHandler', 'tryoutButtonHandler', 'categoryMenuButtonHandler', 'galleryButtonHandler', 'selfRoleHandler'],
@@ -70,6 +72,62 @@ async function loadBot(options = {}) {
             return options.denied !== name;
         };
         if (id === './utils/checkGuildAuth') return async () => true;
+        // New index.js top-level requires (architecture v1.3). Each stub
+        // mirrors the real module's contract for the paths the VM
+        // exercises; the real modules are covered by their own tests.
+        if (id === './utils/loadCommands') return {
+            loadCommands: () => new Map([['sample', command]])
+        };
+        if (id === './utils/discord') return {
+            logError: (label, error) => { errors.push([label, error]); },
+            replyWithError: async (interaction, respondToDeferred = true) => {
+                try {
+                    if (interaction.deferred) {
+                        if (!respondToDeferred) return;
+                        await interaction.editReply({ content: '❌ Something went wrong.' });
+                    } else if (!interaction.replied) {
+                        await interaction.reply({ content: '❌ Something went wrong.', flags: 64 });
+                    }
+                } catch (error) {
+                    if (error.code === 10062) return;
+                    if (error.code === 40060 && typeof interaction.followUp === 'function') {
+                        try {
+                            await interaction.followUp({ content: '❌ Something went wrong.', flags: 64 });
+                            return;
+                        } catch (followUpError) {
+                            if (followUpError.code === 10062) return;
+                            errors.push(['Failed to send error message:', followUpError]);
+                            return;
+                        }
+                    }
+                    errors.push(['Failed to send error message:', error]);
+                }
+            }
+        };
+        if (id === './core/router') return {
+            // The VM interaction objects carry no customId, so prefix
+            // dispatch would never match here; the stub keeps the old
+            // sequential trial order the tests assert. Real prefix
+            // dispatch is covered by tests/router.test.js.
+            createRouter: handlerFiles => ({
+                async dispatch(kind, interaction, ctx) {
+                    for (const name of handlerFiles[kind] || []) {
+                        if (await mockRequire(`./events/${name}`)(interaction, ctx)) return true;
+                    }
+                    return false;
+                },
+                async runHandlers(names, interaction, ctx) {
+                    for (const name of names) {
+                        if (await mockRequire(`./events/${name}`)(interaction, ctx)) return true;
+                    }
+                    return false;
+                }
+            })
+        };
+        if (id === './core/context') return {
+            createContext: clientArg => ({ client: clientArg })
+        };
+        if (id === './services/stateSweeper') return { startSweeper: () => null };
         if (id.startsWith('./events/')) return async interaction => {
             const name = id.slice('./events/'.length);
             calls.push(name);
@@ -250,8 +308,11 @@ test('owner-only handlers use centralized owner configuration', async () => {
         'utf8'
     );
 
-    const ownerIdMatch = ownerConfig.match(/ownerId:\s*"([^"]+)"/);
-    assert.ok(ownerIdMatch);
+    // owner.js must NOT hardcode the owner ID: it re-exports
+    // config.botOwnerId (env BOT_OWNER_ID) via a getter.
+    assert.ok(!ownerConfig.includes(OWNER_ID_LITERAL), 'owner.js must not hardcode the owner ID');
+    assert.ok(ownerConfig.includes('./config'), 'owner.js must re-export config');
+    assert.ok(ownerConfig.includes('config.botOwnerId'), 'owner.js must read config.botOwnerId');
 
     for (const eventFile of [
         path.join(root, 'events', 'giveroleButtonHandler.js'),
@@ -259,7 +320,7 @@ test('owner-only handlers use centralized owner configuration', async () => {
     ]) {
         const source = fs.readFileSync(eventFile, 'utf8');
         assert.ok(source.includes('owner.ownerId'));
-        assert.ok(!source.includes(ownerIdMatch[1]));
+        assert.ok(!source.includes(OWNER_ID_LITERAL));
     }
 });
 
@@ -298,26 +359,46 @@ test('gallery and link handlers contain no diagnostic console logging', async ()
 
 
 // Phase 3 gallery runtime regression coverage.
+// Architecture v1.3: the category query + embed build moved into
+// services/galleryService.js (buildCategoryGallery); the handler
+// still opens gallery state keyed by message id and answers with
+// interaction.update() itself (it does not deferUpdate).
 test('art category handler uses galleryV2 and keys state by message id', async () => {
     const source = fs.readFileSync(
         path.join(root, 'events', 'selectMenuHandler.js'),
         'utf8'
     );
+    const service = fs.readFileSync(
+        path.join(root, 'services', 'galleryService.js'),
+        'utf8'
+    );
 
     assert.ok(source.includes('../services/galleryV2'));
     assert.ok(source.includes('gallery.open(interaction.message.id'));
-    assert.ok(!source.includes('../services/galleryService'));
-    assert.ok(!source.includes('gallery.open(\n        interaction.user.id'));
+    assert.ok(source.includes('../services/galleryService'));
+    assert.ok(source.includes('buildCategoryGallery'));
+    assert.ok(!source.includes('gallery.open(interaction.user.id'));
+    // The service itself keys gallery state by message id.
+    assert.ok(service.includes('gallery.open(interaction.message.id'));
 });
 
+// Architecture v1.3: linkSelectHandler delegates the whole
+// category -> gallery flow to services/galleryService.js
+// (openCategoryGallery), which keys gallery state by message id.
 test('link category handler keys gallery state by message id', async () => {
     const source = fs.readFileSync(
         path.join(root, 'events', 'linkSelectHandler.js'),
         'utf8'
     );
+    const service = fs.readFileSync(
+        path.join(root, 'services', 'galleryService.js'),
+        'utf8'
+    );
 
-    assert.ok(source.includes('gallery.open(interaction.message.id'));
+    assert.ok(source.includes('../services/galleryService'));
+    assert.ok(source.includes('openCategoryGallery'));
     assert.ok(!source.includes('gallery.open(interaction.user.id'));
+    assert.ok(service.includes('gallery.open(interaction.message.id'));
 });
 
 
@@ -390,7 +471,7 @@ test('dead config and utils permission files have been removed', () => {
 test('owner-dependent commands import config/owner not settings.ownerId', () => {
     const files = [
         path.join(root, 'commands', 'admin', 'selfroles.js'),
-        path.join(root, 'commands', 'utility', 'say.js'),
+        path.join(root, 'commands', 'admin', 'say.js'),
         path.join(root, 'commands', 'admin', 'member.js'),
         path.join(root, 'commands', 'admin', 'spam.js'),
         path.join(root, 'commands', 'admin', 'stopspam.js'),
@@ -401,7 +482,7 @@ test('owner-dependent commands import config/owner not settings.ownerId', () => 
         assert.ok(source.includes('config/owner'), `${path.basename(file)} must import config/owner`);
         assert.ok(source.includes('owner.ownerId'), `${path.basename(file)} must use owner.ownerId`);
         assert.ok(!source.includes('settings.ownerId'), `${path.basename(file)} must not use settings.ownerId`);
-        assert.ok(!source.includes('"1466871611893219455"'), `${path.basename(file)} must not hardcode the owner ID`);
+        assert.ok(!source.includes(`"${OWNER_ID_LITERAL}"`), `${path.basename(file)} must not hardcode the owner ID`);
     }
 });
 

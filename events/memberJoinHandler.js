@@ -1,25 +1,35 @@
 const { EmbedBuilder } = require("discord.js");
 
 const settings = require("../config/settings");
+const { getSettings } = require("../config/configLoader");
 
 function getConfiguredChannelId(value) {
     return /^\d+$/.test(String(value || "")) ? String(value) : null;
 }
 
+// Cache-first: a channel the bot already knows about is never fetched.
 async function fetchChannel(guild, configuredId) {
     const channelId = getConfiguredChannelId(configuredId);
 
     if (!channelId) return null;
 
-    return guild.channels.fetch(channelId).catch(() => null);
+    return guild.channels.cache.get(channelId)
+        ?? await guild.channels.fetch(channelId).catch(() => null);
 }
 
 module.exports = async member => {
 
-    const onboardingChannel = await fetchChannel(
-        member.guild,
-        settings.channels.onboarding
-    );
+    // DB-overridable settings for this guild, static fallback on error.
+    const guildSettings = await getSettings(member.guild?.id).catch(() => settings);
+    const channels = guildSettings?.channels || settings.channels;
+
+    // The four channel lookups are independent — run them in parallel.
+    const [onboardingChannel, rulesChannel, welcomeChannel, supportChannel] = await Promise.all([
+        fetchChannel(member.guild, channels.onboarding),
+        fetchChannel(member.guild, channels.serverRules),
+        fetchChannel(member.guild, channels.main_welcome),
+        fetchChannel(member.guild, channels.serverSupport)
+    ]);
 
     if (!onboardingChannel) {
 
@@ -31,26 +41,11 @@ module.exports = async member => {
 
     }
 
-    const rulesChannel = await fetchChannel(
-        member.guild,
-        settings.channels.serverRules
-    );
-
     const verificationChannel =
         member.guild.channels.cache.find(
             channel =>
-                channel.name === settings.channels.verification
+                channel.name === channels.verification
         );
-
-    const welcomeChannel = await fetchChannel(
-        member.guild,
-        settings.channels.main_welcome
-    );
-
-    const supportChannel = await fetchChannel(
-        member.guild,
-        settings.channels.serverSupport
-    );
 
     const rulesMention =
         rulesChannel
@@ -104,8 +99,15 @@ module.exports = async member => {
 
         .setTimestamp();
 
-    await onboardingChannel.send({
-        embeds: [embed]
-    });
+    try {
+        await onboardingChannel.send({
+            embeds: [embed]
+        });
+    } catch (err) {
+        // A missing-permission / deleted-channel send must not make
+        // the member-join handler throw (index.js would only log it,
+        // but the join itself is already done).
+        console.error("[memberJoinHandler] Failed to send onboarding message:", err.message);
+    }
 
 };

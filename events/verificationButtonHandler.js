@@ -7,6 +7,7 @@ const {
 } = require("discord.js");
 
 const settings = require("../config/settings");
+const { VERIFY_MIN_ACCOUNT_AGE_MS, VERIFY_MIN_JOIN_AGE_MS } = require("../config/constants");
 
 async function safeReply(interaction, options) {
     try {
@@ -53,7 +54,7 @@ module.exports = async interaction => {
     }
 
     const accountAge = Date.now() - interaction.user.createdTimestamp;
-    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+    const THIRTY_DAYS = VERIFY_MIN_ACCOUNT_AGE_MS;
 
     if (accountAge < THIRTY_DAYS) {
         await safeReply(interaction, {
@@ -64,7 +65,7 @@ module.exports = async interaction => {
     }
 
     const joinedAge = Date.now() - interaction.member.joinedTimestamp;
-    const FIVE_MINUTES = 5 * 60 * 1000;
+    const FIVE_MINUTES = VERIFY_MIN_JOIN_AGE_MS;
 
     if (joinedAge < FIVE_MINUTES) {
         await safeReply(interaction, {
@@ -106,3 +107,5 @@ module.exports = async interaction => {
 
     return true;
 };
+
+module.exports.customIdPrefixes = ["verify"];

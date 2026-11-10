@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require("discord.js");
+const { COLORS } = require("../config/constants");
 
 const footer = {
     text: "HORNET • Shadow Fight Arena Management"
@@ -37,7 +38,7 @@ function publicCommands() {
 
     return new EmbedBuilder()
 
-        .setColor("#2ecc71")
+        .setColor(COLORS.PRIMARY)
 
         .setTitle("💬 Public Commands")
 
@@ -57,7 +58,7 @@ function trustedCommands() {
 
     return new EmbedBuilder()
 
-        .setColor("#3498db")
+        .setColor(COLORS.INFO)
 
         .setTitle("🛡️ Trusted Commands")
 
@@ -126,7 +127,7 @@ function ownerCommands() {
 
     return new EmbedBuilder()
 
-        .setColor("#e74c3c")
+        .setColor(COLORS.ERROR)
 
         .setTitle("👑 Owner Commands")
 

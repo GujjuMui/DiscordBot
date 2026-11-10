@@ -9,10 +9,15 @@ const {
     ApplicationIntegrationType
 } = require("discord.js");
 
-// Helper to check bot owner
+const config = require("../../config/config");
+const owner = require("../../config/owner");
+const { CONFIRM_TIMEOUT_MS } = require("../../config/constants");
+
+// Helper to check bot owner (owner ID comes from config/owner,
+// which reads BOT_OWNER_ID from the environment — no direct
+// process.env access here).
 function isOwner(userId) {
-    const ownerId = process.env.BOT_OWNER_ID;
-    return ownerId && userId === ownerId;
+    return owner.ownerId && userId === owner.ownerId;
 }
 
 // Error handler helper
@@ -59,7 +64,7 @@ module.exports = {
         .addSubcommand(sub =>
             sub
                 .setName("guildlist")
-                .setDescription("List all guilds the bot is in with authorization status and invites")
+                .setDescription("List all guilds the bot is in with authorization status")
         )
         .addSubcommand(sub =>
             sub
@@ -89,31 +94,13 @@ module.exports = {
                 await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
                 const guilds = interaction.client.guilds.cache;
-                const allowedIds = (process.env.ALLOWED_GUILD_IDS || "").split(",").map(id => id.trim()).filter(Boolean);
+                const allowedIds = config.allowedGuildIds;
 
-                let reportLines = [];
+                const reportLines = [];
                 for (const [guildId, guild] of guilds) {
                     const isAuth = allowedIds.includes(guildId);
                     const statusIcon = isAuth ? "✅" : "⚠️";
-
-                    let inviteLink = "N/A";
-                    try {
-                        const channels = await guild.channels.fetch();
-                        const textChannel = channels.find(c => c && c.isTextBased() && c.permissionsFor(guild.members.me)?.has("CreateInstantInvite"));
-
-                        if (textChannel) {
-                            const invite = await textChannel.createInvite({
-                                maxAge: 3600, // 1 hour
-                                maxUses: 1,
-                                reason: "Owner guildlist request"
-                            });
-                            inviteLink = invite.url;
-                        }
-                    } catch (err) {
-                        // Ignore invite generation errors if lacking permissions
-                    }
-
-                    reportLines.push(`**${guild.name}** (${guildId})\n- Members: ${guild.memberCount}\n- Status: ${statusIcon}\n- Invite: ${inviteLink}\n`);
+                    reportLines.push(`**${guild.name}** (${guildId})\n- Members: ${guild.memberCount}\n- Status: ${statusIcon} ${isAuth ? "Authorized" : "Unauthorized"}\n`);
                 }
 
                 // Chunk into < 1900 chars
@@ -184,7 +171,7 @@ module.exports = {
 
                 const collector = response.createMessageComponentCollector({
                     filter: i => i.user.id === interaction.user.id && i.customId === "leaveguild_select",
-                    time: 60000
+                    time: CONFIRM_TIMEOUT_MS
                 });
 
                 collector.on("collect", async i => {
@@ -209,6 +196,11 @@ module.exports = {
 
                         const btnRow = new ActionRowBuilder().addComponents(confirmButton, cancelButton);
 
+                        // Stop the parent collector before opening the
+                        // confirm step, so the two collectors cannot both
+                        // fire on the same interaction.
+                        collector.stop("confirming");
+
                         const confirmMsg = await i.editReply({
                             content: `⚠️ Are you sure you want to leave **${guild.name}** (ID: \`${guild.id}\`, Members: \`${guild.memberCount}\`)?`,
                             components: [btnRow]
@@ -216,7 +208,7 @@ module.exports = {
 
                         const confirmCollector = confirmMsg.createMessageComponentCollector({
                             filter: ci => ci.user.id === interaction.user.id,
-                            time: 60000
+                            time: CONFIRM_TIMEOUT_MS
                         });
 
                         confirmCollector.on("collect", async ci => {
@@ -236,7 +228,7 @@ module.exports = {
                                     });
                                 }
                             } catch (err) {
-                                handleApiError(err, interaction);
+                                handleApiError(err, ci);
                             }
                         });
 

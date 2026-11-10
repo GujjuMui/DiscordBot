@@ -1,12 +1,18 @@
+// Hornet — entry point. Kept deliberately slim: it wires the client,
+// loads the commands, creates the bot context, and delegates.
+//   - command scanning lives in utils/loadCommands.js
+//   - component dispatch lives in core/router.js
+//   - error replies / logging live in utils/discord.js
+//   - the 5-minute state sweeper lives in services/stateSweeper.js
+//   - shared dependencies live in core/context.js
+// Nothing else belongs here.
 const {
     Client,
     GatewayIntentBits,
     Collection,
-    Events,
-    MessageFlags
+    Events
 } = require("discord.js");
 
-const fs = require("fs");
 const path = require("path");
 const config = require("./config/config");
 const connectMongo = require("./database/mongo");
@@ -15,6 +21,11 @@ const checkAdminPermission = require("./utils/checkAdminPermission");
 const checkGuildAuth = require("./utils/checkGuildAuth");
 const protectedCommands = require("./config/protectedCommands");
 const adminCommands = require("./config/adminCommands");
+const { loadCommands } = require("./utils/loadCommands");
+const { logError, replyWithError } = require("./utils/discord");
+const { createRouter } = require("./core/router");
+const { createContext } = require("./core/context");
+const { startSweeper } = require("./services/stateSweeper");
 
 const client = new Client({
     intents: [
@@ -26,8 +37,15 @@ const client = new Client({
 });
 
 client.commands = new Collection();
+for (const [name, command] of loadCommands(path.join(__dirname, "commands"), config)) {
+    client.commands.set(name, command);
+}
 
-const handlerFiles = {
+// One shared context for the whole process; the router passes it to
+// handlers as their second argument.
+const ctx = createContext(client);
+
+const router = createRouter({
     button: [
         "giveroleButtonHandler",
         "editCardButtonHandler",
@@ -53,69 +71,11 @@ const handlerFiles = {
         "editArtModalHandler",
         "tryoutModalHandler"
     ]
-};
+});
 
-const handlerCache = new Map();
-
-function getHandler(name) {
-    if (!handlerCache.has(name)) {
-        handlerCache.set(name, require(`./events/${name}`));
-    }
-    return handlerCache.get(name);
-}
-
-async function runHandlers(names, interaction) {
-    for (const name of names) {
-        if (await getHandler(name)(interaction)) return true;
-    }
-    return false;
-}
-
-function logError(label, error) {
-    console.error("========== " + label + " ==========");
-    console.error(error?.stack || error);
-    console.error("=".repeat(label.length + 20));
-}
-
-async function replyWithError(interaction, respondToDeferred = true) {
-    try {
-        if (interaction.deferred) {
-            if (!respondToDeferred) return;
-            await interaction.editReply({ content: "❌ Something went wrong." });
-        } else if (!interaction.replied) {
-            await interaction.reply({
-                content: "❌ Something went wrong.",
-                flags: MessageFlags.Ephemeral
-            });
-        }
-    } catch (error) {
-        // Silently ignore expired interactions (10062 = Unknown interaction)
-        if (error.code === 10062) return;
-        console.error("Failed to send error message:");
-        console.error(error);
-    }
-}
-
-// Load commands from all folders with Feature Flag checks
-const foldersPath = path.join(__dirname, "commands");
-const commandFolders = fs.readdirSync(foldersPath);
-
-for (const folder of commandFolders) {
-    const commandsPath = path.join(foldersPath, folder);
-    if (!fs.statSync(commandsPath).isDirectory()) continue;
-
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"));
-
-    for (const file of commandFiles) {
-        const filePath = path.join(commandsPath, file);
-        const command = require(filePath);
-
-        if ("data" in command && "execute" in command) {
-            const cmdName = command.data.name;
-            client.commands.set(cmdName, command);
-        }
-    }
-}
+// Prune stale in-memory gallery / menu / auto-reply state every
+// 5 minutes so long uptimes cannot grow these Maps without bound.
+startSweeper();
 
 client.once(Events.ClientReady, () => {
     console.clear();
@@ -129,8 +89,27 @@ client.once(Events.ClientReady, () => {
     console.log("🟢 Status       : Online");
     console.log("========================================");
 
-    // Set initial presence
-    // require("./utils/presence")(client);
+    // Set initial presence (rotating Karan Aujla Listening status).
+    // Lazy require so the module is only loaded once the client is up.
+    require("./utils/presence")(client);
+});
+
+// Discord client-level errors: log them instead of letting an
+// unhandled 'error' event crash the process.
+client.on("error", error => {
+    console.error("========== DISCORD CLIENT ERROR ==========");
+    console.error(error);
+    console.error("=========================================");
+});
+
+client.on("shardError", error => {
+    console.error("========== DISCORD SHARD ERROR ==========");
+    console.error(error);
+    console.error("========================================");
+});
+
+client.on("rateLimit", info => {
+    console.warn(`[rateLimit] ${info.method} ${info.route} — retry after ${info.timeToReset}ms (global: ${info.global})`);
 });
 
 client.on(Events.GuildMemberAdd, async member => {
@@ -160,7 +139,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
         if (interaction.isButton()) {
             try {
-                await runHandlers(handlerFiles.button, interaction);
+                await router.dispatch("button", interaction, ctx);
             } catch (error) {
                 if (error.code === 10062) return; // expired interaction, ignore
                 logError("BUTTON ERROR", error);
@@ -171,20 +150,20 @@ client.on(Events.InteractionCreate, async interaction => {
 
         if (interaction.isStringSelectMenu()) {
             try {
-                await runHandlers(handlerFiles.select, interaction);
+                await router.dispatch("select", interaction, ctx);
             } catch (error) {
                 logError("SELECT MENU ERROR", error);
-                await replyWithError(interaction, false);
+                await replyWithError(interaction);
             }
             return;
         }
 
         if (interaction.isModalSubmit()) {
             try {
-                await runHandlers(handlerFiles.modal, interaction);
+                await router.dispatch("modal", interaction, ctx);
             } catch (error) {
                 logError("MODAL ERROR", error);
-                await replyWithError(interaction, false);
+                await replyWithError(interaction);
             }
             return;
         }
@@ -222,6 +201,9 @@ process.on("uncaughtException", (err) => {
     console.error("========== UNCAUGHT EXCEPTION ==========");
     console.error(err);
     console.error("========================================");
+    // An uncaught exception leaves the process in an unknown state;
+    // exit so the process manager can restart cleanly.
+    process.exit(1);
 });
 
 (async () => {

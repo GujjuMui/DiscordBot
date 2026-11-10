@@ -1,4 +1,4 @@
-const Art = require("../database/Art");
+const ArtRepository = require("../repositories/ArtRepository");
 const updateArtMessage = require("../utils/updateArtMessage");
 const logger = require("../utils/logger");
 const { MessageFlags } = require("discord.js");
@@ -20,6 +20,14 @@ const MODAL_ACTIONS = new Map([
         inputId: "new_name",
         field: "artName",
         logField: "Name",
+        format: value => value,
+    }],
+    // The image modal (edit_art_image_modal, opened by the "Edit Image"
+    // button) was previously unhandled — submitting it did nothing.
+    ["edit_art_image_modal", {
+        inputId: "new_image",
+        field: "imageFile",
+        logField: "Image",
         format: value => value,
     }],
 ]);
@@ -49,6 +57,15 @@ module.exports = async interaction => {
 
     let value = interaction.fields.getTextInputValue(action.inputId);
 
+    if (action.field === "imageFile") {
+        if (!value.startsWith("http://") && !value.startsWith("https://")) {
+            await interaction.editReply({
+                content: "❌ Please provide a valid image URL starting with `http://` or `https://`.",
+            });
+            return true;
+        }
+    }
+
     if (action.field === "tags") {
         value = value
             .split(",")
@@ -56,12 +73,20 @@ module.exports = async interaction => {
             .filter(Boolean);
     }
 
-    await Art.findOneAndUpdate(
-        { artId },
-        { [action.field]: value }
-    );
+    let showcaseUpdated = true;
+    try {
+        await ArtRepository.update(artId, {
+            [action.field]: value
+        });
 
-    await updateArtMessage(artId, interaction.client);
+        showcaseUpdated = await updateArtMessage(artId, interaction.client, interaction.guild);
+    } catch (err) {
+        console.error("[editArtModalHandler] Failed to update artwork:", err);
+        await interaction.editReply({
+            content: "❌ Something went wrong while updating the artwork.",
+        });
+        return true;
+    }
 
     await logger({
         guild: interaction.guild,
@@ -78,11 +103,17 @@ module.exports = async interaction => {
         ? `✅ Artwork name updated to **${value}**`
         : action.field === "category"
             ? `✅ Category updated to **${value}**`
-            : "✅ Tags updated successfully.";
+            : action.field === "imageFile"
+                ? "✅ Image updated successfully."
+                : "✅ Tags updated successfully.";
 
     await interaction.editReply({
-        content: response,
+        content: showcaseUpdated
+            ? response
+            : `${response}\n\n⚠️ Saved, but the showcase message could not be updated.`,
     });
 
     return true;
 };
+
+module.exports.customIdPrefixes = ["edit_art_tags_modal", "edit_art_category_modal", "edit_art_name_modal", "edit_art_image_modal"];

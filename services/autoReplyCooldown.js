@@ -2,7 +2,7 @@ const cooldowns = new Map();
 
 // Prune entries older than the longest possible cooldown (24 hours) to
 // prevent the Map from growing indefinitely over long bot uptimes.
-const MAX_TTL_MS = 24 * 60 * 60 * 1000;
+const { AUTOREPLY_MAX_TTL_MS: MAX_TTL_MS } = require("../config/constants");
 
 function pruneExpired() {
     const now = Date.now();
@@ -38,6 +38,11 @@ module.exports = {
 
         cooldowns.delete(userId);
 
-    }
+    },
+
+    pruneExpired,
+
+    // Alias used by the index.js 5-minute sweeper.
+    prune: pruneExpired
 
 };

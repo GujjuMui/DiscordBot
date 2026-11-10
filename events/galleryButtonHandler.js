@@ -1,19 +1,21 @@
 const gallery = require("../services/galleryV2");
+const galleryService = require("../services/galleryService");
 
-const Art = require("../database/Art");
-const Card = require("../database/Card");
-const Link = require("../database/Link");
+const CardRepository = require("../repositories/CardRepository");
+const ArtRepository = require("../repositories/ArtRepository");
 
 const {
     createArtEmbed,
     createCardEmbed,
     createLinkEmbed,
-    createGalleryButtons,
-    createCategoryMenu,
-    createLinkCategoryMenu
+    createGalleryButtons
 } = require("../utils/embedBuilder");
 
-const categoryMenu = require("../services/categoryMenuService");
+// The expired-gallery message. This was referenced as a bare
+// `EXPIRED` identifier before and would have thrown a ReferenceError
+// the first time a gallery had expired — same wording as the
+// category-menu handler already used.
+const EXPIRED = "This gallery has expired — run /cards or /arts again.";
 
 module.exports = async (interaction) => {
 
@@ -35,7 +37,16 @@ module.exports = async (interaction) => {
 
     const current = gallery.get(messageId);
 
-    if (!current) return false;
+    // The gallery state is gone (bot restarted, or the entry expired):
+    // answer ephemerally instead of returning silently — the user
+    // otherwise gets "This interaction failed" with no explanation.
+    if (!current) {
+        await interaction.reply({
+            content: `❌ ${EXPIRED}`,
+            flags: require("discord.js").MessageFlags.Ephemeral
+        }).catch(() => {});
+        return true;
+    }
 
     await interaction.deferUpdate();
 
@@ -62,7 +73,12 @@ module.exports = async (interaction) => {
     // Get updated gallery state
     const g = gallery.get(messageId);
 
-    if (!g) return true;
+    if (!g) {
+        await interaction.editReply({
+            content: `❌ ${EXPIRED}`
+        }).catch(() => {});
+        return true;
+    }
 
     // ==========================================
     // BACK TO CATEGORY MENU
@@ -73,147 +89,10 @@ module.exports = async (interaction) => {
         // Close the gallery entry — user is returning to the category menu.
         gallery.close(messageId);
 
-        // --------------------------------------
-        // ARTS
-        // --------------------------------------
-
-        if (g.type === "arts") {
-
-            const arts = await Art
-                .find()
-                .sort({ createdAt: -1 });
-
-            const categories = [
-                ...new Set(
-                    arts
-                        .map(art => art.category)
-                        .filter(Boolean)
-                )
-            ].sort();
-
-            categoryMenu.open(messageId, {
-
-                type: "arts",
-
-                categories
-
-            });
-
-            await interaction.editReply({
-
-                embeds: [{
-                    color: 0x8e44ad,
-                    title:
-                        `${"🎨"} Browse SFA Artwork`,
-                    description:
-                        "Select a category from the dropdown below."
-                }],
-
-                components: createCategoryMenu(
-                    "arts",
-                    categories,
-                    0
-                ),
-
-                files: []
-
-            });
-
-            return true;
-
-        }
-
-        // --------------------------------------
-        // CARDS
-        // --------------------------------------
-
-        if (g.type === "cards") {
-
-            const cards = await Card
-                .find()
-                .sort({ createdAt: -1 });
-
-            const categories = [
-                ...new Set(
-                    cards
-                        .map(card => card.category || "General")
-                        .filter(Boolean)
-                )
-            ].sort();
-
-            categoryMenu.open(messageId, {
-
-                type: "cards",
-
-                categories
-
-            });
-
-            await interaction.editReply({
-
-                embeds: [{
-                    color: 0xff9900,
-                    title:
-                        `${"🎴"} Browse SFA Cards`,
-                    description:
-                        "Select a category from the dropdown below."
-                }],
-
-                components: createCategoryMenu(
-                    "cards",
-                    categories,
-                    0
-                ),
-
-                files: []
-
-            });
-
-            return true;
-
-        }
-
-        // --------------------------------------
-        // LINKS
-        // --------------------------------------
-
-        if (g.type === "links") {
-
-            const links = await Link
-                .find()
-                .sort({ createdAt: -1 });
-
-            const categories = [
-                ...new Set(
-                    links
-                        .map(link => link.category)
-                        .filter(Boolean)
-                )
-            ].sort();
-
-            await interaction.editReply({
-
-                embeds: [{
-                    color: 0x00b894,
-                    title:
-                        `${"📚"} Browse Links`,
-                    description:
-                        "Select a category from the dropdown below."
-                }],
-
-                components: [
-                    createLinkCategoryMenu(categories)
-                ],
-
-                files: []
-
-            });
-
-            return true;
-
-        }
-
-        return true;
+        // The category menu (categories, menu state, embed) is owned
+        // by the gallery service now — no more re-querying the full
+        // collection here.
+        return galleryService.openCategoryMenu(interaction, g.type);
 
     }
 
@@ -223,7 +102,12 @@ module.exports = async (interaction) => {
 
     const item = g.items[g.index];
 
-    if (!item) return true;
+    if (!item) {
+        await interaction.editReply({
+            content: `❌ ${EXPIRED}`
+        }).catch(() => {});
+        return true;
+    }
 
     // ==========================================
     // FAVORITE
@@ -233,31 +117,11 @@ module.exports = async (interaction) => {
 
         if (g.type === "cards") {
 
-            await Card.findByIdAndUpdate(
-
-                item._id,
-
-                {
-                    $inc: {
-                        favorites: 1
-                    }
-                }
-
-            );
+            await CardRepository.incrementFavorites(item._id);
 
         } else if (g.type === "arts") {
 
-            await Art.findByIdAndUpdate(
-
-                item._id,
-
-                {
-                    $inc: {
-                        favorites: 1
-                    }
-                }
-
-            );
+            await ArtRepository.incrementFavorites(item._id);
 
         }
 
@@ -373,3 +237,5 @@ module.exports = async (interaction) => {
     return true;
 
 };
+
+module.exports.customIdPrefixes = ["gallery_next", "gallery_prev", "gallery_favorite", "gallery_back"];

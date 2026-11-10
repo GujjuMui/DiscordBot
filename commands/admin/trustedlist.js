@@ -4,7 +4,7 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
-const Trusted = require("../../database/Trusted");
+const TrustedRepository = require("../../repositories/TrustedRepository");
 const owner = require("../../config/owner");
 
 module.exports = {
@@ -37,7 +37,7 @@ module.exports = {
         }
 
         const trusted =
-            await Trusted.find();
+            await TrustedRepository.listAll();
 
         const users =
             trusted.filter(

@@ -12,8 +12,9 @@ A modular, production-grade Discord.js v14 bot built for competitive gaming clan
 - **Role-Based Access Control (RBAC)**: Secure owner management and trusted/admin role hierarchies for protected commands.
 
 ### 2. 🗄️ Database & Cloud Storage
-- **MongoDB / Mongoose**: Persistent storage for bot settings, SFA cards, artwork showcases, link directories, and verification states with optimized single-field indexes.
-- **Cloudinary Integration**: Secure cloud image hosting and migration utilities for clan logos, badges, and media assets.
+- **MongoDB / Mongoose**: Persistent storage for bot settings, SFA cards, artwork showcases, link directories, and verification states with compound indexes (`{category, createdAt}`, `discordMessageId`, `uploaderId`) and a pooled connection (`maxPoolSize: 10`).
+- **Cloudinary Integration**: Secure cloud image hosting and migration utilities for clan logos, badges, and media assets. Uploads stream straight to Cloudinary (no temp files) with a 10s timeout and 10 MB cap.
+- **Repositories layer**: All database access for cards, art and links goes through `repositories/` (`CardRepository`, `ArtRepository`, `LinkRepository`) — `.lean()` reads, duplicate-key (11000) errors surfaced cleanly. See `REFACTOR.md` for the full list of bugs fixed in this refactor.
 
 ### 3. 🖼️ Gallery & Showcase Management
 - Interactive pagination systems for SFA cards and artwork with category filtering, tag search, and Discord message synchronization.
@@ -35,9 +36,12 @@ Discord Clan Bot/
 │   └── verification/       # Verification system
 │   
 ├── config/                 # Configuration loaders & frozen constants
-│   ├── config.js           # Core environment variable parser
-│   ├── constants.js        # Immutable operational constants
-│   ├── owner.js            # Centralized bot owner definition
+│   ├── config.js           # Core environment variable parser (env only, no hardcoded fallbacks)
+│   ├── constants.js        # Immutable operational constants (colours, TTLs, limits)
+│   ├── owner.js            # Centralized bot owner definition (re-exports BOT_OWNER_ID)
+│   ├── guild.json          # This server's channel/role IDs + branding (gitignored, ships in the zip)
+│   ├── guild.example.json  # Placeholder-ID template for a fresh server
+│   ├── configLoader.js     # DB-overridable per-guild settings (BotSettings, 60s TTL cache)
 │   └── dangerousPermissions.js # Privileged permission flags
 │   
 ├── database/               # Mongoose schemas & singleton connection pool
@@ -52,12 +56,16 @@ Discord Clan Bot/
 │   └── LinkRepository.js   # Link database queries & mutations
 │   
 ├── services/               # In-memory caching, TTL handlers & pagination state
+│   ├── categoryCache.js    # Shared 5-min distinct('category') cache
+│   └── autoReplyCache.js   # 60s cache of enabled auto-replies
 ├── events/                 # Discord event handlers (ready, interactionCreate, etc.)
-├── utils/                  # Core helpers (embedBuilder, logger, saveImage, idGenerator)
+├── utils/                  # Core helpers (embedBuilder, logger, saveImage, idGenerator, discord.js safety helpers)
 ├── tests/                  # Automated test suite (Node.js test runner)
-├── .env                    # Environment credentials & whitelists
+├── .env                    # Environment credentials & whitelists (never committed)
+├── .env.example            # Every variable the bot reads, with defaults
 ├── deploy-commands.js      # Global slash command registration script
 ├── index.js                # Main application entry point
+├── REFACTOR.md             # What was refactored, what was fixed, what was not changed
 └── package.json            # Project dependencies & scripts
 ```
 
@@ -78,11 +86,12 @@ npm install
 ```
 
 ### 2. Configure Environment Variables
-Create your `.env` file in the root directory with your credentials:
+Create your `.env` file in the root directory with your credentials (see `.env.example` for the full list):
+
 ```env
 TOKEN=your_discord_bot_token_here
 CLIENT_ID=your_discord_client_id_here
-BOT_OWNER_ID=your_discord_user_id_here
+BOT_OWNER_ID=your_discord_user_id_here   # required — no hardcoded fallback; unset = owner commands have no owner
 ALLOWED_GUILD_IDS=guild_id_1,guild_id_2
 
 # Database & Storage
@@ -90,7 +99,30 @@ MONGO_URI=mongodb://your_mongo_connection_string
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_FOLDER_PREFIX=hornet
 ```
+
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `TOKEN` | Yes | — | Discord bot token |
+| `CLIENT_ID` | Yes | — | Discord application (client) ID |
+| `BOT_OWNER_ID` | Yes | `""` (fail closed) | Bot owner user ID — the only place the owner is defined; `config/owner.js` re-exports it |
+| `ALLOWED_GUILD_IDS` | No | empty (all guilds) | Comma-separated guild IDs the bot may run in |
+| `MONGO_URI` | Yes | — | MongoDB connection string (never logged) |
+| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | Yes | — | Cloudinary credentials |
+| `CLOUDINARY_FOLDER_PREFIX` | No | `hornet` | Folder prefix for uploaded images |
+| `ENABLE_TICKETS` / `ENABLE_TRYOUTS` / `ENABLE_VERIFICATION` / `ENABLE_MODERATION` / `ENABLE_CHANNEL_MANAGER` / `ENABLE_BROADCAST` | No | `true` | Feature flags; `false` disables the matching commands |
+| `CHANNEL_*` / `ROLE_*` / `SELFROLES_CHANNEL` / `CLAN_EMBED_IMAGE` | No | values in `config/guild.json` | Per-key overrides for the main channels/roles (see `config/settings.js`) |
+| `HORNET_GUILD_CONFIG_PATH` | No | `config/guild.json` | Path to the guild config file |
+
+### Guild configuration (`config/guild.json`)
+Channel IDs, role IDs (member, clan, colour, faction, ping), the self-roles channel and banner URLs, and the clan embed image live in `config/guild.json` — not in code and not in `.env`. The file shipped in this zip already contains this server's values. For a fresh server, copy `config/guild.example.json` to `config/guild.json` and fill in your IDs. `config/guild.json` is gitignored (it holds your server's IDs).
+
+### Rotating the owner
+Set `BOT_OWNER_ID` in `.env` to the new owner's Discord user ID and restart the bot. Nothing else references the owner ID — every owner check reads `owner.ownerId` from `config/owner.js`, which re-exports `config.botOwnerId`.
+
+### Per-guild overrides (BotSettings)
+The `BotSettings` collection in MongoDB can override channels, roles, self-role banners and clan branding per guild at runtime (read via `config/configLoader.js`, cached for 60s, invalidated by `updateSetting()`). Static `config/guild.json` values are the fallback when no record exists.
 
 ### 3. Register Slash Commands
 ```bash
@@ -113,8 +145,11 @@ npm run deploy
 
 Run the automated test suite to verify application logic and repository mocks:
 ```bash
-npm test
+npm test          # 124 tests: index (VM harness), mongo, presence, repositories, config
+npm run check     # syntax-checks all 107 JavaScript files (no git repo needed)
 ```
+
+See `REFACTOR.md` for the migration steps and how to verify the refactor.
 
 ---
 

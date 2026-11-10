@@ -21,9 +21,12 @@ module.exports = async interaction => {
         return false;
     }
 
-    const allowed =
-        interaction.member.roles.cache.has(settings.roles.tryoutTesterAS) ||
-        interaction.member.roles.cache.has(settings.roles.tryoutTesterEU);
+    // interaction.member is null in DMs / for uncached members.
+    const memberRoles = interaction.member?.roles?.cache;
+    const allowed = Boolean(
+        memberRoles?.has(settings.roles.tryoutTesterAS) ||
+        memberRoles?.has(settings.roles.tryoutTesterEU)
+    );
 
     if (!allowed) {
 
@@ -78,14 +81,38 @@ const pendingRole = hasPendingAS
     ? settings.roles.pendingTryoutAS
     : settings.roles.pendingTryoutEU;
 
-    const embed = EmbedBuilder.from(interaction.message.embeds[0]);
+// The remove branch was missing entirely: the customId prefix
+// tryout_remove_ was claimed above, but no branch handled it, so
+// the handler fell through and did nothing. Remove the pending
+// role and confirm ephemerally, like the pass/fail branches.
+if (action === "remove") {
+    await member.roles.remove(pendingRole);
+
+    await interaction.reply({
+        content: `✅ ${member} has been removed from the tryout process.`,
+        flags: MessageFlags.Ephemeral
+    });
+
+    return true;
+}
+
+    // Guard the original message: its embed/components may be gone
+    // (message deleted, or a partial message).
+    const sourceEmbed = interaction.message?.embeds?.[0];
+    const sourceButtons = interaction.message?.components?.[0]?.components ?? [];
+
+    if (!sourceEmbed) {
+        await interaction.reply({
+            content: "❌ The tryout post could not be found.",
+            flags: MessageFlags.Ephemeral
+        });
+        return true;
+    }
+
+    const embed = EmbedBuilder.from(sourceEmbed);
 
 const disabledRow = new ActionRowBuilder().addComponents(
-
-    ButtonBuilder.from(interaction.message.components[0].components[0]).setDisabled(true),
-
-    ButtonBuilder.from(interaction.message.components[0].components[1]).setDisabled(true)
-
+    ...sourceButtons.map(button => ButtonBuilder.from(button).setDisabled(true))
 );
 
 if (action === "pass") {
@@ -202,3 +229,5 @@ if (action === "fail") {
     return true;
 
 }}
+
+module.exports.customIdPrefixes = ["tryout_pass_", "tryout_fail_", "tryout_remove_"];

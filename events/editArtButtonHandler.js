@@ -103,3 +103,5 @@ module.exports = async (interaction) => {
     return true;
 
 };
+
+module.exports.customIdPrefixes = ["edit_art_name", "edit_art_category", "edit_art_tags", "edit_art_image"];

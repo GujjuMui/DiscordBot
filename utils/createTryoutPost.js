@@ -6,6 +6,7 @@ const {
 } = require("discord.js");
 
 const settings = require("../config/settings");
+const { COLORS } = require("../config/constants");
 
 module.exports = async (
     guild,
@@ -21,7 +22,7 @@ module.exports = async (
     if (!channel) return;
 
     const embed = new EmbedBuilder()
-        .setColor("#5865F2")
+        .setColor(COLORS.BRAND)
         .setTitle("🏅 FATE Clan Tryouts")
         .setDescription(
 `Submit a ranked gameplay video here

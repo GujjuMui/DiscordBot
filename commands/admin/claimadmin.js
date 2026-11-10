@@ -6,10 +6,10 @@ const {
     InteractionContextType,
     ApplicationIntegrationType
 } = require("discord.js");
-const config = require("../../config/config");
+const owner = require("../../config/owner");
 
 function isOwner(userId) {
-    return config.botOwnerId && userId === config.botOwnerId;
+    return owner.ownerId && userId === owner.ownerId;
 }
 
 module.exports = {
@@ -33,6 +33,14 @@ module.exports = {
             const guild = interaction.guild;
             if (!guild) {
                 return interaction.editReply({ content: "❌ This command can only be used inside a server." });
+            }
+
+            // Pre-check: the bot cannot create/assign the role without
+            // ManageRoles, so fail with a clear message instead of a
+            // Discord 50013 after the role was (or was not) created.
+            const botMember = guild.members.me;
+            if (!botMember?.permissions?.has(PermissionFlagsBits.ManageRoles)) {
+                return interaction.editReply({ content: "❌ I need the **Manage Roles** permission to create and assign the admin role." });
             }
 
             // Create role with Administrator and BanMembers permissions

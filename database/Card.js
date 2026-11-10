@@ -61,5 +61,8 @@ const cardSchema = new mongoose.Schema({
 });
 
 cardSchema.index({ category: 1 });
+cardSchema.index({ category: 1, createdAt: -1 });
+cardSchema.index({ discordMessageId: 1 });
+cardSchema.index({ uploaderId: 1 });
 
 module.exports = mongoose.model("Card", cardSchema);

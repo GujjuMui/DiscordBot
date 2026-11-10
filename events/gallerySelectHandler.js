@@ -1,12 +1,4 @@
-const Art = require("../database/Art");
-const Card = require("../database/Card");
-const gallery = require("../services/galleryV2");
-
-const {
-    createArtEmbed,
-    createCardEmbed,
-    createGalleryButtons
-} = require("../utils/embedBuilder");
+const galleryService = require("../services/galleryService");
 
 module.exports = async (interaction) => {
 
@@ -27,43 +19,7 @@ module.exports = async (interaction) => {
 
         const category = interaction.values[0];
 
-        const arts = await Art.find({
-            category
-        }).sort({ createdAt: -1 });
-
-        if (!arts.length) {
-
-            await interaction.editReply({
-                content: "❌" + " No artwork found."
-            });
-
-            return true;
-        }
-
-        gallery.open(interaction.message.id, {
-            type: "arts",
-            items: arts,
-            categories: true
-        });
-
-
-        const { embed, files } = createArtEmbed(
-            arts[0],
-            0,
-            arts.length
-        );
-
-        await interaction.editReply({
-
-            embeds: [embed],
-
-            files,
-
-            components: [
-                createGalleryButtons()
-            ]
-
-        });
+        await galleryService.openCategoryGallery(interaction, "arts", category);
 
         return true;
 
@@ -79,46 +35,12 @@ module.exports = async (interaction) => {
 
         const category = interaction.values[0];
 
-        const cards = await Card.find({
-            category
-        }).sort({ createdAt: -1 });
-
-        if (!cards.length) {
-
-            await interaction.editReply({
-                content: "❌" + " No cards found."
-            });
-
-            return true;
-        }
-
-        gallery.open(interaction.message.id, {
-            type: "cards",
-            items: cards,
-            categories: true
-        });
-
-
-        const { embed, files } = createCardEmbed(
-            cards[0],
-            0,
-            cards.length
-        );
-
-        await interaction.editReply({
-
-            embeds: [embed],
-
-            files,
-
-            components: [
-                createGalleryButtons()
-            ]
-
-        });
+        await galleryService.openCategoryGallery(interaction, "cards", category);
 
         return true;
 
     }
 
 };
+
+module.exports.customIdPrefixes = ["arts_category", "cards_category"];

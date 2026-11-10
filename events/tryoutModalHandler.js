@@ -125,3 +125,5 @@ await interaction.member.roles.add(pendingRole);
     return true;
 
 };
+
+module.exports.customIdPrefixes = ["tryout_apply_"];

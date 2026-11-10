@@ -5,7 +5,7 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
-const Card = require("../../database/Card");
+const CardRepository = require("../../repositories/CardRepository");
 const {
     createEditCardButtons
 } = require("../../utils/embedBuilder");
@@ -38,9 +38,7 @@ module.exports = {
             .getString("id")
             .toUpperCase();
 
-        const card = await Card.findOne({
-            cardId: id
-        });
+        const card = await CardRepository.findByCode(id);
 
         if (!card) {
 

@@ -7,6 +7,8 @@ const {
 } = require("discord.js");
 
 const settings = require("../config/settings");
+const { getSettings } = require("../config/configLoader");
+const { PermissionsBitField } = require("discord.js");
 const logger = require("../utils/logger");
 
 module.exports = async (interaction) => {
@@ -21,8 +23,13 @@ module.exports = async (interaction) => {
             flags: MessageFlags.Ephemeral
         });
 
+        // DB-overridable settings for this guild, static fallback.
+        const guildSettings = await getSettings(interaction.guild?.id).catch(() => settings);
+        const roles = guildSettings?.roles || settings.roles;
+        const channels = guildSettings?.channels || settings.channels;
+
         const memberRole = interaction.guild.roles.cache.get(
-            settings.roles.member
+            roles.member
         );
 
         if (!memberRole) {
@@ -33,6 +40,23 @@ module.exports = async (interaction) => {
 
             return true;
 
+        }
+
+        // Pre-checks BEFORE roles.add: the bot must be able to manage
+        // this role (ManageRoles + hierarchy), otherwise the add would
+        // throw a 50013 after the user had already been told nothing.
+        const botMember = interaction.guild.members.me;
+        if (!botMember?.permissions?.has(PermissionsBitField.Flags.ManageRoles)) {
+            await interaction.editReply({
+                content: "❌ I need the **Manage Roles** permission to verify you."
+            });
+            return true;
+        }
+        if (memberRole.position >= botMember.roles.highest.position) {
+            await interaction.editReply({
+                content: "❌ I cannot assign the member role because it is equal to or higher than my highest role."
+            });
+            return true;
         }
 
         if (interaction.member.roles.cache.has(memberRole.id)) {
@@ -52,12 +76,13 @@ module.exports = async (interaction) => {
         // Give role
         await interaction.member.roles.add(memberRole);
 
-        // Welcome channel
+        // Welcome channel (cache-first, then fetch)
         const welcomeChannel =
             interaction.guild.channels.cache.get(
-                settings.channels.welcome
-            );
+                channels.welcome
+            ) || await interaction.guild.channels.fetch(channels.welcome).catch(() => null);
 
+        let welcomeFailed = false;
         if (welcomeChannel) {
 
             const welcomeEmbed = new EmbedBuilder()
@@ -73,7 +98,7 @@ module.exports = async (interaction) => {
                     .setEmoji("🗺️")
                     .setStyle(ButtonStyle.Link)
                     .setURL(
-                        `https://discord.com/channels/${interaction.guild.id}/${settings.channels.serverMap}`
+                        `https://discord.com/channels/${interaction.guild.id}/${channels.serverMap}`
                     ),
 
                 new ButtonBuilder()
@@ -81,19 +106,27 @@ module.exports = async (interaction) => {
                     .setEmoji("🤝")
                     .setStyle(ButtonStyle.Link)
                     .setURL(
-                        `https://discord.com/channels/${interaction.guild.id}/${settings.channels.howToJoin}`
+                        `https://discord.com/channels/${interaction.guild.id}/${channels.howToJoin}`
                     )
                     
 
             );
 
-            await welcomeChannel.send({
+            try {
+                await welcomeChannel.send({
 
-                embeds: [welcomeEmbed],
+                    embeds: [welcomeEmbed],
 
-                components: [buttons]
+                    components: [buttons]
 
-            });
+                });
+            } catch (err) {
+                // The role was already added — the user IS verified.
+                // Log it and tell them so, instead of reporting a
+                // generic verification failure.
+                welcomeFailed = true;
+                console.error("[verificationModalHandler] Failed to send welcome message:", err.message);
+            }
 
         }
 
@@ -113,7 +146,9 @@ module.exports = async (interaction) => {
             );
 
         await interaction.editReply({
-
+            ...(welcomeFailed
+                ? { content: "✅ You are verified, but the welcome message failed to send." }
+                : {}),
             embeds: [replyEmbed]
 
         });
@@ -233,3 +268,5 @@ module.exports = async (interaction) => {
     }
 
 };
+
+module.exports.customIdPrefixes = ["verification_modal"];

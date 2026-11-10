@@ -111,3 +111,5 @@ module.exports = async interaction => {
     return true;
 
 };
+
+module.exports.customIdPrefixes = ["clan_join_as", "clan_join_eu"];

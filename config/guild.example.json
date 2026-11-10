@@ -1,0 +1,72 @@
+{
+  "channels": {
+    "cards": "🎴┃sfa-cards",
+    "arts": "🎨┃sfa-arts",
+    "links": "📺┃content",
+    "verification": "📝┃verification",
+    "tournaments": "tournaments",
+    "logs": "🐝┃hornet-logs",
+    "welcome": "000000000000000000",
+    "main_welcome": "000000000000000000",
+    "serverMap": "000000000000000000",
+    "howToJoin": "000000000000000000",
+    "tryout": "000000000000000000",
+    "onboarding": "000000000000000000",
+    "serverRules": "000000000000000000",
+    "serverSupport": "000000000000000000"
+  },
+  "idPrefix": {
+    "card": "SFA",
+    "art": "ART"
+  },
+  "roles": {
+    "admin": "Admin",
+    "trusted": "Trusted",
+    "member": "000000000000000000",
+    "pendingTryout": "000000000000000000",
+    "clanMemberAS": "000000000000000000",
+    "clanMemberEU": "000000000000000000",
+    "pendingTryoutAS": "000000000000000000",
+    "pendingTryoutEU": "000000000000000000",
+    "tryoutTesterAS": "000000000000000000",
+    "tryoutTesterEU": "000000000000000000",
+    "color": {
+      "red": "000000000000000000",
+      "black": "000000000000000000",
+      "cyan": "000000000000000000",
+      "pink": "000000000000000000",
+      "orange": "000000000000000000",
+      "brown": "000000000000000000",
+      "blue": "000000000000000000",
+      "green": "000000000000000000",
+      "violet": "000000000000000000",
+      "yellow": "000000000000000000"
+    },
+    "faction": {
+      "legion": "000000000000000000",
+      "dynasty": "000000000000000000",
+      "herald": "000000000000000000"
+    },
+    "ping": {
+      "giveaway": "000000000000000000",
+      "videos": "000000000000000000",
+      "announcement": "000000000000000000",
+      "clanUpdate": "000000000000000000",
+      "serverUpdate": "000000000000000000",
+      "friendlyAS": "000000000000000000",
+      "friendlyEU": "000000000000000000"
+    }
+  },
+  "selfRoles": {
+    "channel": "000000000000000000",
+    "banners": {
+      "main": "https://cdn.discordapp.com/attachments/1506280626607886346/1529217638734233670/SELF_ROLES_20260525_065726_0000.jpg",
+      "color": "https://cdn.discordapp.com/attachments/1506280626607886346/1529193303600271541/6146cf1d-cc3c-474c-b39d-4bdc1118f06c.png",
+      "faction": "https://cdn.discordapp.com/attachments/1506280626607886346/1529236444147748884/Screenshot_2026-07-22-02-48-55-82_680d03679600f7af0b4c700c6b270fe7.jpg",
+      "ping": "https://cdn.discordapp.com/attachments/1506280626607886346/1529223064330440876/36f22bd2-adb3-42c4-81e2-abdf770b9f73.png"
+    }
+  },
+  "clan": {
+    "embedImage": "https://cdn.discordapp.com/attachments/1506280626607886346/1528640829327933501/image.png"
+  }
+}

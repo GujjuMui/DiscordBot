@@ -4,6 +4,11 @@ node_modules/
 # Environment variables
 .env
 
+# Guild configuration — holds this server's channel/role IDs.
+# It ships in the delivered zip so the bot works drop-in, but it
+# must not be committed to a shared repo.
+config/guild.json
+
 # Logs
 *.log
 logs/

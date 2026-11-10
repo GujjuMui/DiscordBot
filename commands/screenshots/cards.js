@@ -3,7 +3,8 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
-const Card = require("../../database/Card");
+const CardRepository = require("../../repositories/CardRepository");
+const { getCategories } = require("../../services/categoryCache");
 const settings = require("../../config/settings");
 
 const {
@@ -22,23 +23,17 @@ module.exports = {
 
         await interaction.deferReply();
 
-        const cards = await Card.find().sort({ createdAt: -1 });
+        // Categories come from a shared 5-minute distinct() cache
+        // instead of an unbounded find() mapped in memory.
+        const categories = await getCategories(CardRepository, "Card");
 
-        if (cards.length === 0) {
+        if (categories.length === 0) {
 
             return interaction.editReply({
                 content: `${"❌"} No cards found.`
             });
 
         }
-
-        const categories = [
-            ...new Set(
-                cards
-                    .map(card => card.category || "General")
-                    .filter(Boolean)
-            )
-        ].sort();
 
         const embed = new EmbedBuilder()
             .setColor(0x00b894)

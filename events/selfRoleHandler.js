@@ -20,7 +20,12 @@ const ROLE_GROUPS = {
 const pingRoles = Object.values(settings.roles.ping);
 
 async function updateExclusiveRoles(interaction, config) {
-    const selectedRole = interaction.values[0];
+    const selectedRole = interaction.values?.[0];
+    if (!selectedRole) throw new Error("No role selected.");
+    // The role must still exist in this guild.
+    if (!interaction.guild?.roles?.cache?.has(selectedRole)) {
+        throw new Error("That role no longer exists.");
+    }
     const member = interaction.member;
 
     const rolesToRemove = config.roles.filter(roleId =>
@@ -48,7 +53,12 @@ async function updateExclusiveRoles(interaction, config) {
 
 async function updatePingRoles(interaction) {
     const member = interaction.member;
-    const selectedRoles = interaction.values;
+    const selectedRoles = interaction.values ?? [];
+    for (const roleId of selectedRoles) {
+        if (!interaction.guild?.roles?.cache?.has(roleId)) {
+            throw new Error("One of the selected roles no longer exists.");
+        }
+    }
 
     const rolesToRemove = pingRoles.filter(roleId =>
         member.roles.cache.has(roleId) && !selectedRoles.includes(roleId)
@@ -84,19 +94,27 @@ module.exports = async interaction => {
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    if (config) {
-        await updateExclusiveRoles(interaction, config);
-        await interaction.editReply({
-            content: `✅ Your ${config.label} has been updated to <@&${interaction.values[0]}>.`
-        });
-        return true;
-    }
+    try {
+        if (config) {
+            await updateExclusiveRoles(interaction, config);
+            await interaction.editReply({
+                content: `✅ Your ${config.label} has been updated to <@&${interaction.values[0]}>.`
+            });
+            return true;
+        }
 
-    if (isPing) {
-        await updatePingRoles(interaction);
+        if (isPing) {
+            await updatePingRoles(interaction);
+            await interaction.editReply({
+                content: "✅ Your notification roles have been updated."
+            });
+            return true;
+        }
+    } catch (err) {
+        console.error("[selfRoleHandler] Failed to update self-roles:", err.message);
         await interaction.editReply({
-            content: "✅ Your notification roles have been updated."
-        });
+            content: "❌ Something went wrong while updating your roles. Please try again."
+        }).catch(() => {});
         return true;
     }
 
@@ -104,13 +122,21 @@ module.exports = async interaction => {
         interaction.member.roles.cache.has(roleId)
     );
 
-    if (rolesToRemove.length) {
-        await interaction.member.roles.remove(rolesToRemove);
-        await logger({
-            guild: interaction.guild,
-            type: "SELFROLE_PING_REMOVE",
-            user: interaction.user
-        });
+    try {
+        if (rolesToRemove.length) {
+            await interaction.member.roles.remove(rolesToRemove);
+            await logger({
+                guild: interaction.guild,
+                type: "SELFROLE_PING_REMOVE",
+                user: interaction.user
+            });
+        }
+    } catch (err) {
+        console.error("[selfRoleHandler] Failed to remove ping roles:", err.message);
+        await interaction.editReply({
+            content: "❌ Something went wrong while removing your ping roles. Please try again."
+        }).catch(() => {});
+        return true;
     }
 
     await interaction.editReply({
@@ -119,3 +145,5 @@ module.exports = async interaction => {
 
     return true;
 };
+
+module.exports.customIdPrefixes = ["selfroles_color", "selfroles_faction", "selfroles_ping", "selfroles_remove_ping"];

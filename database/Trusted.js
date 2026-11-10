@@ -16,4 +16,6 @@ const trustedSchema = new mongoose.Schema({
 
 });
 
+trustedSchema.index({ type: 1, targetId: 1 });
+
 module.exports = mongoose.model("Trusted", trustedSchema);

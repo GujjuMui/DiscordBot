@@ -1,4 +1,4 @@
-const Art = require("../database/Art");
+const ArtRepository = require("../repositories/ArtRepository");
 const { MessageFlags } = require("discord.js");
 const settings = require("../config/settings");
 
@@ -29,7 +29,7 @@ module.exports = async interaction => {
     }
 
     const artId = match[0];
-    const art = await Art.findOne({ artId });
+    const art = await ArtRepository.findByCode(artId);
 
     if (!art) {
         await interaction.reply({
@@ -52,7 +52,7 @@ module.exports = async interaction => {
         }
     }
 
-    await Art.deleteOne({ artId });
+    await ArtRepository.delete(artId);
 
     await interaction.update({
         content: `✅ ${art.artName} deleted successfully.`,
@@ -62,3 +62,5 @@ module.exports = async interaction => {
 
     return true;
 };
+
+module.exports.customIdPrefixes = ["delete_confirm", "delete_cancel"];

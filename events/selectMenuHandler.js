@@ -1,9 +1,8 @@
-const Art = require("../database/Art");
 const { MessageFlags } = require("discord.js");
 const gallery = require("../services/galleryV2");
+const galleryService = require("../services/galleryService");
 
 const {
-    createArtEmbed,
     createGalleryButtons
 } = require("../utils/embedBuilder");
 
@@ -15,11 +14,12 @@ module.exports = async (interaction) => {
 
     const category = interaction.values[0];
 
-    const arts = await Art.find({
-        category
-    }).sort({ createdAt: -1 });
+    // Unlike gallerySelectHandler this one answers with
+    // interaction.update(), not deferUpdate + editReply, so it uses
+    // the service's build step (query + embed) and answers itself.
+    const built = await galleryService.buildCategoryGallery("arts", category);
 
-    if (!arts.length) {
+    if (!built) {
 
         await interaction.reply({
             content: "❌" + " No artwork found in this category.",
@@ -32,21 +32,15 @@ module.exports = async (interaction) => {
 
     gallery.open(interaction.message.id, {
         type: "arts",
-        items: arts,
+        items: built.items,
         categories: true
     });
 
-    const { embed, files } = createArtEmbed(
-        arts[0],
-        0,
-        arts.length
-    );
-
     await interaction.update({
 
-        embeds: [embed],
+        embeds: [built.embed],
 
-        files,
+        files: built.files,
 
         components: [
             createGalleryButtons()
@@ -57,3 +51,5 @@ module.exports = async (interaction) => {
     return true;
 
 };
+
+module.exports.customIdPrefixes = ["art_category"];

@@ -5,7 +5,7 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
-const Art = require("../../database/Art");
+const ArtRepository = require("../../repositories/ArtRepository");
 const { createEditArtButtons } = require("../../utils/embedBuilder");
 
 module.exports = {
@@ -34,9 +34,7 @@ module.exports = {
 
     const id = interaction.options.getString("id");
 
-    const art = await Art.findOne({
-        artId: id.toUpperCase()
-    });
+    const art = await ArtRepository.findByCode(id);
 
     if (!art) {
 

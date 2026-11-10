@@ -5,14 +5,14 @@ const fs = require("fs");
 const mongoose = require("mongoose");
 
 const cloudinary = require("./utils/cloudinary");
+const config = require("./config/config");
+const { chunkedEach } = require("./utils/discord");
 
-const Card = require("./database/Card");
-const Art = require("./database/Art");
+const CardRepository = require("./repositories/CardRepository");
+const ArtRepository = require("./repositories/ArtRepository");
 
-const MONGO_URI =
-    process.env.MONGO_URI ||
-    process.env.MONGODB_URI ||
-    process.env.MONGO_URL;
+// MONGO_URI is canonical — config.mongoUri reads it (see config.js).
+const MONGO_URI = config.mongoUri;
 
 if (!MONGO_URI) {
     console.error("❌ MongoDB URI not found in .env");
@@ -52,20 +52,14 @@ async function uploadIfNeeded(document, type) {
             await cloudinary.uploader.upload(
                 localPath,
                 {
-                    folder: `hornet/${type}`,
+                    folder: `${config.cloudinary.folderPrefix}/${type}`,
                     public_id: path.parse(document.imageFile).name,
                     overwrite: true,
                     resource_type: "image"
                 }
             );
 
-        document.imageFile = result.secure_url;
-
-        await document.save();
-
-        console.log(`✔ ${document.imageFile}`);
-
-        return "success";
+        return { status: "success", url: result.secure_url };
 
     } catch (err) {
 
@@ -75,68 +69,60 @@ async function uploadIfNeeded(document, type) {
 
         console.error(err.message);
 
-        return "failed";
+        return { status: "failed" };
 
     }
 
 }
 
+async function migrate(repository, type, idField) {
+    // listAll() returns lean documents, oldest first.
+    const docs = await repository.listAll();
+
+    console.log(`${type}: ${docs.length}\n`);
+
+    const counts = { success: 0, skipped: 0, failed: 0, missing: 0 };
+    const updates = []; // bulkWrite operations, applied once at the end
+
+    await chunkedEach(docs, 3, async doc => {
+        const result = await uploadIfNeeded(doc, type);
+        const status = typeof result === "string" ? result : result.status;
+        counts[status] = (counts[status] || 0) + 1;
+        if (status === "success") {
+            updates.push({
+                updateOne: {
+                    filter: { [idField]: doc[idField] },
+                    update: { $set: { imageFile: result.url } }
+                }
+            });
+        }
+    });
+
+    if (updates.length) {
+        await repository.bulkWrite(updates);
+        console.log(`✔ Updated ${updates.length} ${type} records in bulk.`);
+    }
+
+    return counts;
+}
+
 (async () => {
 
-    await mongoose.connect(MONGO_URI);
+    await mongoose.connect(MONGO_URI, {
+        maxPoolSize: 10,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000
+    });
 
     console.log("Connected to MongoDB\n");
 
-    let migrated = 0;
-    let skipped = 0;
-    let failed = 0;
-    let missing = 0;
+    const cardCounts = await migrate(CardRepository, "cards", "cardId");
+    const artCounts = await migrate(ArtRepository, "arts", "artId");
 
-    const cards = await Card.find();
-
-    console.log(`Cards: ${cards.length}\n`);
-
-    for (let i = 0; i < cards.length; i++) {
-
-        process.stdout.write(
-            `[Card ${i + 1}/${cards.length}] `
-        );
-
-        const result =
-            await uploadIfNeeded(
-                cards[i],
-                "cards"
-            );
-
-        if (result === "success") migrated++;
-        if (result === "skipped") skipped++;
-        if (result === "failed") failed++;
-        if (result === "missing") missing++;
-
-    }
-
-    const arts = await Art.find();
-
-    console.log(`\nArts: ${arts.length}\n`);
-
-    for (let i = 0; i < arts.length; i++) {
-
-        process.stdout.write(
-            `[Art ${i + 1}/${arts.length}] `
-        );
-
-        const result =
-            await uploadIfNeeded(
-                arts[i],
-                "arts"
-            );
-
-        if (result === "success") migrated++;
-        if (result === "skipped") skipped++;
-        if (result === "failed") failed++;
-        if (result === "missing") missing++;
-
-    }
+    const migrated = cardCounts.success + artCounts.success;
+    const skipped = cardCounts.skipped + artCounts.skipped;
+    const failed = cardCounts.failed + artCounts.failed;
+    const missing = cardCounts.missing + artCounts.missing;
 
     console.log("\n==========================");
     console.log("Migration Complete");

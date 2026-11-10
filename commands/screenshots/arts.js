@@ -2,7 +2,8 @@ const {
     SlashCommandBuilder
 } = require("discord.js");
 
-const Art = require("../../database/Art");
+const ArtRepository = require("../../repositories/ArtRepository");
+const { getCategories } = require("../../services/categoryCache");
 const settings = require("../../config/settings");
 
 const {
@@ -21,23 +22,15 @@ module.exports = {
 
         await interaction.deferReply();
 
-        const arts = await Art.find().sort({ createdAt: -1 });
+        const categories = await getCategories(ArtRepository, "Art");
 
-        if (arts.length === 0) {
+        if (categories.length === 0) {
 
             return interaction.editReply({
                 content: "❌" + " No artwork found."
             });
 
         }
-
-        const categories = [
-            ...new Set(
-                arts
-                    .map(art => art.category)
-                    .filter(Boolean)
-            )
-        ].sort();
 
         const embed = {
             color: 0x8e44ad,

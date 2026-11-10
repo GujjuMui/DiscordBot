@@ -1,16 +1,16 @@
 const { REST, Routes } = require("discord.js");
 require("dotenv").config();
 
-const settings = require("./config/settings");
+const config = require("./config/config");
 
-const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+const rest = new REST({ version: "10" }).setToken(config.token);
 
 (async () => {
 
     try {
 
         await rest.put(
-            Routes.applicationCommands(process.env.CLIENT_ID),
+            Routes.applicationCommands(config.clientId),
             { body: [] }
         );
 

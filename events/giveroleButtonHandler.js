@@ -4,6 +4,7 @@ const {
 
 const owner = require("../config/owner");
 const dangerousPermissions = require("../config/dangerousPermissions");
+const { chunkedEach, retryWithBackoff } = require("../utils/discord");
 
 module.exports = async (interaction) => {
 
@@ -174,62 +175,44 @@ module.exports = async (interaction) => {
     });
 
     // =========================
-    // USE CACHED MEMBERS
+    // FETCH MEMBERS (not cache-only)
     // =========================
-
-    const members =
-        interaction.guild.members.cache.filter(
-            member =>
-                member.roles.cache.has(
-                    sourceRole.id
-                )
-        );
+    // The cache only holds members the bot has seen since startup;
+    // a fetch guarantees everyone with the source role is included.
+    let members;
+    try {
+        const fetched = await interaction.guild.members.fetch();
+        members = fetched.filter(member => member.roles.cache.has(sourceRole.id));
+    } catch (err) {
+        await interaction.editReply({
+            content: "❌ I couldn't fetch the server members. Please try again.",
+            components: []
+        });
+        return true;
+    }
 
     let assigned = 0;
     let alreadyHad = 0;
     let failed = 0;
 
     // =========================
-    // ASSIGN ROLE
+    // ASSIGN ROLE (chunks of 10, with backoff on rate limits)
     // =========================
 
-    for (const member of members.values()) {
-
-        if (
-            member.roles.cache.has(
-                targetRole.id
-            )
-        ) {
-
+    const targets = Array.from(members.values());
+    const { failures } = await chunkedEach(targets, 10, async member => {
+        if (member.roles.cache.has(targetRole.id)) {
             alreadyHad++;
-
-            continue;
-
+            return;
         }
+        // retryWithBackoff honours Discord's retry_after on 429s.
+        await retryWithBackoff(() => member.roles.add(targetRole, "HORNET /giverole command"));
+        assigned++;
+    });
 
-        try {
-
-            await member.roles.add(
-
-                targetRole,
-
-                "HORNET /giverole command"
-
-            );
-
-            assigned++;
-
-        } catch (error) {
-
-            failed++;
-
-            console.error(
-                `Failed to give role to ${member.user.tag}:`,
-                error
-            );
-
-        }
-
+    for (const { item, error } of failures) {
+        failed++;
+        console.error(`Failed to give role to ${item.user?.tag ?? item.id}:`, error?.message ?? error);
     }
 
     // =========================
@@ -260,3 +243,5 @@ module.exports = async (interaction) => {
     return true;
 
 };
+
+module.exports.customIdPrefixes = ["giverole_confirm:", "giverole_cancel"];

@@ -6,9 +6,9 @@ const {
     InteractionContextType,
     ApplicationIntegrationType
 } = require("discord.js");
-const fs = require("fs");
 const path = require("path");
 const config = require("../../config/config");
+const { loadCommands } = require("../../utils/loadCommands");
 
 function isOwner(userId) {
     const ownerId = config.botOwnerId;
@@ -40,34 +40,9 @@ module.exports = {
         try {
             await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-            const commandMap = new Map();
-            const foldersPath = path.join(__dirname, "../../commands");
-            const commandFolders = fs.readdirSync(foldersPath);
+            const commandMap = loadCommands(path.join(__dirname, "../../commands"), config);
 
-            for (const folder of commandFolders) {
-                const commandsPath = path.join(foldersPath, folder);
-                if (!fs.statSync(commandsPath).isDirectory()) continue;
-
-                const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"));
-                for (const file of commandFiles) {
-                    const filePath = path.join(commandsPath, file);
-                    const command = require(filePath);
-                    if ("data" in command && "execute" in command) {
-                        const cmdName = command.data.name;
-
-                        // Check feature flags
-                        if (!config.features.moderation && ["mod", "bulkban"].includes(cmdName)) continue;
-                        if (!config.features.channelManager && ["channelmanager"].includes(cmdName)) continue;
-                        if (!config.features.broadcast && ["broadcast"].includes(cmdName)) continue;
-
-                        if (!commandMap.has(cmdName)) {
-                            commandMap.set(cmdName, command.data.toJSON());
-                        }
-                    }
-                }
-            }
-
-            const commands = Array.from(commandMap.values());
+            const commands = Array.from(commandMap.values()).map(command => command.data.toJSON());
             const rest = new REST({ version: "10" }).setToken(config.token);
 
             // Clear guild-specific commands first to remove duplicates

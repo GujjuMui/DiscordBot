@@ -25,6 +25,17 @@ const regions = {
 
 };
 
+// True only if the bot can manage the role (ManageRoles + hierarchy).
+// Checked before any role add/remove so failures are a clear message
+// instead of a Discord 50013 after a partial change.
+function botCanManage(interaction, roleId) {
+    const botMember = interaction.guild?.members?.me;
+    const role = interaction.guild?.roles?.cache?.get(roleId);
+    if (!botMember || !role) return false;
+    if (!botMember.permissions?.has("ManageRoles")) return false;
+    return role.position < botMember.roles.highest.position;
+}
+
 module.exports = {
 
     data: new SlashCommandBuilder()
@@ -150,10 +161,14 @@ module.exports = {
             flags: MessageFlags.Ephemeral
         });
 
-        const member =
-            await interaction.guild.members.fetch(
-                interaction.user.id
-            );
+        // interaction.member is the caller — no fetch needed (and the
+        // fetch could fail for a member the bot has not cached).
+        const member = interaction.member;
+        if (!member) {
+            return interaction.editReply({
+                content: "❌ Could not find your member profile in this server."
+            });
+        }
 
         const hasPermission =
             member.roles.cache.has(
@@ -256,16 +271,29 @@ module.exports = {
 
             }
 
-            await target.roles.remove([
+            if (!botCanManage(interaction, regionData.clanRole)) {
+                return interaction.editReply({
+                    content: "❌ I cannot assign that clan role — check my permissions and role position."
+                });
+            }
 
-                regions.AS.pendingRole,
-                regions.EU.pendingRole
+            try {
+                await target.roles.remove([
 
-            ]).catch(() => {});
+                    regions.AS.pendingRole,
+                    regions.EU.pendingRole
 
-            await target.roles.add(
-                regionData.clanRole
-            );
+                ]).catch(() => {});
+
+                await target.roles.add(
+                    regionData.clanRole
+                );
+            } catch (err) {
+                console.error("[member add] Failed to assign clan role:", err.message);
+                return interaction.editReply({
+                    content: "❌ I couldn't assign the clan role. Check my permissions and role position."
+                });
+            }
 
             const embed =
                 new EmbedBuilder()
@@ -355,9 +383,22 @@ module.exports = {
 
             }
 
-            await target.roles.remove(
-                regionData.clanRole
-            );
+            if (!botCanManage(interaction, regionData.clanRole)) {
+                return interaction.editReply({
+                    content: "❌ I cannot remove that clan role — check my permissions and role position."
+                });
+            }
+
+            try {
+                await target.roles.remove(
+                    regionData.clanRole
+                );
+            } catch (err) {
+                console.error("[member remove] Failed to remove clan role:", err.message);
+                return interaction.editReply({
+                    content: "❌ I couldn't remove the clan role. Check my permissions and role position."
+                });
+            }
 
             const embed =
                 new EmbedBuilder()
@@ -482,13 +523,31 @@ module.exports = {
             const oldRegion =
                 regions[currentRegion];
 
-            await target.roles.remove(
-                oldRegion.clanRole
-            );
+            if (!botCanManage(interaction, regionData.clanRole) || !botCanManage(interaction, oldRegion.clanRole)) {
+                return interaction.editReply({
+                    content: "❌ I cannot transfer that member — check my permissions and role position."
+                });
+            }
 
-            await target.roles.add(
-                regionData.clanRole
-            );
+            // roles.set() swaps both roles in one call where possible;
+            // if the add fails after the remove, roll the old role back.
+            try {
+                const newRoles = target.roles.cache
+                    .filter(role => role.id !== oldRegion.clanRole)
+                    .map(role => role.id);
+                newRoles.push(regionData.clanRole);
+                await target.roles.set(newRoles);
+            } catch (err) {
+                console.error("[member transfer] roles.set failed, attempting rollback:", err.message);
+                try {
+                    await target.roles.add(oldRegion.clanRole);
+                } catch (rollbackErr) {
+                    console.error("[member transfer] Rollback failed:", rollbackErr.message);
+                }
+                return interaction.editReply({
+                    content: "❌ I couldn't transfer that member. Check my permissions and role position."
+                });
+            }
 
             const embed =
                 new EmbedBuilder()

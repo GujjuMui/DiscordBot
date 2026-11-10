@@ -7,7 +7,7 @@ const {
 const owner = require("../../config/owner");
 const settings = require("../../config/settings");
 
-const SelfRoleMessage = require("../../database/SelfRoleMessage");
+const SelfRoleMessageRepository = require("../../repositories/SelfRoleMessageRepository");
 
 const buildSelfRolePanel =
     require("../../utils/selfRoleComponents");
@@ -114,7 +114,7 @@ module.exports = {
 
                 });
 
-            await SelfRoleMessage.findOneAndUpdate(
+            await SelfRoleMessageRepository.findOneAndUpdate(
 
                 {
                     guildId:
@@ -152,7 +152,7 @@ module.exports = {
         // =========================
 
         const saved =
-            await SelfRoleMessage.findOne({
+            await SelfRoleMessageRepository.findOne({
 
                 guildId:
                     interaction.guild.id

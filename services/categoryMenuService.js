@@ -1,7 +1,7 @@
 const menus = new Map();
 
-// Prune category menu entries older than 30 minutes to prevent indefinite growth.
-const MENU_TTL_MS = 30 * 60 * 1000;
+// Prune category menu entries older than the TTL to prevent indefinite growth.
+const { MENU_TTL_MS } = require("../config/constants");
 
 function pruneExpired() {
     const cutoff = Date.now() - MENU_TTL_MS;
@@ -18,6 +18,12 @@ module.exports = {
 
         pruneExpired();
 
+        // Cap the menu table: evict the oldest entry when full.
+        if (menus.size >= 500) {
+            const oldest = menus.keys().next().value;
+            if (oldest !== undefined) menus.delete(oldest);
+        }
+
         menus.set(messageId, {
 
             page: 0,
@@ -31,6 +37,8 @@ module.exports = {
     },
 
     get(messageId) {
+
+        pruneExpired();
 
         return menus.get(messageId);
 
@@ -67,6 +75,11 @@ module.exports = {
 
         menus.delete(messageId);
 
-    }
+    },
+
+    pruneExpired,
+
+    // Alias used by the index.js 5-minute sweeper.
+    prune: pruneExpired
 
 };

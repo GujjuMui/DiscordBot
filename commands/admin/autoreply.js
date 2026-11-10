@@ -4,7 +4,8 @@ const {
     MessageFlags
 } = require("discord.js");
 
-const AutoReply = require("../../database/AutoReply");
+const AutoReplyRepository = require("../../repositories/AutoReplyRepository");
+const { invalidateAutoReplyCache } = require("../../services/autoReplyCache");
 const owner = require("../../config/owner");
 
 module.exports = {
@@ -116,7 +117,7 @@ module.exports = {
             }
 
             const existing =
-                await AutoReply.findOne({
+                await AutoReplyRepository.findOne({
                     targetId: user.id
                 });
 
@@ -129,7 +130,7 @@ module.exports = {
 
             }
 
-            const autoReply = new AutoReply({
+            await AutoReplyRepository.create({
 
                 targetId: user.id,
 
@@ -142,8 +143,7 @@ module.exports = {
                 createdById: interaction.user.id
 
             });
-
-            await autoReply.save();
+            invalidateAutoReplyCache();
 
             const embed =
                 new EmbedBuilder()
@@ -200,12 +200,15 @@ module.exports = {
                 interaction.options.getUser("user");
 
             const deleted =
-                await AutoReply.findOneAndDelete({
+                await AutoReplyRepository.findOneAndDelete({
 
                     targetId:
                         user.id
 
                 });
+
+            // The cache must not keep serving a deleted reply.
+            invalidateAutoReplyCache();
 
             if (!deleted) {
 
@@ -254,9 +257,7 @@ module.exports = {
         if (subcommand === "list") {
 
             const autoReplies =
-                await AutoReply.find().sort({
-                    createdAt: 1
-                });
+                await AutoReplyRepository.listAll();
 
             if (!autoReplies.length) {
 

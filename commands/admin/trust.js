@@ -4,7 +4,8 @@ const {
     PermissionFlagsBits
 } = require("discord.js");
 
-const Trusted = require("../../database/Trusted");
+const TrustedRepository = require("../../repositories/TrustedRepository");
+const { invalidateTrustedCache } = require("../../utils/checkPermission");
 
 const owner = require("../../config/owner");
 
@@ -96,7 +97,7 @@ module.exports = {
             user ? "user" : "role";
 
         const exists =
-            await Trusted.findOne({
+            await TrustedRepository.findOne({
 
                 targetId,
 
@@ -118,13 +119,14 @@ module.exports = {
 
         }
 
-        await Trusted.create({
+        await TrustedRepository.create({
 
             targetId,
 
             type
 
         });
+        invalidateTrustedCache();
 
         await interaction.reply({
 

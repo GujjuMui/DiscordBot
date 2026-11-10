@@ -7,6 +7,7 @@ const {
     StringSelectMenuOptionBuilder
 } = require("discord.js");
 const settings = require("../config/settings");
+const { COLORS } = require("../config/constants");
 
 const path = require("path");
 
@@ -58,7 +59,7 @@ function getImageData(folder, imageFile) {
 
         const embed = new EmbedBuilder()
 
-            .setColor("#ff9900")
+            .setColor(COLORS.CARD)
 
             .setTitle(`${"🎴"} ${card.cardName}`)
 
@@ -112,7 +113,7 @@ function getImageData(folder, imageFile) {
 
         const embed = new EmbedBuilder()
 
-            .setColor("#8e44ad")
+            .setColor(COLORS.ART)
 
             .setTitle(`${"🎨"} ${art.artName}`)
 
@@ -178,7 +179,7 @@ function createLinkEmbed(link, index, total) {
 
     const embed = new EmbedBuilder()
 
-        .setColor("#00b894")
+        .setColor(COLORS.LINK)
 
         .setTitle(`${"🔗"} ${link.title}`)
 

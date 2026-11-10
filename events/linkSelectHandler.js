@@ -1,10 +1,4 @@
-const Link = require("../database/Link");
-const gallery = require("../services/galleryV2");
-
-const {
-    createLinkEmbed,
-    createGalleryButtons
-} = require("../utils/embedBuilder");
+const galleryService = require("../services/galleryService");
 
 module.exports = async (interaction) => {
 
@@ -16,49 +10,10 @@ module.exports = async (interaction) => {
 
     const category = interaction.values[0];
 
-    const links = await Link.find({
-        category
-    }).sort({ createdAt: -1 });
-
-    if (!links.length) {
-
-        await interaction.editReply({
-            content: "❌" + " No links found."
-        });
-
-        return true;
-
-    }
-
-    gallery.open(interaction.message.id, {
-
-        type: "links",
-
-        items: links,
-
-        categories: true
-
-    });
-
-    const { embed, files } =
-        createLinkEmbed(
-            links[0],
-            0,
-            links.length
-        );
-
-    await interaction.editReply({
-
-        embeds: [embed],
-
-        files,
-
-        components: [
-            createGalleryButtons()
-        ]
-
-    });
+    await galleryService.openCategoryGallery(interaction, "links", category);
 
     return true;
 
 };
+
+module.exports.customIdPrefixes = ["link_category"];

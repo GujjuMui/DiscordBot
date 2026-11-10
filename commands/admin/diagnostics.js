@@ -8,6 +8,7 @@ const fs = require("fs");
 const path = require("path");
 
 const settings = require("../../config/settings");
+const config = require("../../config/config");
 
 module.exports = {
 
@@ -272,25 +273,27 @@ module.exports = {
 
             const requiredSettings = [
 
-    ["TOKEN", process.env.TOKEN],
+    ["TOKEN", config.token],
 
-    ["CLIENT_ID", process.env.CLIENT_ID],
+    ["CLIENT_ID", config.clientId],
 
-    ["MONGO_URI", process.env.MONGO_URI],
+    ["BOT_OWNER_ID", config.botOwnerId],
+
+    ["MONGO_URI", config.mongoUri],
 
     [
         "CLOUDINARY_CLOUD_NAME",
-        process.env.CLOUDINARY_CLOUD_NAME
+        config.cloudinary.cloudName
     ],
 
     [
         "CLOUDINARY_API_KEY",
-        process.env.CLOUDINARY_API_KEY
+        config.cloudinary.apiKey
     ],
 
     [
         "CLOUDINARY_API_SECRET",
-        process.env.CLOUDINARY_API_SECRET
+        config.cloudinary.apiSecret
     ]
 
 ];

@@ -1,121 +1,120 @@
-module.exports = {
+// Static guild settings — channel/role IDs, self-role panel and clan
+// branding for this server.
+//
+// The actual values live in config/guild.json (NOT in this file and
+// NOT in .env), so they can be edited without touching code. Copy
+// config/guild.example.json to config/guild.json for a fresh server.
+// A few keys can also be overridden per-environment via CHANNEL_* /
+// ROLE_* variables (see ENV_OVERRIDES below). The BotSettings
+// collection in MongoDB can override these per guild at runtime via
+// config/configLoader.js — see getSettings().
+//
+// This module exports the same shape as before so all consumers work
+// unchanged: { channels, idPrefix, roles, selfRoles, clan }.
+const fs = require("fs");
+const path = require("path");
 
+function loadGuildFile(filePath) {
+    try {
+        return JSON.parse(fs.readFileSync(filePath, "utf8"));
+    } catch {
+        return null;
+    }
+}
+
+const guildConfigPath =
+    process.env.HORNET_GUILD_CONFIG_PATH ||
+    path.join(__dirname, "guild.json");
+
+let guild = loadGuildFile(guildConfigPath);
+if (!guild) {
+    // Fall back to the example file so the bot still starts (with
+    // placeholder IDs) instead of crashing on a missing guild.json.
+    guild = loadGuildFile(path.join(__dirname, "guild.example.json"));
+}
+if (!guild) {
+    console.error("[settings] config/guild.json not found — using empty guild settings. Copy config/guild.example.json to config/guild.json.");
+    guild = {};
+}
+
+// Minimal shape defaults (channel *names*, never IDs) so a missing
+// guild.json cannot crash a consumer that reads a key.
+const settings = {
     channels: {
-
         cards: "🎴┃sfa-cards",
-
         arts: "🎨┃sfa-arts",
-
         links: "📺┃content",
-
         verification: "📝┃verification",
-
         tournaments: "tournaments",
-
         logs: "🐝┃hornet-logs",
-
-        // NEW
-        welcome: "1460346256823156736",
-
-        main_welcome: "1176828357590130757",
-
-        // Replace with the actual channel IDs
-        serverMap: "1176828357590130757",
-
-        howToJoin: "1175701042374115428",
-
-        tryout: "1326826025950117898",
-
-        onboarding: "1341324526453002283",
-
-        serverRules: "1295652032643989618",
-
-        serverSupport: "1341324123514736741"
+        welcome: "",
+        main_welcome: "",
+        serverMap: "",
+        howToJoin: "",
+        tryout: "",
+        onboarding: "",
+        serverRules: "",
+        serverSupport: "",
+        ...(guild.channels || {})
     },
-
     idPrefix: {
-
         card: "SFA",
-
-        art: "ART"
-
+        art: "ART",
+        ...(guild.idPrefix || {})
     },
-
     roles: {
-
         admin: "Admin",
-
         trusted: "Trusted",
-
-        member: "1171390411646963744",
-
-        pendingTryout: "1175736919603302430",
-
-        clanMemberAS: "1175839611193409617",
-        clanMemberEU: "1461006413802242264",
-
-        pendingTryoutAS: "1175736919603302430",
-        pendingTryoutEU: "1480831128389681152",
-
-        tryoutTesterAS: "1205879584369942548",
-        tryoutTesterEU: "1457795909869113521",
-
-          color: {
-
-        red: "1177091038230360135",
-        black: "1178567235825057874",
-        cyan: "1178568449723748394",
-        pink: "1178567626847428618",
-        orange: "1178570035422302268",
-        brown: "1178567989952532550",
-        blue: "1177075248680669234",
-        green: "1177092808218267759",
-        violet: "1177093678184026113",
-        yellow: "1177094491748966500"
+        member: "",
+        pendingTryout: "",
+        clanMemberAS: "",
+        clanMemberEU: "",
+        pendingTryoutAS: "",
+        pendingTryoutEU: "",
+        tryoutTesterAS: "",
+        tryoutTesterEU: "",
+        color: {},
+        faction: {},
+        ping: {},
+        ...(guild.roles || {})
     },
-
-    faction: {
-
-        legion: "1229629190765285386",
-        dynasty: "1229628706205597759",
-        herald: "1229629093432000563"
-    },
-
-    ping: {
-
-        giveaway: "1344498198097428555",
-        videos: "1536449372617842758",
-        announcement: "1344509272704159814",
-        clanUpdate: "1344509346339356772",
-        serverUpdate: "1344509422961033277",
-        friendlyAS: "1461405049161777274",
-        friendlyEU: "1465313773433913354"
-    }
-
-    },
-
     selfRoles: {
-
-    channel: "1229640787072122912",
-
-    banners: {
-
-        main: "https://cdn.discordapp.com/attachments/1506280626607886346/1529217638734233670/SELF_ROLES_20260525_065726_0000.jpg",
-        color: "https://cdn.discordapp.com/attachments/1506280626607886346/1529193303600271541/6146cf1d-cc3c-474c-b39d-4bdc1118f06c.png",
-        faction: "https://cdn.discordapp.com/attachments/1506280626607886346/1529236444147748884/Screenshot_2026-07-22-02-48-55-82_680d03679600f7af0b4c700c6b270fe7.jpg",
-        ping: "https://cdn.discordapp.com/attachments/1506280626607886346/1529223064330440876/36f22bd2-adb3-42c4-81e2-abdf770b9f73.png"
-
-    }
-},
-
-    // WARNING: Discord CDN attachment URLs with ?ex=...&hm=... query parameters expire.
-    // The URL below has had its expiry parameters stripped; if the image stops showing,
-    // replace this URL with a Cloudinary-hosted permanent link or a fresh Discord CDN URL.
-    // To update without a redeploy, host the image on Cloudinary and update this value.
+        channel: "",
+        banners: {},
+        ...(guild.selfRoles || {})
+    },
     clan: {
-        embedImage: "https://cdn.discordapp.com/attachments/1506280626607886346/1528640829327933501/image.png"
+        embedImage: "",
+        ...(guild.clan || {})
     }
-
 };
 
-// ${settings.emoji.emojiname}
+// Per-key environment overrides. Only the main channel/role keys are
+// mapped — everything else is edited in guild.json.
+const ENV_OVERRIDES = {
+    CHANNEL_WELCOME: ["channels", "welcome"],
+    CHANNEL_MAIN_WELCOME: ["channels", "main_welcome"],
+    CHANNEL_TRYOUT: ["channels", "tryout"],
+    CHANNEL_ONBOARDING: ["channels", "onboarding"],
+    CHANNEL_SERVER_RULES: ["channels", "serverRules"],
+    CHANNEL_SERVER_SUPPORT: ["channels", "serverSupport"],
+    CHANNEL_LOGS: ["channels", "logs"],
+    CHANNEL_CARDS: ["channels", "cards"],
+    CHANNEL_ARTS: ["channels", "arts"],
+    CHANNEL_LINKS: ["channels", "links"],
+    CHANNEL_VERIFICATION: ["channels", "verification"],
+    ROLE_MEMBER: ["roles", "member"],
+    ROLE_PENDING_TRYOUT: ["roles", "pendingTryout"],
+    ROLE_CLAN_MEMBER_AS: ["roles", "clanMemberAS"],
+    ROLE_CLAN_MEMBER_EU: ["roles", "clanMemberEU"],
+    ROLE_TRYOUT_TESTER_AS: ["roles", "tryoutTesterAS"],
+    ROLE_TRYOUT_TESTER_EU: ["roles", "tryoutTesterEU"],
+    SELFROLES_CHANNEL: ["selfRoles", "channel"],
+    CLAN_EMBED_IMAGE: ["clan", "embedImage"]
+};
+
+for (const [envName, [section, key]] of Object.entries(ENV_OVERRIDES)) {
+    if (process.env[envName]) settings[section][key] = process.env[envName];
+}
+
+module.exports = settings;

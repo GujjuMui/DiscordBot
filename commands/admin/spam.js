@@ -6,7 +6,9 @@ const {
 
 const spamManager = require("../../services/spamManager");
 const owner = require("../../config/owner");
-const settings = require("../../config/settings");
+const { SPAM_MAX_PINGS, SPAM_DELAY_MS, SPAM_PROGRESS_EVERY } = require("../../config/constants");
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 module.exports = {
 
@@ -30,10 +32,10 @@ module.exports = {
         .addIntegerOption(option =>
             option
                 .setName("count")
-                .setDescription("Number of pings (Max 1000)")
+                .setDescription(`Number of pings (Max ${SPAM_MAX_PINGS})`)
                 .setRequired(true)
                 .setMinValue(1)
-                .setMaxValue(1000)
+                .setMaxValue(SPAM_MAX_PINGS)
         )
 
         .addStringOption(option =>
@@ -64,7 +66,7 @@ module.exports = {
 
         }
 
-        if (spamManager.isRunning()) {
+        if (spamManager.isRunning(interaction.guildId)) {
 
             return interaction.editReply({
 
@@ -110,75 +112,69 @@ module.exports = {
 
         spamManager.start(
             user.id,
-            channel.id
+            channel.id,
+            interaction.guildId
         );
 
-        console.log(
-            `🚀 Starting spam for ${user.tag}`
-        );
+        // Stops cleanly on: manual /stopspam, the target replying
+        // (messageCreate), a 403 / deleted channel (10003), or three
+        // consecutive 429s. Discord's retry_after is honoured instead
+        // of hammering through a rate limit.
+        let sent = 0;
+        let stoppedReason = null;
+        let consecutive429 = 0;
 
-        for (
-            let i = 0;
-            i < count;
-            i++
-        ) {
-
-            console.log(
-                "Loop:",
-                i
-            );
-
-            if (!spamManager.isRunning()) {
-
-                console.log(
-                    "🛑 Spam manually stopped."
-                );
-
+        for (let i = 0; i < count; i++) {
+            if (!spamManager.isRunning(interaction.guildId)) {
+                stoppedReason = "stopped";
                 break;
-
             }
 
             try {
-
-                await channel.send(
-                    `${user} ${message}`
-                );
-
+                await channel.send(`${user} ${message}`);
+                sent++;
+                consecutive429 = 0;
             } catch (err) {
-
-                console.error(
-                    `❌ Failed to send spam message ${i + 1}/${count}`
-                );
-
-                console.error(err);
-
+                if (err?.code === 403 || err?.code === 10003) {
+                    stoppedReason = "forbidden";
+                    break;
+                }
+                if (err?.status === 429 || err?.code === 429) {
+                    consecutive429++;
+                    const retryAfterMs = err?.retry_after
+                        ? Math.ceil(err.retry_after * 1000)
+                        : SPAM_DELAY_MS;
+                    if (consecutive429 >= 3) {
+                        stoppedReason = "rate-limited";
+                        break;
+                    }
+                    await sleep(Math.min(retryAfterMs, 30000));
+                    continue;
+                }
+                console.error(`❌ Failed to send spam message ${i + 1}/${count}:`, err.message);
             }
 
-            if (
-                (i + 1) % 50 === 0
-            ) {
-
-                console.log(
-                    `📨 Spam Progress: ${i + 1}/${count}`
-                );
-
+            if ((i + 1) % SPAM_PROGRESS_EVERY === 0) {
+                await interaction.editReply({
+                    content:
+                        `⏳ Spam in progress: **${i + 1}/${count}** sent to ${user.tag}.`
+                }).catch(() => {});
             }
 
-            await new Promise(
-                resolve =>
-                    setTimeout(
-                        resolve,
-                        1000
-                    )
-            );
-
+            await sleep(SPAM_DELAY_MS);
         }
 
-        spamManager.stop();
+        spamManager.stop(interaction.guildId);
 
-        console.log(
-            "✅ Spam finished."
-        );
+        const finalMessage = stoppedReason === "stopped"
+            ? `🛑 Spam stopped after **${sent}/${count}** pings.`
+            : stoppedReason === "forbidden"
+                ? `❌ Spam stopped after **${sent}/${count}** pings — I lost permission to send in that channel.`
+                : stoppedReason === "rate-limited"
+                    ? `❌ Spam stopped after **${sent}/${count}** pings — Discord rate-limited the channel.`
+                    : `✅ Spam finished. **${sent}/${count}** pings sent to ${user.tag}.`;
+
+        await interaction.editReply({ content: finalMessage }).catch(() => {});
 
     }
 

@@ -57,5 +57,8 @@ const artSchema = new mongoose.Schema({
 });
 
 artSchema.index({ category: 1 });
+artSchema.index({ category: 1, createdAt: -1 });
+artSchema.index({ discordMessageId: 1 });
+artSchema.index({ uploaderId: 1 });
 
 module.exports = mongoose.model("Art", artSchema);

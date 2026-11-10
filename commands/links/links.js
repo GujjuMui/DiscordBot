@@ -3,7 +3,8 @@ const {
     EmbedBuilder
 } = require("discord.js");
 
-const Link = require("../../database/Link");
+const LinkRepository = require("../../repositories/LinkRepository");
+const { getCategories } = require("../../services/categoryCache");
 const settings = require("../../config/settings");
 const { createLinkCategoryMenu } = require("../../utils/embedBuilder");
 
@@ -17,29 +18,15 @@ module.exports = {
 
     await interaction.deferReply();
 
-    const links = await Link.find().sort({ createdAt: -1 });
+    const categories = await getCategories(LinkRepository, "Link");
 
-    if (!links.length) {
+    if (!categories.length) {
 
         return interaction.editReply({
             content: "❌" + " No links have been added yet."
         });
 
     }
-
-    const categories = [
-
-        ...new Set(
-
-            links
-
-                .map(link => link.category)
-
-                .filter(Boolean)
-
-        )
-
-    ].sort();
 
     await interaction.editReply({
 

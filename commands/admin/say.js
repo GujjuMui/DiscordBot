@@ -5,7 +5,7 @@ const {
     InteractionContextType,
     ApplicationIntegrationType
 } = require("discord.js");
-const config = require("../../config/config");
+const owner = require("../../config/owner");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,7 +18,9 @@ module.exports = {
         .addAttachmentOption(opt => opt.setName("attachment").setDescription("Optional attachment").setRequired(false)),
 
     async execute(interaction) {
-        if (!isOwner(interaction.user.id) && !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        // Guarded with ?. — interaction.member is null in DMs, and the
+        // check used to throw before the try block could catch it.
+        if (!isOwner(interaction.user.id) && !interaction.member?.permissions?.has(PermissionFlagsBits.Administrator)) {
             return interaction.reply({
                 content: "❌ You must be an Administrator or Bot Owner to use this command.",
                 flags: MessageFlags.Ephemeral
@@ -40,5 +42,5 @@ module.exports = {
 };
 
 function isOwner(userId) {
-    return config.botOwnerId && userId === config.botOwnerId;
+    return owner.ownerId && userId === owner.ownerId;
 }

@@ -43,5 +43,7 @@ const linkSchema = new mongoose.Schema({
 
 linkSchema.index({ title: 1 });
 linkSchema.index({ category: 1 });
+linkSchema.index({ category: 1, createdAt: -1 });
+linkSchema.index({ discordMessageId: 1 });
 
 module.exports = mongoose.model("Link", linkSchema);

@@ -4,7 +4,8 @@ const {
     PermissionFlagsBits
 } = require("discord.js");
 
-const Trusted = require("../../database/Trusted");
+const TrustedRepository = require("../../repositories/TrustedRepository");
+const { invalidateTrustedCache } = require("../../utils/checkPermission");
 const owner = require("../../config/owner");
 const logger = require("../../utils/logger");
 
@@ -88,12 +89,13 @@ module.exports = {
             user ? "user" : "role";
 
         const result =
-            await Trusted.deleteOne({
+            await TrustedRepository.deleteOne({
 
                 targetId,
                 type
 
             });
+            invalidateTrustedCache();
 
         if (result.deletedCount === 0) {
 

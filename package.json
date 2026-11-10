@@ -1,14 +1,17 @@
 {
-  "name": "hornet-bot",
-  "version": "1.2.0",
+  "author": "gujju_mui",
+  "dependencies": {
+    "cloudinary": "^2.10.0",
+    "discord.js": "^14.26.4",
+    "dotenv": "^17.4.2",
+    "mongoose": "^9.7.3"
+  },
   "description": "Discord SFA Clan Management Bot",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "deploy": "node deploy-commands.js",
-    "test": "node --test tests/index.test.js tests/mongo.test.js",
-    "check": "node -e \"const {execFileSync}=require('node:child_process'); const files=execFileSync('git',['ls-files','-z','--','*.js'],{encoding:'utf8'}).split('\\0').filter(Boolean); for(const file of files) execFileSync(process.execPath,['--check',file],{stdio:'inherit'}); console.log('Syntax checked '+files.length+' JavaScript files');\""
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "keywords": [
     "discord",
@@ -16,18 +19,15 @@
     "sfa",
     "shadow-fight-arena"
   ],
-  "author": "gujju_mui",
   "license": "MIT",
-  "dependencies": {
-    "cloudinary": "^2.10.0",
-    "discord.js": "^14.26.4",
-    "dotenv": "^17.4.2",
-    "mongoose": "^9.7.3"
+  "main": "index.js",
+  "name": "hornet-bot",
+  "scripts": {
+    "check": "node scripts/check-syntax.js",
+    "deploy": "node deploy-commands.js",
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "test": "node --test tests/index.test.js tests/mongo.test.js tests/presence.test.js tests/repositories.test.js tests/config.test.js tests/router.test.js"
   },
-  "devDependencies": {
-    "nodemon": "^3.1.14"
-  },
-  "engines": {
-    "node": ">=22"
-  }
+  "version": "1.2.0"
 }
