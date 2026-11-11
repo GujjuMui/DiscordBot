@@ -18,6 +18,11 @@ events/ + commands/           handlers: parse the interaction, call a
         │
         ▼
 services/                     domain logic + in-memory state:
+  guildSetup.js               the no-hardcoding resolver: every channel
+                              / role is resolved (stored ID, then
+                              canonical name, then created under the
+                              HORNET category) and remembered in
+                              BotSettings + in-memory settings
   galleryService.js           category -> gallery flow (query, embed,
                               open state, category menu)
   galleryV2.js                gallery state (per message id, 30-min TTL)
@@ -63,6 +68,20 @@ config/                       config.js (env only), settings.js (loads
 - **services/** — domain logic and in-memory state. A service may
   call repositories and other services, never a model, never
   Discord directly except to answer the interaction it was given.
+- **services/guildSetup.js** — the single place channel/role IDs
+  come from. Nothing else in the codebase may hardcode an ID or
+  require one up front: `resolveChannel` / `resolveRole` /
+  `resolveGroupedRole` / `resolveSelfRolesChannel` try the stored
+  ID first (guild.json, then BotSettings), then a channel/role
+  with the canonical name, then create it under the HORNET
+  category and persist the ID via `configLoader.updateSetting()`
+  plus the in-memory static settings. Nested colour / faction /
+  ping IDs travel as one JSON blob in `BotSettings.extras.
+  roleGroups`, which `getSettings()` unflattens. Banner / embed
+  images are URLs and cannot be created — a missing one is
+  skipped, never invented. `getSelfRoleGroupIds()` is the
+  read-only counterpart for handlers that must match the roles a
+  panel was built from.
 - **repositories/** — data access only. One file per model, thin
   wrappers, `.lean()` on reads, 11000 surfaced as a clear error.
   No Discord, no embeds, no business rules.

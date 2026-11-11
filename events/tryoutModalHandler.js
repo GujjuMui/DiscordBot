@@ -1,8 +1,7 @@
 const { MessageFlags } = require("discord.js");
 
-const settings = require("../config/settings");
-
 const logger = require("../utils/logger");
+const { resolveRole, SetupPermissionError } = require("../services/guildSetup");
 
 const createTryoutPost = require("../utils/createTryoutPost");
 
@@ -19,18 +18,28 @@ module.exports = async interaction => {
     flags: MessageFlags.Ephemeral
 });
 
-    const pendingRoleId =
-        region === "AS"
-            ? settings.roles.pendingTryoutAS
-            : settings.roles.pendingTryoutEU;
-
-    const testerRoleId =
-        region === "AS"
-            ? settings.roles.tryoutTesterAS
-            : settings.roles.tryoutTesterEU;
-
-    const pendingRole =
-        interaction.guild.roles.cache.get(pendingRoleId);
+    // Pending / tester roles are resolved (stored ID, then canonical
+    // name, then created) instead of erroring when not configured yet.
+    let pendingRole;
+    let testerRoleId;
+    try {
+        ({ role: pendingRole } = await resolveRole(
+            interaction.guild,
+            region === "AS" ? "pendingTryoutAS" : "pendingTryoutEU"
+        ));
+        ({ role: { id: testerRoleId } } = await resolveRole(
+            interaction.guild,
+            region === "AS" ? "tryoutTesterAS" : "tryoutTesterEU"
+        ));
+    } catch (err) {
+        if (err instanceof SetupPermissionError) {
+            await interaction.editReply({
+                content: err.message,
+            });
+            return true;
+        }
+        throw err;
+    }
 
     if (!pendingRole) {
 

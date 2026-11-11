@@ -5,8 +5,8 @@ const {
     ButtonStyle
 } = require("discord.js");
 
-const settings = require("../config/settings");
 const { COLORS } = require("../config/constants");
+const { resolveChannel } = require("../services/guildSetup");
 
 module.exports = async (
     guild,
@@ -17,8 +17,16 @@ module.exports = async (
     gameId
 ) => {
 
-    const channel = guild.channels.cache.get(settings.channels.tryout);
-
+    // The tryouts channel is resolved (stored ID, then canonical
+    // name, then created under HORNET). A failure to resolve it
+    // (e.g. no Manage Channels) keeps the old silent no-op: the
+    // application itself already succeeded.
+    let channel;
+    try {
+        ({ channel } = await resolveChannel(guild, "tryout"));
+    } catch {
+        return;
+    }
     if (!channel) return;
 
     const embed = new EmbedBuilder()

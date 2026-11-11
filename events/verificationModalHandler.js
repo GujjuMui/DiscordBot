@@ -10,6 +10,15 @@ const settings = require("../config/settings");
 const { getSettings } = require("../config/configLoader");
 const { PermissionsBitField } = require("discord.js");
 const logger = require("../utils/logger");
+const {
+    resolveChannel,
+    resolveRole,
+    SetupPermissionError
+} = require("../services/guildSetup");
+
+function isId(value) {
+    return /^\d+$/.test(String(value || ""));
+}
 
 module.exports = async (interaction) => {
 
@@ -25,12 +34,25 @@ module.exports = async (interaction) => {
 
         // DB-overridable settings for this guild, static fallback.
         const guildSettings = await getSettings(interaction.guild?.id).catch(() => settings);
-        const roles = guildSettings?.roles || settings.roles;
         const channels = guildSettings?.channels || settings.channels;
 
-        const memberRole = interaction.guild.roles.cache.get(
-            roles.member
-        );
+        // The member role is resolved (stored ID, then canonical
+        // name, then created) instead of erroring when it is not
+        // configured yet.
+        let memberRole;
+        try {
+            ({ role: memberRole } = await resolveRole(
+                interaction.guild, "member"
+            ));
+        } catch (err) {
+            if (err instanceof SetupPermissionError) {
+                await interaction.editReply({
+                    content: "❌ I need the **Manage Roles** permission to verify you."
+                });
+                return true;
+            }
+            throw err;
+        }
 
         if (!memberRole) {
 
@@ -76,11 +98,41 @@ module.exports = async (interaction) => {
         // Give role
         await interaction.member.roles.add(memberRole);
 
-        // Welcome channel (cache-first, then fetch)
-        const welcomeChannel =
-            interaction.guild.channels.cache.get(
-                channels.welcome
-            ) || await interaction.guild.channels.fetch(channels.welcome).catch(() => null);
+        // Welcome channel, resolved (stored ID, then canonical
+        // name, then created under HORNET). A failure to resolve it
+        // skips the welcome message — the user is already verified.
+        let welcomeChannel = null;
+        try {
+            ({ channel: welcomeChannel } = await resolveChannel(
+                interaction.guild, "welcome"
+            ));
+        } catch (err) {
+            console.error("[verificationModalHandler] Failed to resolve welcome channel:", err.message);
+        }
+
+        // Link channels for the welcome buttons, resolved the
+        // same way; the stored ID is the fallback when resolution
+        // fails, so the buttons keep working as before.
+        const serverMapId = await (async () => {
+            try {
+                const { channel } = await resolveChannel(
+                    interaction.guild, "serverMap"
+                );
+                return channel.id;
+            } catch {
+                return isId(channels.serverMap) ? channels.serverMap : "";
+            }
+        })();
+        const howToJoinId = await (async () => {
+            try {
+                const { channel } = await resolveChannel(
+                    interaction.guild, "howToJoin"
+                );
+                return channel.id;
+            } catch {
+                return isId(channels.howToJoin) ? channels.howToJoin : "";
+            }
+        })();
 
         let welcomeFailed = false;
         if (welcomeChannel) {
@@ -98,7 +150,7 @@ module.exports = async (interaction) => {
                     .setEmoji("🗺️")
                     .setStyle(ButtonStyle.Link)
                     .setURL(
-                        `https://discord.com/channels/${interaction.guild.id}/${channels.serverMap}`
+                        `https://discord.com/channels/${interaction.guild.id}/${serverMapId}`
                     ),
 
                 new ButtonBuilder()
@@ -106,7 +158,7 @@ module.exports = async (interaction) => {
                     .setEmoji("🤝")
                     .setStyle(ButtonStyle.Link)
                     .setURL(
-                        `https://discord.com/channels/${interaction.guild.id}/${channels.howToJoin}`
+                        `https://discord.com/channels/${interaction.guild.id}/${howToJoinId}`
                     )
                     
 

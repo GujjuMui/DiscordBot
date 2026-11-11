@@ -6,8 +6,8 @@ const {
     ActionRowBuilder
 } = require("discord.js");
 
-const settings = require("../config/settings");
 const { VERIFY_MIN_ACCOUNT_AGE_MS, VERIFY_MIN_JOIN_AGE_MS } = require("../config/constants");
+const { resolveRole, SetupPermissionError } = require("../services/guildSetup");
 
 async function safeReply(interaction, options) {
     try {
@@ -35,7 +35,21 @@ module.exports = async interaction => {
 
     if (interaction.customId !== "verify") return false;
 
-    const memberRole = interaction.guild.roles.cache.get(settings.roles.member);
+    // The member role is resolved (stored ID, then canonical name,
+    // then created) instead of erroring when it is not configured yet.
+    let memberRole;
+    try {
+        ({ role: memberRole } = await resolveRole(interaction.guild, "member"));
+    } catch (err) {
+        if (err instanceof SetupPermissionError) {
+            await safeReply(interaction, {
+                content: "❌ I need the **Manage Roles** permission to verify you.",
+                flags: MessageFlags.Ephemeral
+            });
+            return true;
+        }
+        throw err;
+    }
 
     if (!memberRole) {
         await safeReply(interaction, {

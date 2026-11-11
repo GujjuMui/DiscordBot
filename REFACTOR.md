@@ -1,5 +1,152 @@
 # Hornet — Refactor Notes
 
+## No hardcoding (v1.6): every channel and role is resolved or created
+
+User requirement (2026-11-11): running a command must automatically
+create what it needs, or ask for a channel — nobody should have to
+put channel/role IDs into `config/guild.json` or `.env` first. This
+covers `/selfroles` (same treatment `/verification` got in v1.5) and
+every other place an ID was required.
+
+### How it works — `services/guildSetup.js`
+
+One shared resolver, used by every command and handler:
+
+  stored ID (config/guild.json, then BotSettings in Mongo)
+    -> use that channel/role
+  else a channel/role with the canonical name
+    -> use it, and remember its ID
+  else create it under the HORNET category (category created too)
+    -> remember its ID
+
+"Remember it" = `configLoader.updateSetting()` (BotSettings in
+MongoDB, so it survives a restart) AND the in-memory static
+`config/settings` object in the same process, so consumers that read
+settings directly see it immediately. A fresh server needs NO
+`guild.json` / `.env` ID entries at all — `guild.json` may be an
+empty `{}` or absent. An existing server keeps working unchanged:
+its stored IDs are always tried first; name fallback and creation
+only run when no stored ID resolves. `config/guild.json` itself was
+not edited.
+
+Nested role maps cannot round-trip through `BotSettings.roles`
+(a flat Map of String), so colour / faction / ping IDs are stored
+as one JSON blob in `BotSettings.extras.roleGroups`;
+`configLoader.getSettings()` unflattens it back into
+`roles.color` / `roles.faction` / `roles.ping`. Proven by test: a
+grouped role resolved, the in-memory value dropped (simulating a
+restart), and the second resolve reuses the stored ID without
+creating again.
+
+Channels looked up BY NAME everywhere (cards, arts, links,
+verification, tournaments, logs) keep a name in settings — never
+an ID. A channel picked with a slash-command channel option whose
+name differs from the canonical one is remembered by ID in
+`BotSettings.extras.<key>ChannelId` instead.
+
+Banner / embed images are Discord CDN URLs the user uploaded — they
+cannot be created. A missing one is skipped: the self-role panel
+posts without that gallery, and the clan panel posts without its
+image. No image URL was invented.
+
+### Canonical names (created by /setup, or on demand)
+
+Channels (all text, under HORNET):
+`🎴┃sfa-cards`, `🎨┃sfa-arts`, `📺┃content`,
+`📝┃verification`, `tournaments`, `🐝┃hornet-logs`,
+`🎀┃welcome`, `📖┃server-guide`, `🗺️┃server-map`,
+`🤝┃how-to-join`, `🏅┃tryouts`, `👋┃onboarding`,
+`📃┃server-rules`, `💬┃server-support`, `🎭┃self-roles`
+
+Roles: `Member`, `Pending Tryout`, `Clan Member AS`,
+`Clan Member EU`, `Pending Tryout AS`, `Pending Tryout EU`,
+`Tryout Tester AS`, `Tryout Tester EU`;
+colours `Red`, `Black`, `Cyan`, `Pink`, `Orange`, `Brown`,
+`Blue`, `Green`, `Violet`, `Yellow` (with matching colours);
+factions `🎀 •  Legion`, `🎀  •  Dynasty`, `🎀  •  Heralds`;
+pings `📌  •  Giveaway ping`, `📌  •  SFA Videos Ping`,
+`📌  •  Announcement Ping`, `📌  •  Clan Update Ping`,
+`📌  •  Server Update Ping`, `Friendly ping`,
+`Friendly Ping (Europe)`. Faction/ping names are exactly the names
+the self-role panel emoji maps already expected, so those maps
+were not changed. Created roles are non-hoisted, non-mentionable.
+
+### Commands
+
+- `/setup` is the one-time "build everything" command: it now
+  creates all 14 channels and all 28 roles above, reporting
+  created / already-existed in the same result embed (plus a
+  `⚠️ Not Created` field only when something fails). It has a
+  Manage Roles pre-check alongside the existing Manage Channels
+  one. Existing channels found outside the category are still
+  re-parented under HORNET.
+- `/selfroles setup` accepts an optional `channel` option (the
+  native Discord channel picker): a picked channel wins and is
+  remembered; otherwise `🎭┃self-roles` is auto-created under
+  HORNET. It creates every colour/faction/ping role first, so the
+  panel is never posted with empty select menus. `/selfroles
+  refresh` resolves the saved panel channel first, else the
+  resolved self-roles channel. Panel content, owner-only check
+  and replies are unchanged.
+- `/verification setup` accepts the same optional `channel`
+  option; otherwise the v1.5 auto-create still applies. Panel
+  embed, button and replies unchanged.
+- `/clan setup` resolves its how-to-join channel the same way
+  (its embed image is skipped when unset). Member join,
+  verification, tryout and member-management handlers resolve
+  their roles/channels through the same resolver; a failure to
+  resolve on the join path only skips the welcome message — it
+  never breaks the join.
+
+### Removed hardcoding
+
+- `config/guild.example.json`: every `000000000000000000`
+  placeholder is now `""` (empty = not configured yet).
+- `config/settings.js`: the `ENV_OVERRIDES` block (`CHANNEL_*` /
+  `ROLE_*` / `SELFROLES_CHANNEL` / `CLAN_EMBED_IMAGE`) is gone,
+  and those entries are gone from `.env.example`. `.env` keeps
+  only `TOKEN`, `CLIENT_ID`, `BOT_OWNER_ID`, `MONGO_URI`,
+  `CLOUDINARY_*` and the feature flags (plus the optional
+  `ALLOWED_GUILD_IDS` allowlist, which is empty by default).
+- No other command's embed text, buttons, replies or logic
+  changed. Tests: 140 (v1.5 baseline) -> 147, including 7 new
+  resolver tests; syntax check 119 files; boot smoke reaches the
+  expected MongoDB failure.
+
+
+
+## Verification auto-create (v1.5): /setup and /verification create what is missing
+
+Bug reported by the user (2026-11-11): `/verification setup` replied
+"Verification channel not found", because `/setup` created the HORNET
+category and the cards / arts / links / tournaments / logs channels but
+never created the verification channel.
+
+- `commands/setup/setup.js`: `settings.channels.verification`
+  (`📝┃verification`) added to the channel list, so `/setup` now creates
+  it under the HORNET category like the other channels.
+- `commands/verification/verification.js`: instead of erroring when the
+  verification channel is missing, it now creates the HORNET category
+  if there is none, then creates the `📝┃verification` text channel
+  under it, and posts the verification panel there — the same pattern
+  `/setup` uses. Added a Manage Channels pre-check (same as `/setup`),
+  so a missing permission fails with a clear message instead of
+  halfway through. The panel embed, Verify button and replies are
+  unchanged.
+- `scripts/clear-guild-commands.js` (new utility, not a command):
+  one-off cleanup for duplicate slash commands — clears leftover
+  guild-scoped copies from one server: `node scripts/clear-guild-commands.js <SERVER_ID>`,
+  then `npm run deploy`. Added after v1.4 was packaged, now included
+  in this zip.
+
+No logic of any other command changed; kept commands are 30 (v1.4
+removals still apply). Install: copy the complete set, keep your
+existing `.env`, delete nothing extra this time, `npm install`,
+`npm run deploy`, `npm start`. Run `/setup` once on a server that
+never had it, or just run `/verification setup` — either one creates
+what is missing.
+
+
 ## Trim (v1.4): /botadmin, /checkperms and /claimadmin removed
 
 User decision (2026-11-11): keep everything else from v1.3, remove only

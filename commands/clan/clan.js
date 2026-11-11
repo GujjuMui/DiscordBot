@@ -9,6 +9,11 @@ const {
 } = require("discord.js");
 
 const settings = require("../../config/settings");
+const { getSettings } = require("../../config/configLoader");
+const {
+    resolveChannel,
+    SetupPermissionError
+} = require("../../services/guildSetup");
 
 module.exports = {
 
@@ -28,6 +33,12 @@ module.exports = {
 
     async execute(interaction) {
 
+        // Clan branding (embed image) is a Discord CDN URL the user
+        // uploaded — it cannot be created. A missing one simply
+        // skips the image; the panel still posts.
+        const guildSettings = await getSettings(interaction.guild?.id).catch(() => settings);
+        const clanImage = guildSettings?.clan?.embedImage || settings.clan.embedImage;
+
         const embed = new EmbedBuilder()
 
             .setColor("#ED4245")
@@ -43,9 +54,11 @@ Accept the clan rules.
 
 ℹ️ What are clan tryouts?
 Basically clan tryouts are the process where we check the player is capable of joining the clan or not, you can play with our tryout tester to complete the tryouts.
-`)
+`);
 
-            .setImage(settings.clan.embedImage);
+        if (clanImage) {
+            embed.setImage(clanImage);
+        }
 
        const row = new ActionRowBuilder().addComponents(
 
@@ -63,20 +76,22 @@ Basically clan tryouts are the process where we check the player is capable of j
 
 );
 
-        const clanChannel = interaction.guild.channels.cache.get(
-        settings.channels.howToJoin
-        );
-
-        if (!clanChannel) {
-
-            return interaction.reply({
-
-                content: "❌" + " How-to-Join channel not found.",
-
-                flags: MessageFlags.Ephemeral
-
-            });
-
+        // The how-to-join channel is resolved (stored ID, then
+        // canonical name, then created under the HORNET category)
+        // instead of erroring when it is not configured yet.
+        let clanChannel;
+        try {
+            ({ channel: clanChannel } = await resolveChannel(
+                interaction.guild, "howToJoin"
+            ));
+        } catch (err) {
+            if (err instanceof SetupPermissionError) {
+                return interaction.reply({
+                    content: err.message,
+                    flags: MessageFlags.Ephemeral
+                });
+            }
+            throw err;
         }
 
         await clanChannel.send({

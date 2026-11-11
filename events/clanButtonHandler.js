@@ -6,7 +6,7 @@ const {
     MessageFlags
 } = require("discord.js");
 
-const settings = require("../config/settings");
+const { resolveRole, SetupPermissionError } = require("../services/guildSetup");
 
 module.exports = async interaction => {
 
@@ -21,13 +21,35 @@ module.exports = async interaction => {
 
     const isAS = interaction.customId === "clan_join_as";
 
-    const pendingRoleId = isAS
-        ? settings.roles.pendingTryoutAS
-        : settings.roles.pendingTryoutEU;
-
-    const memberRole = interaction.guild.roles.cache.get(settings.roles.member);
-
-    const pendingTryoutRole = interaction.guild.roles.cache.get(pendingRoleId);
+    // Member / pending / clan roles are resolved (stored ID, then
+    // canonical name, then created) instead of erroring when they
+    // are not configured yet.
+    let memberRole;
+    let pendingTryoutRole;
+    let pendingTryoutAS;
+    let pendingTryoutEU;
+    let clanMemberAS;
+    let clanMemberEU;
+    try {
+        ({ role: memberRole } = await resolveRole(interaction.guild, "member"));
+        ({ role: pendingTryoutRole } = await resolveRole(
+            interaction.guild,
+            isAS ? "pendingTryoutAS" : "pendingTryoutEU"
+        ));
+        ({ role: { id: pendingTryoutAS } } = await resolveRole(interaction.guild, "pendingTryoutAS"));
+        ({ role: { id: pendingTryoutEU } } = await resolveRole(interaction.guild, "pendingTryoutEU"));
+        ({ role: { id: clanMemberAS } } = await resolveRole(interaction.guild, "clanMemberAS"));
+        ({ role: { id: clanMemberEU } } = await resolveRole(interaction.guild, "clanMemberEU"));
+    } catch (err) {
+        if (err instanceof SetupPermissionError) {
+            await interaction.reply({
+                content: err.message,
+                flags: MessageFlags.Ephemeral
+            });
+            return true;
+        }
+        throw err;
+    }
 
     if (!memberRole || !pendingTryoutRole) {
 
@@ -44,11 +66,11 @@ module.exports = async interaction => {
     }
 
     const hasPendingAS = interaction.member.roles.cache.has(
-        settings.roles.pendingTryoutAS
+        pendingTryoutAS
     );
 
     const hasPendingEU = interaction.member.roles.cache.has(
-        settings.roles.pendingTryoutEU
+        pendingTryoutEU
     );
 
     if (hasPendingAS || hasPendingEU) {
@@ -66,8 +88,8 @@ module.exports = async interaction => {
     }
 
     const isClanMember =
-    interaction.member.roles.cache.has(settings.roles.clanMemberAS) ||
-    interaction.member.roles.cache.has(settings.roles.clanMemberEU);
+    interaction.member.roles.cache.has(clanMemberAS) ||
+    interaction.member.roles.cache.has(clanMemberEU);
 
     if (isClanMember) {
 

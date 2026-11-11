@@ -1,23 +1,26 @@
 const { MessageFlags } = require("discord.js");
-const settings = require("../config/settings");
 const logger = require("../utils/logger");
+const { getSelfRoleGroupIds } = require("../services/guildSetup");
 
-const ROLE_GROUPS = {
-    selfroles_color: {
-        roles: Object.values(settings.roles.color),
-        logType: "SELFROLE_COLOR",
-        fieldName: "Role",
-        label: "color role"
-    },
-    selfroles_faction: {
-        roles: Object.values(settings.roles.faction),
-        logType: "SELFROLE_FACTION",
-        fieldName: "Faction",
-        label: "faction"
-    }
-};
-
-const pingRoles = Object.values(settings.roles.ping);
+// Role groups are resolved per interaction (stored IDs first,
+// BotSettings fills the gaps) — never read once at module load,
+// or a restart would serve stale IDs after roles are recreated.
+function roleGroupsFromIds(ids) {
+    return {
+        selfroles_color: {
+            roles: Object.values(ids.color || {}).filter(Boolean),
+            logType: "SELFROLE_COLOR",
+            fieldName: "Role",
+            label: "color role"
+        },
+        selfroles_faction: {
+            roles: Object.values(ids.faction || {}).filter(Boolean),
+            logType: "SELFROLE_FACTION",
+            fieldName: "Faction",
+            label: "faction"
+        }
+    };
+}
 
 async function updateExclusiveRoles(interaction, config) {
     const selectedRole = interaction.values?.[0];
@@ -51,7 +54,7 @@ async function updateExclusiveRoles(interaction, config) {
     });
 }
 
-async function updatePingRoles(interaction) {
+async function updatePingRoles(interaction, pingRoles) {
     const member = interaction.member;
     const selectedRoles = interaction.values ?? [];
     for (const roleId of selectedRoles) {
@@ -85,12 +88,20 @@ async function updatePingRoles(interaction) {
 }
 
 module.exports = async interaction => {
-    const config = ROLE_GROUPS[interaction.customId];
     const isPing = interaction.customId === "selfroles_ping";
     const isPingRemove = interaction.customId === "selfroles_remove_ping";
 
-    if (!config && !isPing && !isPingRemove) return false;
+    if (
+        interaction.customId !== "selfroles_color" &&
+        interaction.customId !== "selfroles_faction" &&
+        !isPing && !isPingRemove
+    ) return false;
     if (!interaction.member) return true;
+
+    const groupIds = await getSelfRoleGroupIds(interaction.guild);
+    const ROLE_GROUPS = roleGroupsFromIds(groupIds);
+    const pingRoles = Object.values(groupIds.ping || {}).filter(Boolean);
+    const config = ROLE_GROUPS[interaction.customId];
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -104,7 +115,7 @@ module.exports = async interaction => {
         }
 
         if (isPing) {
-            await updatePingRoles(interaction);
+            await updatePingRoles(interaction, pingRoles);
             await interaction.editReply({
                 content: "✅ Your notification roles have been updated."
             });

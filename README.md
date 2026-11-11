@@ -112,11 +112,10 @@ CLOUDINARY_FOLDER_PREFIX=hornet
 | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | Yes | — | Cloudinary credentials |
 | `CLOUDINARY_FOLDER_PREFIX` | No | `hornet` | Folder prefix for uploaded images |
 | `ENABLE_TICKETS` / `ENABLE_TRYOUTS` / `ENABLE_VERIFICATION` / `ENABLE_MODERATION` / `ENABLE_CHANNEL_MANAGER` / `ENABLE_BROADCAST` | No | `true` | Feature flags; `false` disables the matching commands |
-| `CHANNEL_*` / `ROLE_*` / `SELFROLES_CHANNEL` / `CLAN_EMBED_IMAGE` | No | values in `config/guild.json` | Per-key overrides for the main channels/roles (see `config/settings.js`) |
-| `HORNET_GUILD_CONFIG_PATH` | No | `config/guild.json` | Path to the guild config file |
+| _(removed in v1.6)_ | — | — | Channel/role IDs are no longer configured anywhere — the bot creates what it needs (see `services/guildSetup.js`) |
 
-### Guild configuration (`config/guild.json`)
-Channel IDs, role IDs (member, clan, colour, faction, ping), the self-roles channel and banner URLs, and the clan embed image live in `config/guild.json` — not in code and not in `.env`. The file shipped in this zip already contains this server's values. For a fresh server, copy `config/guild.example.json` to `config/guild.json` and fill in your IDs. `config/guild.json` is gitignored (it holds your server's IDs).
+### Guild configuration — none required (v1.6)
+No channel or role IDs need to be configured anywhere — not in `config/guild.json`, not in `.env`. Run `/setup` once and the bot builds the HORNET category, all 14 channels and all 28 roles itself, and remembers their IDs in MongoDB (BotSettings). `/verification setup` and `/selfroles setup` do the same for their own panel, and both accept an optional channel instead. A server that already has IDs in `config/guild.json` keeps using them — stored IDs are always tried first. Banner URLs and the clan embed image are the only values that still live in `config/guild.json` (they are uploaded media the bot cannot create); the file shipped in this zip already contains this server's values, and for a fresh server they can simply be left empty — panels post without them. `config/guild.json` is gitignored.
 
 ### Rotating the owner
 Set `BOT_OWNER_ID` in `.env` to the new owner's Discord user ID and restart the bot. Nothing else references the owner ID — every owner check reads `owner.ownerId` from `config/owner.js`, which re-exports `config.botOwnerId`.

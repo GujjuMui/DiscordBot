@@ -10,136 +10,160 @@ const {
 } = require("discord.js");
 
 const settings = require("../config/settings");
+const { bannerUrl } = require("../services/guildSetup");
 
-function buildSelfRolePanel(guild) {
+// Builds the self-role panel (Components V2 container).
+//
+// `resolved` is supplied by /selfroles after the resolver has made
+// sure every role exists: { groups: { color, faction, ping } (role
+// ID maps), banners: { main, color, faction, ping } (URLs) }. It
+// defaults to the static settings so existing callers keep working.
+//
+// Banner images are Discord CDN URLs the user uploaded — they cannot
+// be created. A missing/empty banner simply skips that section's
+// gallery; the panel still posts. A section with no roles at all is
+// skipped instead of posting an empty select menu (discord.js would
+// reject it).
 
-         const factionEmojis = {
+function buildSelfRolePanel(guild, resolved = {}) {
 
-    "🎀 •  Legion": "⚔️",
-    "🎀  •  Dynasty": "🏯",
-    "🎀  •  Heralds": "🛡️"
+    const groups = resolved.groups || {
+        color: settings.roles.color || {},
+        faction: settings.roles.faction || {},
+        ping: settings.roles.ping || {}
+    };
+    const banners = resolved.banners || settings.selfRoles.banners || {};
 
-};
+    const factionEmojis = {
 
-    const factionOptions = Object.values(settings.roles.faction)
+        "🎀 •  Legion": "⚔️",
+        "🎀  •  Dynasty": "🏯",
+        "🎀  •  Heralds": "🛡️"
 
-    .map(roleId => guild.roles.cache.get(roleId))
+    };
 
-    .filter(Boolean)
+    const factionOptions = Object.values(groups.faction || {})
 
-    .map(role => ({
+        .map(roleId => guild.roles.cache.get(roleId))
 
-    label: role.name,
+        .filter(Boolean)
 
-    value: role.id,
+        .map(role => ({
 
-    emoji: factionEmojis[role.name] ?? "⚔️",
+            label: role.name,
 
-    description: `Join the ${role.name} faction`,
+            value: role.id,
 
-}));
+            emoji: factionEmojis[role.name] ?? "⚔️",
 
-        const colorEmojis = {
+            description: `Join the ${role.name} faction`,
 
-    Red: "🔴",
-    Black: "⚫",
-    Cyan: "🔹",
-    Pink: "🩷",
-    Orange: "🟠",
-    Brown: "🟤",
-    Blue: "🔵",
-    Green: "🟢",
-    Violet: "🟣",
-    Yellow: "🟡"
+        }));
 
-};
+    const colorEmojis = {
 
-const colorOptions = Object.values(settings.roles.color)
+        Red: "🔴",
+        Black: "⚫",
+        Cyan: "🔹",
+        Pink: "🩷",
+        Orange: "🟠",
+        Brown: "🟤",
+        Blue: "🔵",
+        Green: "🟢",
+        Violet: "🟣",
+        Yellow: "🟡"
 
-    .map(roleId => guild.roles.cache.get(roleId))
+    };
 
-    .filter(Boolean)
+    const colorOptions = Object.values(groups.color || {})
 
-    .map(role => ({
+        .map(roleId => guild.roles.cache.get(roleId))
 
-    label: role.name,
+        .filter(Boolean)
 
-    value: role.id,
+        .map(role => ({
 
-    emoji: colorEmojis[role.name] ?? "🎨",
+            label: role.name,
 
-    description: `Choose the ${role.name} color role`,
+            value: role.id,
 
-}));
+            emoji: colorEmojis[role.name] ?? "🎨",
 
-    const pingOptions = Object.entries(settings.roles.ping)
+            description: `Choose the ${role.name} color role`,
 
-    .map(([key, roleId]) => {
+        }));
 
-        const role = guild.roles.cache.get(roleId);
+    const pingOptions = Object.entries(groups.ping || {})
 
-        if (!role) return null;
+        .map(([key, roleId]) => {
 
-        const descriptions = {
+            const role = guild.roles.cache.get(roleId);
 
-    giveaway: "Get notified about giveaways",
-    videos: "Get notified about new SFA videos",
-    announcement: "Important server announcements",
-    clanUpdate: "Clan news and updates",
-    serverUpdate: "Server update notifications",
-    friendlyAS: "Asian friendly match pings",
-    friendlyEU: "European friendly match pings"
+            if (!role) return null;
 
-};
+            const descriptions = {
 
-    const pingEmojis = {
-    "📌  •  Giveaway ping": "🎁",
-    "📌  •  SFA Videos Ping": "📸",
-    "📌  •  Announcement Ping": "📢",
-    "📌  •  Clan Update Ping": "⚔️",
-    "📌  •  Server Update Ping": "📰",
-    "Friendly ping": "🤝",
-    "Friendly Ping (Europe)": "🤝"
-};
+                giveaway: "Get notified about giveaways",
+                videos: "Get notified about new SFA videos",
+                announcement: "Important server announcements",
+                clanUpdate: "Clan news and updates",
+                serverUpdate: "Server update notifications",
+                friendlyAS: "Asian friendly match pings",
+                friendlyEU: "European friendly match pings"
 
-       return {
+            };
 
-    label: role.name,
+            const pingEmojis = {
+                "📌  •  Giveaway ping": "🎁",
+                "📌  •  SFA Videos Ping": "📸",
+                "📌  •  Announcement Ping": "📢",
+                "📌  •  Clan Update Ping": "⚔️",
+                "📌  •  Server Update Ping": "📰",
+                "Friendly ping": "🤝",
+                "Friendly Ping (Europe)": "🤝"
+            };
 
-    value: role.id,
+            return {
 
-    emoji: pingEmojis[role.name] ?? "🔔",
+                label: role.name,
 
-    description: descriptions[key] ?? "Receive notifications",
+                value: role.id,
 
-};
-    })
+                emoji: pingEmojis[role.name] ?? "🔔",
 
-    .filter(Boolean);
+                description: descriptions[key] ?? "Receive notifications",
 
-        const container = new ContainerBuilder()
+            };
+        })
 
-        .setAccentColor(0x5865F2)
+        .filter(Boolean);
 
-        // =========================
-        // MAIN
-        // =========================
+    const container = new ContainerBuilder()
 
-        .addMediaGalleryComponents(
+        .setAccentColor(0x5865F2);
+
+    // =========================
+    // MAIN
+    // =========================
+
+    const mainBanner = bannerUrl(banners, "main");
+    if (mainBanner) {
+        container.addMediaGalleryComponents(
 
             gallery => gallery.addItems(
 
                 new MediaGalleryItemBuilder()
 
-                    .setURL(settings.selfRoles.banners.main)
+                    .setURL(mainBanner)
 
             )
 
-        )
+        );
+    }
 
-        .addTextDisplayComponents(
+    container.addTextDisplayComponents(
 
-            text => text.setContent(
+        text => text.setContent(
 `# ${"🎭"} HORNET SELF ROLES
 
 Welcome to the self-role panel!
@@ -150,27 +174,31 @@ Personalize your profile by selecting:
 • Any Ping Roles you wish to receive
 
 -# Your selections can be changed at any time.`
-            )
-
         )
 
-        // =========================
-        // COLOR
-        // =========================
+    );
 
-        .addMediaGalleryComponents(
+    // =========================
+    // COLOR
+    // =========================
 
-            gallery => gallery.addItems(
+    if (colorOptions.length) {
+        const colorBanner = bannerUrl(banners, "color");
+        if (colorBanner) {
+            container.addMediaGalleryComponents(
 
-                new MediaGalleryItemBuilder()
+                gallery => gallery.addItems(
 
-                    .setURL(settings.selfRoles.banners.color)
+                    new MediaGalleryItemBuilder()
 
-            )
+                        .setURL(colorBanner)
 
-        )
+                )
 
-        .addTextDisplayComponents(
+            );
+        }
+
+        container.addTextDisplayComponents(
 
             text => text.setContent(
 `### ${"🎨"} Color Roles
@@ -178,9 +206,9 @@ Personalize your profile by selecting:
 Choose **one** color role. Selecting another color will automatically remove the previous one.`
             )
 
-        )
+        );
 
-        .addActionRowComponents(
+        container.addActionRowComponents(
 
             new ActionRowBuilder()
 
@@ -196,25 +224,30 @@ Choose **one** color role. Selecting another color will automatically remove the
 
                 )
 
-        )
-     
-        // =========================
-        // FACTION
-        // =========================
+        );
+    }
 
-        .addMediaGalleryComponents(
+    // =========================
+    // FACTION
+    // =========================
 
-            gallery => gallery.addItems(
+    if (factionOptions.length) {
+        const factionBanner = bannerUrl(banners, "faction");
+        if (factionBanner) {
+            container.addMediaGalleryComponents(
 
-                new MediaGalleryItemBuilder()
+                gallery => gallery.addItems(
 
-                    .setURL(settings.selfRoles.banners.faction)
+                    new MediaGalleryItemBuilder()
 
-            )
+                        .setURL(factionBanner)
 
-        )
+                )
 
-        .addTextDisplayComponents(
+            );
+        }
+
+        container.addTextDisplayComponents(
 
             text => text.setContent(
 `### ${"⚔️"} Faction Roles
@@ -222,9 +255,9 @@ Choose **one** color role. Selecting another color will automatically remove the
 Choose **one** faction role. Selecting another faction will automatically remove the previous one.`
             )
 
-        )
+        );
 
-        .addActionRowComponents(
+        container.addActionRowComponents(
 
             new ActionRowBuilder()
 
@@ -240,25 +273,30 @@ Choose **one** faction role. Selecting another faction will automatically remove
 
                 )
 
-        )   
-    
-                // =========================
-        // PING
-        // =========================
+        );
+    }
 
-        .addMediaGalleryComponents(
+    // =========================
+    // PING
+    // =========================
 
-            gallery => gallery.addItems(
+    if (pingOptions.length) {
+        const pingBanner = bannerUrl(banners, "ping");
+        if (pingBanner) {
+            container.addMediaGalleryComponents(
 
-                new MediaGalleryItemBuilder()
+                gallery => gallery.addItems(
 
-                    .setURL(settings.selfRoles.banners.ping)
+                    new MediaGalleryItemBuilder()
 
-            )
+                        .setURL(pingBanner)
 
-        )
+                )
 
-        .addTextDisplayComponents(
+            );
+        }
+
+        container.addTextDisplayComponents(
 
             text => text.setContent(
 `### ${"🔔"} Ping Roles
@@ -268,9 +306,9 @@ Select the notifications you would like to receive.
 You can choose multiple roles.`
             )
 
-        )
+        );
 
-        .addActionRowComponents(
+        container.addActionRowComponents(
 
             new ActionRowBuilder()
 
@@ -290,9 +328,9 @@ You can choose multiple roles.`
 
                 )
 
-        )
+        );
 
-        .addActionRowComponents(
+        container.addActionRowComponents(
 
             new ActionRowBuilder()
 
@@ -308,9 +346,8 @@ You can choose multiple roles.`
 
                 )
 
-        )
-
-        ;
+        );
+    }
 
     return {
         components: [container]

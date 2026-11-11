@@ -40,10 +40,39 @@ async function getSettings(guildId) {
         const banners = asObject(record.banners);
         const extras = asObject(record.extras);
 
+        // Nested role groups (colour / faction / ping) cannot live in
+        // BotSettings.roles — it is a flat Map of String — so the
+        // resolver stores them as one JSON blob in extras.roleGroups
+        // (see services/guildSetup.js). Unflatten it back here so
+        // merged.roles.color.red etc. read exactly like the static
+        // guild.json shape. Dotted flat keys (e.g. "color.red") are
+        // accepted too, for records written by other tools.
+        let roleGroups = {};
+        try {
+            roleGroups = JSON.parse(extras.roleGroups || "{}");
+        } catch {
+            roleGroups = {};
+        }
+        if (roleGroups && typeof roleGroups !== "object") roleGroups = {};
+        for (const [key, value] of Object.entries(roles)) {
+            const match = key.match(/^(color|faction|ping)\.(.+)$/);
+            if (match) {
+                if (!roleGroups[match[1]]) roleGroups[match[1]] = {};
+                roleGroups[match[1]][match[2]] = value;
+                delete roles[key];
+            }
+        }
+
         // Merge record over static defaults
         const merged = {
             channels: { ...staticSettings.channels, ...channels },
-            roles: { ...staticSettings.roles, ...roles },
+            roles: {
+                ...staticSettings.roles,
+                ...roles,
+                color: { ...(staticSettings.roles.color || {}), ...(roleGroups.color || {}) },
+                faction: { ...(staticSettings.roles.faction || {}), ...(roleGroups.faction || {}) },
+                ping: { ...(staticSettings.roles.ping || {}), ...(roleGroups.ping || {}) }
+            },
             selfRoles: {
                 channel: channels.selfRolesChannel || staticSettings.selfRoles.channel,
                 banners: { ...staticSettings.selfRoles.banners, ...banners }
@@ -53,7 +82,10 @@ async function getSettings(guildId) {
             },
             // Passthrough: nothing the static file defines may be dropped.
             idPrefix: { ...staticSettings.idPrefix, ...(asObject(record.idPrefix)) },
-            brand: extras.brand || staticSettings.clan?.brand || ""
+            brand: extras.brand || staticSettings.clan?.brand || "",
+            // Extras passthrough: the resolver reads remembered picked
+            // channels (e.g. extras.verificationChannelId) from here.
+            extras
         };
         settingsCache.set(guildId, { settings: merged, fetchedAt: Date.now() });
         return merged;

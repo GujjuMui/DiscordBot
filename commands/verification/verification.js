@@ -5,10 +5,15 @@ const {
     ActionRowBuilder,
     MessageFlags,
     ButtonBuilder,
-    ButtonStyle
+    ButtonStyle,
+    ChannelType
 } = require("discord.js");
 
-const settings = require("../../config/settings");
+const {
+    resolveChannel,
+    rememberPickedChannel,
+    SetupPermissionError
+} = require("../../services/guildSetup");
 
 module.exports = {
 
@@ -23,6 +28,12 @@ module.exports = {
             sub
                 .setName("setup")
                 .setDescription("Create the verification panel")
+                .addChannelOption(option =>
+                    option
+                        .setName("channel")
+                        .setDescription("Channel to post the verification panel in (created automatically if not given)")
+                        .addChannelTypes(ChannelType.GuildText)
+                )
         ),
 
     async execute(interaction) {
@@ -62,21 +73,29 @@ module.exports = {
 
             );
 
-        const verificationChannel = interaction.guild.channels.cache.find(
-    channel => channel.name === settings.channels.verification
-);
-
-if (!verificationChannel) {
-
-    return interaction.reply({
-
-        content: "❌" + " Verification channel not found.",
-
-        flags: MessageFlags.Ephemeral
-
-    });
-
-}
+        // Picked channel wins; otherwise the channel is resolved
+        // (stored ID, then canonical name, then created under the
+        // HORNET category — the v1.5 auto-create, now shared).
+        let verificationChannel = interaction.options.getChannel("channel");
+        if (verificationChannel) {
+            await rememberPickedChannel(
+                interaction.guild, "verification", verificationChannel
+            );
+        } else {
+            try {
+                ({ channel: verificationChannel } = await resolveChannel(
+                    interaction.guild, "verification"
+                ));
+            } catch (err) {
+                if (err instanceof SetupPermissionError) {
+                    return interaction.reply({
+                        content: err.message,
+                        flags: MessageFlags.Ephemeral
+                    });
+                }
+                throw err;
+            }
+        }
 
 await verificationChannel.send({
 

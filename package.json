@@ -27,7 +27,7 @@
     "deploy": "node deploy-commands.js",
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "test": "node --test tests/index.test.js tests/mongo.test.js tests/presence.test.js tests/repositories.test.js tests/config.test.js tests/router.test.js"
+    "test": "node --test tests/index.test.js tests/mongo.test.js tests/presence.test.js tests/repositories.test.js tests/config.test.js tests/router.test.js tests/resolver.test.js"
   },
-  "version": "1.4.0"
+  "version": "1.6.0"
 }

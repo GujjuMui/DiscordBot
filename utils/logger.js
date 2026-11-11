@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require("discord.js");
-const settings = require("../config/settings");
 const { COLORS } = require("../config/constants");
+const { resolveChannel } = require("../services/guildSetup");
 
 const LOG_TYPES = {
     CARD_CREATE: [COLORS.PRIMARY, "✅ CARD CREATED"],
@@ -40,13 +40,16 @@ module.exports = async ({
 }) => {
     if (!guild || !user) return;
 
-    // settings.channels.logs may be a channel ID (numeric) or a
-    // channel name — resolve by ID first, then by name, and only use
-    // the channel if it is actually a text channel we can send in.
-    const logsTarget = settings.channels.logs;
-    const channel = /^\d+$/.test(String(logsTarget || ""))
-        ? (guild.channels.cache.get(logsTarget) || await guild.channels.fetch(logsTarget).catch(() => null))
-        : guild.channels.cache.find(item => item.name === logsTarget);
+    // The logs channel is resolved the same way as every other
+    // channel (stored ID, then canonical name, then created under
+    // HORNET). A failure to resolve it is a silent no-op — logging
+    // must never throw.
+    let channel = null;
+    try {
+        ({ channel } = await resolveChannel(guild, "logs"));
+    } catch {
+        return;
+    }
 
     if (!channel || typeof channel.isTextBased !== "function" || !channel.isTextBased()) return;
 

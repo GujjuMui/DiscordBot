@@ -2,11 +2,13 @@
 // branding for this server.
 //
 // The actual values live in config/guild.json (NOT in this file and
-// NOT in .env), so they can be edited without touching code. Copy
-// config/guild.example.json to config/guild.json for a fresh server.
-// A few keys can also be overridden per-environment via CHANNEL_* /
-// ROLE_* variables (see ENV_OVERRIDES below). The BotSettings
-// collection in MongoDB can override these per guild at runtime via
+// NOT in .env), so they can be edited without touching code. A fresh
+// server does NOT need guild.json at all: services/guildSetup.js
+// resolves every channel/role — stored ID first, then the canonical
+// name, then it creates it under the HORNET category and remembers
+// the ID in MongoDB (BotSettings) — so /setup, /verification setup
+// and /selfroles setup all work from a bare server. The BotSettings
+// collection can override these per guild at runtime via
 // config/configLoader.js — see getSettings().
 //
 // This module exports the same shape as before so all consumers work
@@ -88,33 +90,5 @@ const settings = {
         ...(guild.clan || {})
     }
 };
-
-// Per-key environment overrides. Only the main channel/role keys are
-// mapped — everything else is edited in guild.json.
-const ENV_OVERRIDES = {
-    CHANNEL_WELCOME: ["channels", "welcome"],
-    CHANNEL_MAIN_WELCOME: ["channels", "main_welcome"],
-    CHANNEL_TRYOUT: ["channels", "tryout"],
-    CHANNEL_ONBOARDING: ["channels", "onboarding"],
-    CHANNEL_SERVER_RULES: ["channels", "serverRules"],
-    CHANNEL_SERVER_SUPPORT: ["channels", "serverSupport"],
-    CHANNEL_LOGS: ["channels", "logs"],
-    CHANNEL_CARDS: ["channels", "cards"],
-    CHANNEL_ARTS: ["channels", "arts"],
-    CHANNEL_LINKS: ["channels", "links"],
-    CHANNEL_VERIFICATION: ["channels", "verification"],
-    ROLE_MEMBER: ["roles", "member"],
-    ROLE_PENDING_TRYOUT: ["roles", "pendingTryout"],
-    ROLE_CLAN_MEMBER_AS: ["roles", "clanMemberAS"],
-    ROLE_CLAN_MEMBER_EU: ["roles", "clanMemberEU"],
-    ROLE_TRYOUT_TESTER_AS: ["roles", "tryoutTesterAS"],
-    ROLE_TRYOUT_TESTER_EU: ["roles", "tryoutTesterEU"],
-    SELFROLES_CHANNEL: ["selfRoles", "channel"],
-    CLAN_EMBED_IMAGE: ["clan", "embedImage"]
-};
-
-for (const [envName, [section, key]] of Object.entries(ENV_OVERRIDES)) {
-    if (process.env[envName]) settings[section][key] = process.env[envName];
-}
 
 module.exports = settings;

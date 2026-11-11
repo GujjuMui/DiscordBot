@@ -1,13 +1,22 @@
 const {
     SlashCommandBuilder,
     PermissionFlagsBits,
-    MessageFlags
+    MessageFlags,
+    ChannelType
 } = require("discord.js");
 
 const owner = require("../../config/owner");
-const settings = require("../../config/settings");
 
 const SelfRoleMessageRepository = require("../../repositories/SelfRoleMessageRepository");
+
+const {
+    resolveSelfRolesChannel,
+    rememberPickedChannel,
+    ensureSelfRoleGroups,
+    getSelfRoleGroupIds,
+    getSelfRoleBanners,
+    SetupPermissionError
+} = require("../../services/guildSetup");
 
 const buildSelfRolePanel =
     require("../../utils/selfRoleComponents");
@@ -32,6 +41,13 @@ module.exports = {
 
                 .setDescription(
                     "Create the self role panel"
+                )
+
+                .addChannelOption(option =>
+                    option
+                        .setName("channel")
+                        .setDescription("Channel to post the self role panel in (created automatically if not given)")
+                        .addChannelTypes(ChannelType.GuildText)
                 )
 
         )
@@ -77,32 +93,86 @@ module.exports = {
         const subcommand =
             interaction.options.getSubcommand();
 
-        const channel =
-            interaction.guild.channels.cache.get(
-                settings.selfRoles.channel
-            );
-
-        if (!channel) {
-
-            return interaction.editReply({
-
-                content:
-                    "❌ Self role channel not found."
-
-            });
-
-        }
-
-        const payload =
-            buildSelfRolePanel(
-                interaction.guild
-            );
-
         // =========================
         // SETUP
         // =========================
 
         if (subcommand === "setup") {
+
+            // Picked channel wins; otherwise the channel is resolved
+            // (stored ID, then canonical name, then created under the
+            // HORNET category — the same auto-create /verification
+            // got in v1.5).
+            let channel;
+            const pickedChannel =
+                interaction.options.getChannel("channel");
+            try {
+                if (pickedChannel) {
+                    channel = pickedChannel;
+                    await rememberPickedChannel(
+                        interaction.guild, "selfRoles", pickedChannel
+                    );
+                } else {
+                    ({ channel } = await resolveSelfRolesChannel(
+                        interaction.guild
+                    ));
+                }
+            } catch (err) {
+                if (err instanceof SetupPermissionError) {
+                    return interaction.editReply({
+                        content: err.message
+                    });
+                }
+                throw err;
+            }
+
+            // Make sure every colour / faction / ping role exists
+            // first — created under their canonical names when a
+            // fresh server has none yet — so the panel is never
+            // posted with empty select menus.
+            let groups;
+            try {
+                groups = await ensureSelfRoleGroups(interaction.guild);
+            } catch (err) {
+                if (err instanceof SetupPermissionError) {
+                    return interaction.editReply({
+                        content: err.message
+                    });
+                }
+                throw err;
+            }
+
+            const groupIds = {
+                color: Object.fromEntries(
+                    Object.entries(groups.color).map(([k, r]) => [k, r.id])
+                ),
+                faction: Object.fromEntries(
+                    Object.entries(groups.faction).map(([k, r]) => [k, r.id])
+                ),
+                ping: Object.fromEntries(
+                    Object.entries(groups.ping).map(([k, r]) => [k, r.id])
+                )
+            };
+
+            if (
+                !Object.values(groupIds.color).length
+                && !Object.values(groupIds.faction).length
+                && !Object.values(groupIds.ping).length
+            ) {
+                return interaction.editReply({
+                    content:
+                        "❌ No self roles are configured yet — run /setup first."
+                });
+            }
+
+            const banners =
+                await getSelfRoleBanners(interaction.guild);
+
+            const payload =
+                buildSelfRolePanel(
+                    interaction.guild,
+                    { groups: groupIds, banners }
+                );
 
             const message =
                 await channel.send({
@@ -169,6 +239,35 @@ module.exports = {
             });
 
         }
+
+        // The saved channel first; the resolved self-roles channel
+        // if the saved one is gone.
+        let channel =
+            await interaction.guild.channels.fetch(saved.channelId)
+                .catch(() => null);
+        if (!channel) {
+            try {
+                ({ channel } = await resolveSelfRolesChannel(
+                    interaction.guild
+                ));
+            } catch (err) {
+                if (err instanceof SetupPermissionError) {
+                    return interaction.editReply({
+                        content: err.message
+                    });
+                }
+                throw err;
+            }
+        }
+
+        const groupIds = await getSelfRoleGroupIds(interaction.guild);
+        const banners = await getSelfRoleBanners(interaction.guild);
+
+        const payload =
+            buildSelfRolePanel(
+                interaction.guild,
+                { groups: groupIds, banners }
+            );
 
         try {
 

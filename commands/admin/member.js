@@ -6,24 +6,11 @@ const {
 
 const memberCooldown = require("../../services/memberCooldown");
 const owner = require("../../config/owner");
-const settings = require("../../config/settings");
 const logger = require("../../utils/logger");
-
-const regions = {
-
-    AS: {
-        clanRole: settings.roles.clanMemberAS,
-        pendingRole: settings.roles.pendingTryoutAS,
-        name: "FATE AS"
-    },
-
-    EU: {
-        clanRole: settings.roles.clanMemberEU,
-        pendingRole: settings.roles.pendingTryoutEU,
-        name: "FATE EU"
-    }
-
-};
+const {
+    resolveRole,
+    SetupPermissionError
+} = require("../../services/guildSetup");
 
 // True only if the bot can manage the role (ManageRoles + hierarchy).
 // Checked before any role add/remove so failures are a clear message
@@ -170,12 +157,45 @@ module.exports = {
             });
         }
 
+        // Clan / pending / tester roles are resolved (stored ID,
+        // then canonical name, then created) instead of erroring
+        // when they are not configured yet.
+        let regions;
+        let tryoutTesterAS;
+        let tryoutTesterEU;
+        try {
+            const resolve = async key =>
+                (await resolveRole(interaction.guild, key)).role.id;
+            const [clanAS, pendingAS, clanEU, pendingEU, testerAS, testerEU] =
+                await Promise.all([
+                    resolve("clanMemberAS"),
+                    resolve("pendingTryoutAS"),
+                    resolve("clanMemberEU"),
+                    resolve("pendingTryoutEU"),
+                    resolve("tryoutTesterAS"),
+                    resolve("tryoutTesterEU")
+                ]);
+            regions = {
+                AS: { clanRole: clanAS, pendingRole: pendingAS, name: "FATE AS" },
+                EU: { clanRole: clanEU, pendingRole: pendingEU, name: "FATE EU" }
+            };
+            tryoutTesterAS = testerAS;
+            tryoutTesterEU = testerEU;
+        } catch (err) {
+            if (err instanceof SetupPermissionError) {
+                return interaction.editReply({
+                    content: err.message
+                });
+            }
+            throw err;
+        }
+
         const hasPermission =
             member.roles.cache.has(
-                settings.roles.tryoutTesterAS
+                tryoutTesterAS
             ) ||
             member.roles.cache.has(
-                settings.roles.tryoutTesterEU
+                tryoutTesterEU
             );
 
         if (!hasPermission) {

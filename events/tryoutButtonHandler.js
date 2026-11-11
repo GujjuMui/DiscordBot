@@ -6,8 +6,8 @@ const {
     ButtonStyle
 } = require("discord.js");
 
-const settings = require("../config/settings");
 const logger = require("../utils/logger");
+const { resolveRole, SetupPermissionError } = require("../services/guildSetup");
 
 module.exports = async interaction => {
 
@@ -21,11 +21,37 @@ module.exports = async interaction => {
         return false;
     }
 
+    // Tester / pending / clan roles are resolved (stored ID, then
+    // canonical name, then created) instead of erroring when they
+    // are not configured yet.
+    let R;
+    try {
+        const resolve = async key =>
+            (await resolveRole(interaction.guild, key)).role.id;
+        R = {
+            tryoutTesterAS: await resolve("tryoutTesterAS"),
+            tryoutTesterEU: await resolve("tryoutTesterEU"),
+            pendingTryoutAS: await resolve("pendingTryoutAS"),
+            pendingTryoutEU: await resolve("pendingTryoutEU"),
+            clanMemberAS: await resolve("clanMemberAS"),
+            clanMemberEU: await resolve("clanMemberEU")
+        };
+    } catch (err) {
+        if (err instanceof SetupPermissionError) {
+            await interaction.reply({
+                content: err.message,
+                flags: MessageFlags.Ephemeral
+            });
+            return true;
+        }
+        throw err;
+    }
+
     // interaction.member is null in DMs / for uncached members.
     const memberRoles = interaction.member?.roles?.cache;
     const allowed = Boolean(
-        memberRoles?.has(settings.roles.tryoutTesterAS) ||
-        memberRoles?.has(settings.roles.tryoutTesterEU)
+        memberRoles?.has(R.tryoutTesterAS) ||
+        memberRoles?.has(R.tryoutTesterEU)
     );
 
     if (!allowed) {
@@ -60,8 +86,8 @@ if (!member) {
 
 }
 
-const hasPendingAS = member.roles.cache.has(settings.roles.pendingTryoutAS);
-const hasPendingEU = member.roles.cache.has(settings.roles.pendingTryoutEU);
+const hasPendingAS = member.roles.cache.has(R.pendingTryoutAS);
+const hasPendingEU = member.roles.cache.has(R.pendingTryoutEU);
 
 if (!hasPendingAS && !hasPendingEU) {
 
@@ -78,8 +104,8 @@ if (!hasPendingAS && !hasPendingEU) {
 }
 
 const pendingRole = hasPendingAS
-    ? settings.roles.pendingTryoutAS
-    : settings.roles.pendingTryoutEU;
+    ? R.pendingTryoutAS
+    : R.pendingTryoutEU;
 
 // The remove branch was missing entirely: the customId prefix
 // tryout_remove_ was claimed above, but no branch handled it, so
@@ -120,9 +146,9 @@ if (action === "pass") {
     await member.roles.remove(pendingRole);
 
     const clanMemberRoleId =
-        pendingRole === settings.roles.pendingTryoutAS
-            ? settings.roles.clanMemberAS
-            : settings.roles.clanMemberEU;
+        pendingRole === R.pendingTryoutAS
+            ? R.clanMemberAS
+            : R.clanMemberEU;
 
     await member.roles.add(clanMemberRoleId);
 
@@ -164,7 +190,7 @@ if (action === "pass") {
 
             {
                 name: "Region",
-                value: pendingRole === settings.roles.pendingTryoutAS ? "AS" : "EU",
+                value: pendingRole === R.pendingTryoutAS ? "AS" : "EU",
                 inline: true
             }
 
@@ -218,7 +244,7 @@ if (action === "fail") {
 
         {
             name: "Region",
-            value: pendingRole === settings.roles.pendingTryoutAS ? "AS" : "EU",
+            value: pendingRole === R.pendingTryoutAS ? "AS" : "EU",
             inline: true
         }
 

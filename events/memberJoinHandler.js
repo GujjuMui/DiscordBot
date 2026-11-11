@@ -1,34 +1,30 @@
 const { EmbedBuilder } = require("discord.js");
 
-const settings = require("../config/settings");
-const { getSettings } = require("../config/configLoader");
+const { resolveChannel } = require("../services/guildSetup");
 
-function getConfiguredChannelId(value) {
-    return /^\d+$/.test(String(value || "")) ? String(value) : null;
-}
-
-// Cache-first: a channel the bot already knows about is never fetched.
-async function fetchChannel(guild, configuredId) {
-    const channelId = getConfiguredChannelId(configuredId);
-
-    if (!channelId) return null;
-
-    return guild.channels.cache.get(channelId)
-        ?? await guild.channels.fetch(channelId).catch(() => null);
+// Resolve one onboarding channel. A failure (e.g. the bot cannot
+// create channels) resolves to null instead of throwing — a missing
+// channel must never break a member join.
+async function resolve(guild, key) {
+    try {
+        const { channel } = await resolveChannel(guild, key);
+        return channel;
+    } catch {
+        return null;
+    }
 }
 
 module.exports = async member => {
 
-    // DB-overridable settings for this guild, static fallback on error.
-    const guildSettings = await getSettings(member.guild?.id).catch(() => settings);
-    const channels = guildSettings?.channels || settings.channels;
-
     // The four channel lookups are independent — run them in parallel.
+    // Each one is resolved (stored ID, then canonical name, then
+    // created under HORNET), so a fresh server builds its onboarding
+    // channels on the first join instead of skipping the welcome.
     const [onboardingChannel, rulesChannel, welcomeChannel, supportChannel] = await Promise.all([
-        fetchChannel(member.guild, channels.onboarding),
-        fetchChannel(member.guild, channels.serverRules),
-        fetchChannel(member.guild, channels.main_welcome),
-        fetchChannel(member.guild, channels.serverSupport)
+        resolve(member.guild, "onboarding"),
+        resolve(member.guild, "serverRules"),
+        resolve(member.guild, "main_welcome"),
+        resolve(member.guild, "serverSupport")
     ]);
 
     if (!onboardingChannel) {
@@ -41,11 +37,10 @@ module.exports = async member => {
 
     }
 
+    // Resolved like the others (stored ID, then canonical name,
+    // then created under HORNET); null when it cannot be resolved.
     const verificationChannel =
-        member.guild.channels.cache.find(
-            channel =>
-                channel.name === channels.verification
-        );
+        await resolve(member.guild, "verification");
 
     const rulesMention =
         rulesChannel

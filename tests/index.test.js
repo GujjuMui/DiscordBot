@@ -403,13 +403,14 @@ test('link category handler keys gallery state by message id', async () => {
 
 
 // Phase 4 runtime safety coverage.
-test('onboarding handler ignores invalid configured channel ids without fetching', async () => {
+test('onboarding handler resolves channels through the shared resolver and never throws on a missing one', async () => {
     const source = fs.readFileSync(
         path.join(root, 'events', 'memberJoinHandler.js'),
         'utf8'
     );
 
-    assert.ok(source.includes('getConfiguredChannelId'));
+    assert.ok(source.includes('resolveChannel'), 'memberJoinHandler must use the shared resolver');
+    assert.ok(!source.includes('getConfiguredChannelId'), 'the hand-rolled ID check is replaced by the resolver');
     assert.ok(source.includes('return null'));
     assert.ok(source.includes('Onboarding channel is unavailable; skipping welcome message.'));
     assert.ok(!source.includes('Onboarding channel not found:'));

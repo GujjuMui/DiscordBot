@@ -57,11 +57,33 @@ test('settings loads config/guild.json with the exact values and no ID literals 
     assert.ok(settings.clan.embedImage.length > 0, 'clan.embedImage must be a non-empty string');
 });
 
-test('guild.example.json has placeholder IDs, not real ones', () => {
+test('guild.example.json has no IDs at all — empty means "not configured yet"', () => {
     const example = JSON.parse(fs.readFileSync(path.join(root, 'config', 'guild.example.json'), 'utf8'));
     const text = JSON.stringify(example);
-    assert.ok(!/\b1[0-9]{16}\b/.test(text), 'guild.example.json must not contain real IDs');
-    assert.ok(text.includes('000000000000000000'), 'guild.example.json must use placeholder IDs');
+    assert.ok(!text.includes('000000000000000000'), 'guild.example.json must not use placeholder IDs any more');
+    const collect = value => {
+        if (typeof value === 'string') return [value];
+        if (value && typeof value === 'object') return Object.values(value).flatMap(collect);
+        return [];
+    };
+    // Every ID-based slot is empty. (The name-based channel values
+    // and the Admin/Trusted role names are names, not IDs, and stay;
+    // banner URLs keep their values — they are uploaded media, and
+    // their CDN paths contain long digit runs that are not IDs.)
+    const idSlots = [
+        ...['welcome', 'main_welcome', 'serverMap', 'howToJoin', 'tryout', 'onboarding', 'serverRules', 'serverSupport']
+            .map(key => example.channels[key]),
+        ...['member', 'pendingTryout', 'clanMemberAS', 'clanMemberEU', 'pendingTryoutAS', 'pendingTryoutEU', 'tryoutTesterAS', 'tryoutTesterEU']
+            .map(key => example.roles[key]),
+        ...collect(example.roles.color),
+        ...collect(example.roles.faction),
+        ...collect(example.roles.ping),
+        example.selfRoles.channel
+    ];
+    for (const value of idSlots) {
+        assert.equal(value, '', `every ID slot in guild.example.json must be empty, got ${value}`);
+        assert.ok(!/\b\d{17,19}\b/.test(value), `ID slot must not contain a 17-19 digit ID literal, got ${value}`);
+    }
 });
 
 test('constants carry the shared values used across the codebase', () => {
