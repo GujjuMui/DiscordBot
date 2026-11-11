@@ -26,7 +26,7 @@ A modular, production-grade Discord.js v14 bot built for competitive gaming clan
 ```text
 Discord Clan Bot/
 ├── commands/               # Modular slash command categories
-│   ├── admin/              # Administrative & bot-owner commands (sync, claimadmin, trust, etc.)
+│   ├── admin/              # Administrative & bot-owner commands (sync, trust, etc.)
 │   ├── cards/              # SFA Card management & editing
 │   ├── clan/               # Clan info & join panels
 │   ├── links/              # Community link directory

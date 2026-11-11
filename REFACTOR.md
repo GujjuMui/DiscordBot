@@ -1,5 +1,28 @@
 # Hornet — Refactor Notes
 
+## Trim (v1.4): /botadmin, /checkperms and /claimadmin removed
+
+User decision (2026-11-11): keep everything else from v1.3, remove only
+these three commands. Deleted files, nothing else changed:
+
+- `commands/admin/botadmin.js` — owner guild-list / leave-guild commands.
+  No other file referenced it.
+- `commands/admin/checkperms.js` — bot/user permission checker.
+  No other file referenced it.
+- `commands/admin/claimadmin.js` — created a role with Administrator
+  permission and gave it to the owner. No other file referenced it.
+
+Kept commands: 30 of 33 (all gallery, verification, tryout, auto-reply,
+diagnostics, editsay, giverole, member, say, spam, stopspam, sync,
+selfroles, trust trio, help, about, setup). No config, router, test or
+behaviour change to any kept command. Install steps are unchanged:
+copy your existing `.env`, set `BOT_OWNER_ID`, seed counters on an
+existing DB before the first `/savecard` or `/saveart` (see §5),
+`npm install`, `npm run deploy`, `npm start`. Note: with /botadmin
+gone, leaving a guild is done from Discord itself (Server Settings /
+right-click the server), not from the bot.
+
+
 Refactor of the Discord clan bot ("Hornet"), done against the original
 source in `Discord_Clan_Bot.zip`. All existing functionality and
 user-facing behaviour (command names, embed text/colours, custom IDs,
