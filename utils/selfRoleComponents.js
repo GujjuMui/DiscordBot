@@ -14,10 +14,17 @@ const { bannerUrl } = require("../services/guildSetup");
 
 // Builds the self-role panel (Components V2 container).
 //
-// `resolved` is supplied by /selfroles after the resolver has made
-// sure every role exists: { groups: { color, faction, ping } (role
-// ID maps), banners: { main, color, faction, ping } (URLs) }. It
-// defaults to the static settings so existing callers keep working.
+// `resolved` is supplied by /selfroles: { groups: { color } (role
+// ID map), custom: { factions, pings } (stored per-guild lists —
+// each entry { roleId, name, description, emoji }),
+// banners: { main, color, faction, ping } (URLs) }. It defaults to
+// the static settings so existing callers keep working.
+//
+// Colour roles are the canonical 10 colours — unchanged. Faction
+// and ping options come ONLY from the guild's custom lists
+// (services/selfRoleCustom.js); there is no hardcoded faction /
+// ping table in this file any more. An entry whose role no longer
+// exists in the guild is skipped.
 //
 // Banner images are Discord CDN URLs the user uploaded — they cannot
 // be created. A missing/empty banner simply skips that section's
@@ -28,35 +35,26 @@ const { bannerUrl } = require("../services/guildSetup");
 function buildSelfRolePanel(guild, resolved = {}) {
 
     const groups = resolved.groups || {
-        color: settings.roles.color || {},
-        faction: settings.roles.faction || {},
-        ping: settings.roles.ping || {}
+        color: settings.roles.color || {}
     };
+    const custom = resolved.custom || { factions: [], pings: [] };
     const banners = resolved.banners || settings.selfRoles.banners || {};
 
-    const factionEmojis = {
+    const factionOptions = (custom.factions || [])
 
-        legion: "⚔️",
-        dynasty: "🏯",
-        herald: "🛡️"
-
-    };
-
-    const factionOptions = Object.entries(groups.faction || {})
-
-        .map(([key, roleId]) => ({ key, role: guild.roles.cache.get(roleId) }))
+        .map(entry => ({ entry, role: guild.roles.cache.get(entry.roleId) }))
 
         .filter(({ role }) => Boolean(role))
 
-        .map(({ key, role }) => ({
+        .map(({ entry, role }) => ({
 
             label: role.name,
 
             value: role.id,
 
-            emoji: factionEmojis[key] ?? "⚔️",
+            emoji: entry.emoji || "⚔️",
 
-            description: `Join the ${role.name} faction`,
+            description: entry.description || `Join the ${role.name} faction`,
 
         }));
 
@@ -93,50 +91,23 @@ function buildSelfRolePanel(guild, resolved = {}) {
 
         }));
 
-    const pingOptions = Object.entries(groups.ping || {})
+    const pingOptions = (custom.pings || [])
 
-        .map(([key, roleId]) => {
+        .map(entry => ({ entry, role: guild.roles.cache.get(entry.roleId) }))
 
-            const role = guild.roles.cache.get(roleId);
+        .filter(({ role }) => Boolean(role))
 
-            if (!role) return null;
+        .map(({ entry, role }) => ({
 
-            const descriptions = {
+            label: role.name,
 
-                giveaway: "Get notified about giveaways",
-                videos: "Get notified about new SFA videos",
-                announcement: "Important server announcements",
-                clanUpdate: "Clan news and updates",
-                serverUpdate: "Server update notifications",
-                friendlyAS: "Asian friendly match pings",
-                friendlyEU: "European friendly match pings"
+            value: role.id,
 
-            };
+            emoji: entry.emoji || "🔔",
 
-            const pingEmojis = {
-                giveaway: "🎁",
-                videos: "📸",
-                announcement: "📢",
-                clanUpdate: "⚔️",
-                serverUpdate: "📰",
-                friendlyAS: "🤝",
-                friendlyEU: "🤝"
-            };
+            description: entry.description || "Receive notifications",
 
-            return {
-
-                label: role.name,
-
-                value: role.id,
-
-                emoji: pingEmojis[key] ?? "🔔",
-
-                description: descriptions[key] ?? "Receive notifications",
-
-            };
-        })
-
-        .filter(Boolean);
+        }));
 
     const container = new ContainerBuilder()
 

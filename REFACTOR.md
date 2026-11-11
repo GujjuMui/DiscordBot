@@ -1,5 +1,73 @@
 # Hornet — Refactor Notes
 
+## Custom factions & pings (v1.9)
+
+Faction and ping roles are no longer hardcoded. Legion / Dynasty /
+Heralds and the 7 ping roles (giveaway, SFA videos, announcement,
+clan update, server update, friendly AS, friendly EU) were the FATE
+server's own lists — they cannot be the same for every server. Each
+server now keeps its own lists, and the owner builds them with
+commands. Colour roles are unchanged (the canonical 10 colours, same
+names and colours as before).
+
+### Storage
+
+BotSettings `extras` JSON blobs (services/selfRoleCustom.js):
+- `extras.selfRoleFactions`: [{ roleId, name, description, emoji }]
+- `extras.selfRolePings`:    [{ roleId, name, description, emoji }]
+
+Reads go through `configLoader.getSettings()` and writes through
+`configLoader.updateSetting()` (cache invalidated, so a change is
+visible to the next read in the same process). No Discord ID literal
+is written anywhere in code — IDs live only in the per-guild DB
+record and in the guild's own config. `settings.roles.faction` /
+`settings.roles.ping` keep their shape in `config/settings.js` and
+`config/guild.json` is byte-identical — they are only the seed input
+for servers that already had factions / pings configured.
+
+### New /selfroles subcommands (all owner-only)
+
+- `/selfroles faction-add role:<role> [description] [emoji]` — add a
+  faction role to the panel. Re-adding the same role updates its
+  description and emoji.
+- `/selfroles faction-remove role:<role>` — remove it from the panel
+  (the Discord role itself is not deleted).
+- `/selfroles faction-list` — list the guild's faction roles.
+- `/selfroles ping-add / ping-remove / ping-list` — the same, for
+  ping roles.
+- `/selfroles banner-set section:<main|color|faction|ping> image:<attachment>`
+  — save an uploaded image as that section's banner. The attachment
+  must be an image (contentType starting with `image/`). The URL is
+  stored in BotSettings `banners` and in memory, and BotSettings
+  banners now win over the static URL in guild.json, so a banner set
+  this way survives a restart. Run `/selfroles refresh` after
+  changing the lists or a banner to update the posted panel.
+
+Setup and refresh keep working: setup makes sure the colour roles
+exist, then builds the panel from the colour roles + the stored
+custom lists; a section with no roles is skipped, so a fresh server
+starts with colours only. The panel builder
+(utils/selfRoleComponents.js) and the select handler
+(events/selfRoleHandler.js) read faction / ping options ONLY from
+the stored custom lists — entries whose role no longer exists are
+skipped. Select customIds (`selfroles_color` / `selfroles_faction` /
+`selfroles_ping`) and the grant/remove behaviour are unchanged.
+
+### One-time seed
+
+When a guild has no stored lists yet, they are built once from the
+roles it already has configured (settings.roles.faction / ping,
+resolved to live Discord roles for their names), with descriptions
+and emojis from the legacy tables in services/selfRoleDefaults.js
+(labelled "legacy FATE defaults — used ONLY for the one-time
+seed"). The seed runs only when a list is absent and never
+overwrites a list the owner has set — removing an entry afterwards
+stays removed. A fresh server with no configured roles seeds to
+empty lists. The legacy name strings (Legion, Dynasty, Heralds,
+"SFA Videos Ping", "Friendly Ping (Europe)" etc.) now appear only
+in that seed module, in docs, and in tests that assert the seed.
+
+
 ## Server map, optional how-to-join, separate categories, styled roles, unverified visibility (v1.8)
 
 v1.7 kept intact: the onboarding code in

@@ -190,17 +190,17 @@ test('resolveGroupedRole persists through the extras blob and reuses it after th
     assert.equal(blob.color.red, first.role.id);
 });
 
-test('ensureSelfRoleGroups creates every colour/faction/ping role with the canonical names', async () => {
+test('ensureSelfRoleGroups creates only the 10 canonical colour roles (factions/pings are per-guild custom)', async () => {
     const guild = makeGuild('guild-d');
     const groups = await guildSetup.ensureSelfRoleGroups(guild);
     assert.equal(Object.keys(groups.color).length, 10);
-    assert.equal(Object.keys(groups.faction).length, 3);
-    assert.equal(Object.keys(groups.ping).length, 7);
+    // Faction / ping roles are NOT created here any more — the owner
+    // adds them per server with /selfroles faction-add / ping-add.
+    assert.deepEqual(groups.faction, {});
+    assert.deepEqual(groups.ping, {});
     const { toScript } = require(path.join(root, 'utils', 'fancyFont.js'));
     assert.equal(groups.color.red.name, '🔴 ' + toScript('Red'));
     assert.equal(groups.color.red.name !== 'Red', true, 'created roles must be styled, not plain');
-    assert.equal(groups.faction.legion.name, '🎀 •  ' + toScript('Legion'));
-    assert.equal(groups.ping.giveaway.name, '📌  •  ' + toScript('Giveaway ping'));
 
     const second = await guildSetup.ensureSelfRoleGroups(guild);
     assert.equal(
@@ -271,13 +271,20 @@ test('/selfroles setup posts the panel to the auto-created channel from a bare g
 test('self-role panel builds from a bare guild with no banners', async () => {
     const guild = makeGuild('guild-f');
     const groups = await guildSetup.ensureSelfRoleGroups(guild);
+    // Faction / ping options come from the guild's custom lists now,
+    // not from any canonical table — build them from roles that
+    // exist in this guild.
+    const factionRole = await guild.roles.create({ name: 'Legion' });
+    const pingRole = await guild.roles.create({ name: 'Giveaway ping' });
+    const custom = {
+        factions: [{ roleId: factionRole.id, name: 'Legion', description: 'Join the Legion faction', emoji: '⚔️' }],
+        pings: [{ roleId: pingRole.id, name: 'Giveaway ping', description: 'Get notified about giveaways', emoji: '🎁' }]
+    };
     const groupIds = {
-        color: Object.fromEntries(Object.entries(groups.color).map(([k, r]) => [k, r.id])),
-        faction: Object.fromEntries(Object.entries(groups.faction).map(([k, r]) => [k, r.id])),
-        ping: Object.fromEntries(Object.entries(groups.ping).map(([k, r]) => [k, r.id]))
+        color: Object.fromEntries(Object.entries(groups.color).map(([k, r]) => [k, r.id]))
     };
     const buildSelfRolePanel = require(path.join(root, 'utils', 'selfRoleComponents.js'));
-    const payload = buildSelfRolePanel(guild, { groups: groupIds, banners: {} });
+    const payload = buildSelfRolePanel(guild, { groups: groupIds, custom, banners: {} });
     assert.ok(payload.components.length, 'panel must have components');
     const json = JSON.stringify(payload.components[0].toJSON());
     assert.ok(!json.includes('"url":""'), 'no empty banner URL may be posted');

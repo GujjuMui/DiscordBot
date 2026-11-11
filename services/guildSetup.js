@@ -126,6 +126,13 @@ const ROLE_DEFS = Object.freeze({
     tryoutTesterEU: { name: "🧪 " + toScript("Tryout Tester EU") }
 });
 
+// Only the colour roles are canonical across servers — the 10
+// colours are the same everywhere, so they stay a fixed table.
+// Faction and ping roles are per-guild custom lists now
+// (services/selfRoleCustom.js): each server builds its own with
+// /selfroles faction-add / ping-add, seeded once from whatever it
+// already had configured. Their names live in the guild's own
+// roles and in the per-guild BotSettings record — never here.
 const ROLE_GROUPS = Object.freeze({
     color: Object.freeze({
         red: { name: "🔴 " + toScript("Red"), color: 0xED4245 },
@@ -138,20 +145,6 @@ const ROLE_GROUPS = Object.freeze({
         green: { name: "🟢 " + toScript("Green"), color: 0x2ECC71 },
         violet: { name: "🟣 " + toScript("Violet"), color: 0x8A2BE2 },
         yellow: { name: "🟡 " + toScript("Yellow"), color: 0xFEE75C }
-    }),
-    faction: Object.freeze({
-        legion: { name: "🎀 •  " + toScript("Legion") },
-        dynasty: { name: "🎀  •  " + toScript("Dynasty") },
-        herald: { name: "🎀  •  " + toScript("Heralds") }
-    }),
-    ping: Object.freeze({
-        giveaway: { name: "📌  •  " + toScript("Giveaway ping") },
-        videos: { name: "📌  •  " + toScript("SFA Videos Ping") },
-        announcement: { name: "📌  •  " + toScript("Announcement Ping") },
-        clanUpdate: { name: "📌  •  " + toScript("Clan Update Ping") },
-        serverUpdate: { name: "📌  •  " + toScript("Server Update Ping") },
-        friendlyAS: { name: toScript("Friendly ping") },
-        friendlyEU: { name: toScript("Friendly Ping (Europe)") }
     })
 });
 
@@ -507,8 +500,12 @@ async function resolveGroupedRole(guild, group, sub, { create = true } = {}) {
     return { role, created: true };
 }
 
-// Resolve every self-role group role (creating any that are missing).
-// Returns { color: { sub: role }, faction: {...}, ping: {...} }.
+// Resolve every canonical self-role group role (creating any that
+// are missing). Only the colour roles are canonical — faction /
+// ping roles are per-guild custom lists (services/selfRoleCustom.js)
+// and are never created here. Returns
+// { color: { sub: role }, faction: {}, ping: {} } — the faction /
+// ping maps stay empty; callers read them from getCustomLists().
 async function ensureSelfRoleGroups(guild) {
     const out = { color: {}, faction: {}, ping: {} };
     for (const group of Object.keys(ROLE_GROUPS)) {
@@ -520,29 +517,40 @@ async function ensureSelfRoleGroups(guild) {
     return out;
 }
 
-// Merged self-role group IDs without creating anything: static
-// guild.json first, BotSettings fills the gaps. Used by the select
-// handler, which must match the roles the panel was built from.
+// Merged self-role group IDs without creating anything. Colour IDs
+// come from the canonical table (static guild.json first,
+// BotSettings fills the gaps). Faction / ping IDs come from the
+// guild's custom lists (services/selfRoleCustom.js, seeded once
+// from whatever the guild already had configured) — keyed by role
+// ID, since custom entries have no stable sub-key. Used by the
+// select handler, which must match the roles the panel was built
+// from.
 async function getSelfRoleGroupIds(guild) {
     const merged = await mergedSettings(guild);
-    const pick = group => {
-        const out = {};
-        for (const sub of Object.keys(ROLE_GROUPS[group])) {
-            out[sub] = settings.roles?.[group]?.[sub]
-                || merged?.roles?.[group]?.[sub]
-                || "";
-        }
-        return out;
-    };
-    return { color: pick("color"), faction: pick("faction"), ping: pick("ping") };
+    const color = {};
+    for (const sub of Object.keys(ROLE_GROUPS.color)) {
+        color[sub] = settings.roles?.color?.[sub]
+            || merged?.roles?.color?.[sub]
+            || "";
+    }
+    const { getCustomLists } = require("./selfRoleCustom");
+    const { factions, pings } = await getCustomLists(guild);
+    const faction = {};
+    for (const entry of factions) faction[entry.roleId] = entry.roleId;
+    const ping = {};
+    for (const entry of pings) ping[entry.roleId] = entry.roleId;
+    return { color, faction, ping };
 }
 
-// Merged self-role banner URLs (static first, BotSettings second).
+// Merged self-role banner URLs. BotSettings wins over the static
+// file (same as channels / roles everywhere else) so a banner set
+// with /selfroles banner-set survives a restart instead of being
+// shadowed by the old URL in guild.json.
 async function getSelfRoleBanners(guild) {
     const merged = await mergedSettings(guild);
     const banners = { ...(settings.selfRoles?.banners || {}) };
     for (const [key, value] of Object.entries(merged?.selfRoles?.banners || {})) {
-        if (!banners[key]) banners[key] = value;
+        if (value) banners[key] = value;
     }
     return banners;
 }
