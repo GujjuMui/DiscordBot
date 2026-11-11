@@ -97,6 +97,25 @@ module.exports = {
             }
         }
 
+// The original bot's verification flow also needs the onboarding
+// channel: on member join, the welcome embed is posted there.
+// Resolved the same way as the verification channel — stored ID,
+// then canonical name, then created under HORNET. No hardcoded ID.
+let onboardingChannel;
+try {
+    ({ channel: onboardingChannel } = await resolveChannel(
+        interaction.guild, "onboarding"
+    ));
+} catch (err) {
+    if (err instanceof SetupPermissionError) {
+        return interaction.reply({
+            content: err.message,
+            flags: MessageFlags.Ephemeral
+        });
+    }
+    throw err;
+}
+
 await verificationChannel.send({
 
     embeds: [embed],
@@ -107,7 +126,7 @@ await verificationChannel.send({
 
         await interaction.reply({
 
-            content: "✅" + " Verification panel created.",
+            content: `✅ Verification panel created in ${verificationChannel}. Onboarding channel ${onboardingChannel} is ready.`,
 
             flags: MessageFlags.Ephemeral
 

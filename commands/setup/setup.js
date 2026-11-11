@@ -8,17 +8,28 @@ const {
 
 const { COLORS } = require("../../config/constants");
 const {
-    CATEGORY_NAME,
+    CATEGORY_NAMES,
     CHANNEL_NAMES,
     ROLE_DEFS,
     ROLE_GROUPS,
     MANAGE_CHANNELS_MESSAGE,
     MANAGE_ROLES_MESSAGE,
     ensureCategory,
+    cleanupLegacyCategory,
+    applyVisibility,
     resolveChannel,
     resolveRole,
     resolveGroupedRole
 } = require("../../services/guildSetup");
+
+// One representative channel key per category group, so /setup can
+// make sure every category exists before building inside it.
+const CATEGORY_KEYS = {
+    gallery: "cards",
+    verification: "verification",
+    clan: "tryout",
+    bot: "logs"
+};
 
 const logger = require("../../utils/logger");
 
@@ -57,27 +68,27 @@ module.exports = {
         const failed = [];
 
         // -----------------------------
-        // Category
+        // Categories
         // -----------------------------
+        // One category per thing the bot manages — gallery, verification,
+        // clan and bot — instead of a single HORNET category. Each is
+        // created if it does not exist yet.
 
-        let category = guild.channels.cache.find(
-
-            c =>
-                c.type === ChannelType.GuildCategory &&
-                c.name === CATEGORY_NAME
-
-        );
-
-        if (!category) {
-
-            category = await ensureCategory(guild);
-
-            created.push("📁 HORNET Category");
-
-        } else {
-
-            existing.push("📁 HORNET Category");
-
+        for (const [group, name] of Object.entries(CATEGORY_NAMES)) {
+            const key = CATEGORY_KEYS[group];
+            const found = guild.channels.cache.find(
+                c => c.type === ChannelType.GuildCategory && c.name === name
+            );
+            if (found) {
+                existing.push(`📁 ${name}`);
+                continue;
+            }
+            try {
+                await ensureCategory(guild, key);
+                created.push(`📁 ${name}`);
+            } catch (err) {
+                failed.push(`📁 ${name} — ${err.message}`);
+            }
         }
 
         // -----------------------------
@@ -86,10 +97,15 @@ module.exports = {
         // Every channel the bot needs, resolved through the shared
         // resolver: a stored ID or a channel with the canonical name
         // is reused (and remembered), otherwise it is created under
-        // the HORNET category. Existing channels found outside the
-        // category are re-parented under it, as before.
+        // its group category. Existing channels are re-parented into
+        // their group category when they sit elsewhere (e.g. left
+        // over from the old single HORNET category).
+        //
+        // The how-to-join channel is NOT built here — it is optional.
+        // It is only used when it already exists (see /clan setup);
+        // /setup never creates it.
 
-        for (const key of Object.keys(CHANNEL_NAMES)) {
+        for (const key of Object.keys(CHANNEL_NAMES).filter(k => k !== "howToJoin")) {
             const name = CHANNEL_NAMES[key];
             try {
                 const { channel, created: wasCreated } =
@@ -97,6 +113,7 @@ module.exports = {
                 if (wasCreated) {
                     created.push(`#${name}`);
                 } else {
+                    const category = await ensureCategory(guild, key);
                     if (channel.parentId !== category.id
                         && typeof channel.setParent === "function") {
                         await channel.setParent(category.id).catch(() => {});
@@ -106,6 +123,14 @@ module.exports = {
             } catch (err) {
                 failed.push(`#${name} — ${err.message}`);
             }
+        }
+
+        // The old single HORNET category, left over from before v1.8:
+        // delete it only if it ended up empty after the moves above.
+        // A category that still holds any channel is left alone.
+        const legacyRemoved = await cleanupLegacyCategory(guild).catch(() => false);
+        if (legacyRemoved) {
+            created.push("🗑️ Old HORNET category removed (was empty)");
         }
 
         // -----------------------------
@@ -142,6 +167,20 @@ module.exports = {
                     failed.push(`@${label} — ${err.message}`);
                 }
             }
+        }
+
+        // -----------------------------
+        // Visibility
+        // -----------------------------
+        // Unverified members (@everyone, no roles) see only the
+        // VERIFICATION category; the Member role opens the other
+        // managed categories, and the bot's own role is always
+        // allowed. Runs on every /setup, including re-runs, so
+        // existing categories get the overwrites too.
+        try {
+            await applyVisibility(guild);
+        } catch (err) {
+            failed.push(`visibility — ${err.message}`);
         }
 
         // -----------------------------

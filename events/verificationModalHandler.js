@@ -123,12 +123,16 @@ module.exports = async (interaction) => {
                 return isId(channels.serverMap) ? channels.serverMap : "";
             }
         })();
+        // How-to-join is optional: it is only linked when it
+        // already exists (stored ID, then canonical name) and is
+        // never created here. An empty ID means the Join button
+        // below is left out rather than linking nowhere.
         const howToJoinId = await (async () => {
             try {
-                const { channel } = await resolveChannel(
-                    interaction.guild, "howToJoin"
+                const resolved = await resolveChannel(
+                    interaction.guild, "howToJoin", { create: false }
                 );
-                return channel.id;
+                return resolved?.channel?.id || "";
             } catch {
                 return isId(channels.howToJoin) ? channels.howToJoin : "";
             }
@@ -143,7 +147,7 @@ module.exports = async (interaction) => {
                     `${"🐝"} Welcome to **F A T E - SF**, ${interaction.user}!\nEnjoy your stay.`
                 );
 
-            const buttons = new ActionRowBuilder().addComponents(
+            const welcomeButtons = [
 
                 new ButtonBuilder()
                     .setLabel("Server Map")
@@ -151,17 +155,25 @@ module.exports = async (interaction) => {
                     .setStyle(ButtonStyle.Link)
                     .setURL(
                         `https://discord.com/channels/${interaction.guild.id}/${serverMapId}`
-                    ),
-
-                new ButtonBuilder()
-                    .setLabel("Join Fate Clan")
-                    .setEmoji("🤝")
-                    .setStyle(ButtonStyle.Link)
-                    .setURL(
-                        `https://discord.com/channels/${interaction.guild.id}/${howToJoinId}`
                     )
-                    
 
+            ];
+
+            // Only link the clan when a how-to-join channel exists.
+            if (howToJoinId) {
+                welcomeButtons.push(
+                    new ButtonBuilder()
+                        .setLabel("Join Fate Clan")
+                        .setEmoji("🤝")
+                        .setStyle(ButtonStyle.Link)
+                        .setURL(
+                            `https://discord.com/channels/${interaction.guild.id}/${howToJoinId}`
+                        )
+                );
+            }
+
+            const buttons = new ActionRowBuilder().addComponents(
+                ...welcomeButtons
             );
 
             try {

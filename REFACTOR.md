@@ -1,5 +1,161 @@
 # Hornet — Refactor Notes
 
+## Server map, optional how-to-join, separate categories, styled roles, unverified visibility (v1.8)
+
+v1.7 kept intact: the onboarding code in
+`commands/verification/verification.js` (resolve onboarding + reply
+naming both channels) is unchanged in this version.
+
+### 1. New `/servermap` command (31 commands now)
+
+`commands/setup/servermap.js`, admin-only, with an optional `channel`
+option. It builds an embed by SCANNING the live server — server name,
+member / channel / role counts, then one field per category listing
+that category's channels as mentions in position order, plus a
+"No Category" field for uncategorised channels. Embed limits are
+respected (25 fields, 1024 chars per field with "…and N more",
+6000 total) so a big server never throws. The how-to-join channel is
+mentioned only when it exists on the server.
+
+It is idempotent: the map's channel + message IDs are remembered in
+BotSettings `extras` (`serverMapChannelId` / `serverMapMessageId`,
+via `configLoader.updateSetting` — no new model), so a re-run EDITS
+the same message; a deleted message (or a moved channel) posts fresh
+and the old copy is deleted when possible. Reply says where the map
+was posted or updated. `npm run deploy` is required after installing
+— the command registers through the shared loader automatically.
+
+### 2. How-to-join is optional now
+
+- `/setup` no longer creates it (skipped in the channel loop).
+- `/clan setup` has a new optional `channel` option (picked channel
+  wins and is remembered). With no channel given it resolves
+  how-to-join with `create: false` and, when it does not exist,
+  posts the clan join panel in the channel the command was run in
+  instead of creating a channel. Panel embed, buttons and the
+  "Clan join panel created." reply are unchanged.
+- `events/verificationModalHandler.js` resolves how-to-join with
+  `create: false` too; when it does not exist the "Join Fate Clan"
+  button is left out of the welcome message rather than linking
+  nowhere. The channel key and canonical name stay in
+  `services/guildSetup.js` — it is still resolvable when present,
+  just never auto-created. To opt in, create the channel by hand
+  (name `🤝┃how-to-join`) or pick it in `/clan setup`.
+
+### 3. Separate categories (no more single HORNET category)
+
+| Category | Channels |
+| --- | --- |
+| 🎴 FATE GALLERY | 🎴┃sfa-cards, 🎨┃sfa-arts, 📺┃content |
+| ✅ VERIFICATION | 📝┃verification, 👋┃onboarding, 📃┃server-rules, 📖┃server-guide, 🎀┃welcome, 💬┃server-support |
+| ⚔️ CLAN | 🏅┃tryouts, tournaments, 🗺️┃server-map, 🤝┃how-to-join (only if it exists) |
+| 🤖 HORNET | 🐝┃hornet-logs, 🎭┃self-roles |
+
+`services/guildSetup.js` has a per-channel category map
+(`CHANNEL_CATEGORIES`) and `ensureCategory(guild, key)`; every
+caller creates the category for that channel's group. The resolver
+re-parents a channel found by canonical name into its group category
+(channels found by a stored ID the owner picked are never moved).
+`/setup` re-parents every managed channel and, at the end, deletes
+the old `HORNET` category ONLY if it ends up empty — a category
+that still holds any channel is left alone.
+
+### A. Styled role names
+
+Every role the bot creates fresh now has an emoji prefix plus its
+name in Mathematical Bold Script (one font, `utils/fancyFont.js`
+`toScript`). Roles that already exist keep their current names —
+the stored ID is tried first, so styling applies only to freshly
+created roles. The self-role panel emoji maps are keyed by the
+stable sub-key (red/legion/giveaway…) instead of the role name, so
+the emojis resolve for plain and styled names alike.
+
+Exact names created (plain → created):
+
+- Member → 👤 𝓜𝓮𝓶𝓫𝓮𝓻, Pending Tryout → ⏳ 𝓟𝓮𝓷𝓭𝓲𝓷𝓰 𝓣𝓻𝔂𝓸𝓾𝓽
+- Clan Member AS → ⚔️ 𝓒𝓵𝓪𝓷 𝓜𝓮𝓶𝓫𝓮𝓻 𝓐𝓢, Clan Member EU → ⚔️ 𝓒𝓵𝓪𝓷 𝓜𝓮𝓶𝓫𝓮𝓻 ℰ𝓤
+- Pending Tryout AS/EU → ⏳ 𝓟𝓮𝓷𝓭𝓲𝓷𝓰 𝓣𝓻𝔂𝓸𝓾𝓽 𝓐𝓢 / ℰ𝓤
+- Tryout Tester AS/EU → 🧪 𝓣𝓻𝔂𝓸𝓾𝓽 𝓣𝓮𝓼𝓽𝓮𝓻 𝓐𝓢 / ℰ𝓤
+- Colours: 🔴 𝓡𝓮𝓭, ⚫ 𝓑𝓵𝓪𝓬𝓴, 🔹 𝓒𝔂𝓪𝓷, 🩷 𝓟𝓲𝓷𝓴, 🟠 𝒪𝓻𝓪𝓷𝓰𝓮, 🟤 𝓑𝓻𝓸𝔀𝓷, 🔵 𝓑𝓵𝓾𝓮, 🟢 𝒢𝓻𝓮𝓮𝓷, 🟣 𝓥𝓲𝓸𝓵𝓮𝓽, 🟡 𝓨𝓮𝓵𝓵𝓸𝔀
+- Factions: 🎀 •  𝓛𝓮𝓰𝓲𝓸𝓷, 🎀  •  𝓓𝔂𝓷𝓪𝓼𝓽𝔂, 🎀  •  𝓗𝓮𝓻𝓪𝓵𝓭𝓼
+- Pings: 📌  •  𝒢𝓲𝓿𝓮𝓪𝔀𝓪𝔂 𝓹𝓲𝓷𝓰, 📌  •  𝓢𝓕𝓐 𝓥𝓲𝓭𝓮𝓸𝓼 𝓟𝓲𝓷𝓰, 📌  •  𝓐𝓷𝓷𝓸𝓾𝓷𝓬𝓮𝓶𝓮𝓷𝓽 𝓟𝓲𝓷𝓰, 📌  •  𝓒𝓵𝓪𝓷 𝓤𝓹𝓭𝓪𝓽𝓮 𝓟𝓲𝓷𝓰, 📌  •  𝓢𝓮𝓻𝓿𝓮𝓻 𝓤𝓹𝓭𝓪𝓽𝓮 𝓟𝓲𝓷𝓰, 𝓕𝓻𝓲𝓮𝓷𝓭𝓵𝔂 𝓹𝓲𝓷𝓰, 𝓕𝓻𝓲𝓮𝓷𝓭𝓵𝔂 𝓟𝓲𝓷𝓰 (ℰ𝓾𝓻𝓸𝓹𝓮)
+
+Trade-off, stated plainly: Discord search matches plain text, so
+a styled name does not match a search for the plain name (searching
+"Member" will not find "𝓜𝓮𝓶𝓫𝓮𝓻").
+
+### B. Unverified visibility
+
+Members with no roles see ONLY the ✅ VERIFICATION category.
+`services/guildSetup.js` `applyVisibility(guild)` sets, on every
+managed category:
+
+- ✅ VERIFICATION: @everyone ALLOW ViewChannel.
+- 🎴 FATE GALLERY, ⚔️ CLAN, 🤖 HORNET: @everyone DENY
+  ViewChannel, Member role ALLOW, the bot's own role ALLOW.
+
+`VISIBLE_TO_UNVERIFIED` is a parameterised set of channel keys
+(verification, onboarding, serverRules, main_welcome, welcome,
+serverSupport — exactly the verification category). The "broadcast"
+channel the user meant is the onboarding / welcome channel, which
+is already in this set — no separate announcements channel was
+created. To make another channel visible to unverified members,
+add its key to the set and resolve it under the verification
+category.
+
+`applyVisibility` runs when a managed category is created (via
+`ensureCategory`) and on every `/setup` run, so existing
+categories get the overwrites too. Categories the bot does not
+manage are never touched.
+
+Verification unlocks the server: `events/verificationModalHandler.js`
+already grants the Member role on success (confirmed, unchanged)
+— that is what opens the hidden categories. Consequence, checked
+not assumed: the tryout code grants no channel access of its own
+(no permission overwrites anywhere in the tryout flow) and a tryout
+pass grants the Clan Member role but NOT the Member role, so a
+member who does tryouts without verifying first sees only the
+verification category until they verify; likewise a pending-tryout
+member without the Member role cannot see the tryout channel. The
+intended order is verification first (the onboarding welcome tells
+new members to verify before joining the clan), so this is the
+designed behaviour, not a regression.
+
+Install: complete set, keep your `.env`, `npm install`,
+`npm run deploy` (registers `/servermap`), `npm start`, then
+re-run `/setup` once to move channels into the new categories,
+apply the visibility overwrites, and (only if the old HORNET
+category ends up empty) remove it. The bot needs Manage Channels
+and Manage Roles in the server for this.
+
+
+## Onboarding channel in verification setup (v1.7)
+
+User report (2026-11-11): the original bot's verification flow had an
+onboarding channel, and `/verification setup` should set it up too.
+
+- `commands/verification/verification.js`: after resolving the
+  verification channel, it now also resolves the onboarding channel
+  (`👋┃onboarding`) through the same resolver — stored ID first, then
+  a channel with that name, then created under the HORNET category
+  (category created if missing). No hardcoded ID. The success reply
+  now names both channels: "Verification panel created in
+  #📝┃verification. Onboarding channel #👋┃onboarding is ready."
+  This is the channel the original bot posted its welcome embed in on
+  member join (see `events/memberJoinHandler.js`, which already
+  resolved it the same way) — now it is ready at setup time instead
+  of only being created on the first member join. The panel embed,
+  Verify button and picked-channel option are unchanged.
+- `tests/resolver.test.js`: new test proving `/verification setup` on
+  a bare guild creates the HORNET category, the verification channel
+  and the onboarding channel under it, sends the panel once, and
+  mentions the onboarding channel in its reply.
+
+No logic of any other command changed. Install as usual: complete
+set, keep your `.env`, `npm install`, `npm run deploy`, `npm start`,
+then `/verification setup`.
+
+
 ## No hardcoding (v1.6): every channel and role is resolved or created
 
 User requirement (2026-11-11): running a command must automatically

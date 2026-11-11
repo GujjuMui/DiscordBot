@@ -5,13 +5,15 @@ const {
     ActionRowBuilder,
     MessageFlags,
     ButtonBuilder,
-    ButtonStyle
+    ButtonStyle,
+    ChannelType
 } = require("discord.js");
 
 const settings = require("../../config/settings");
 const { getSettings } = require("../../config/configLoader");
 const {
     resolveChannel,
+    rememberPickedChannel,
     SetupPermissionError
 } = require("../../services/guildSetup");
 
@@ -29,6 +31,12 @@ module.exports = {
             sub
                 .setName("setup")
                 .setDescription("Create the clan join panel")
+                .addChannelOption(option =>
+                    option
+                        .setName("channel")
+                        .setDescription("Channel to post the clan join panel in (posts here if not given)")
+                        .addChannelTypes(ChannelType.GuildText)
+                )
         ),
 
     async execute(interaction) {
@@ -76,22 +84,38 @@ Basically clan tryouts are the process where we check the player is capable of j
 
 );
 
-        // The how-to-join channel is resolved (stored ID, then
-        // canonical name, then created under the HORNET category)
-        // instead of erroring when it is not configured yet.
-        let clanChannel;
-        try {
-            ({ channel: clanChannel } = await resolveChannel(
-                interaction.guild, "howToJoin"
-            ));
-        } catch (err) {
-            if (err instanceof SetupPermissionError) {
-                return interaction.reply({
-                    content: err.message,
-                    flags: MessageFlags.Ephemeral
-                });
+        // The how-to-join channel is OPTIONAL: it is used only when
+        // it already exists (stored ID, then canonical name) and is
+        // never created. A channel picked with the command option
+        // wins; with no channel given, the panel is posted in the
+        // channel the command was run in.
+        let clanChannel = interaction.options.getChannel("channel");
+        if (clanChannel) {
+            await rememberPickedChannel(
+                interaction.guild, "howToJoin", clanChannel
+            );
+        } else {
+            try {
+                const resolved = await resolveChannel(
+                    interaction.guild, "howToJoin", { create: false }
+                );
+                clanChannel = resolved?.channel || interaction.channel;
+            } catch (err) {
+                if (err instanceof SetupPermissionError) {
+                    return interaction.reply({
+                        content: err.message,
+                        flags: MessageFlags.Ephemeral
+                    });
+                }
+                throw err;
             }
-            throw err;
+        }
+
+        if (!clanChannel || typeof clanChannel.send !== "function") {
+            return interaction.reply({
+                content: "❌ No channel to post the clan join panel in.",
+                flags: MessageFlags.Ephemeral
+            });
         }
 
         await clanChannel.send({

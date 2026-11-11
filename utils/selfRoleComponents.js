@@ -36,25 +36,25 @@ function buildSelfRolePanel(guild, resolved = {}) {
 
     const factionEmojis = {
 
-        "🎀 •  Legion": "⚔️",
-        "🎀  •  Dynasty": "🏯",
-        "🎀  •  Heralds": "🛡️"
+        legion: "⚔️",
+        dynasty: "🏯",
+        herald: "🛡️"
 
     };
 
-    const factionOptions = Object.values(groups.faction || {})
+    const factionOptions = Object.entries(groups.faction || {})
 
-        .map(roleId => guild.roles.cache.get(roleId))
+        .map(([key, roleId]) => ({ key, role: guild.roles.cache.get(roleId) }))
 
-        .filter(Boolean)
+        .filter(({ role }) => Boolean(role))
 
-        .map(role => ({
+        .map(({ key, role }) => ({
 
             label: role.name,
 
             value: role.id,
 
-            emoji: factionEmojis[role.name] ?? "⚔️",
+            emoji: factionEmojis[key] ?? "⚔️",
 
             description: `Join the ${role.name} faction`,
 
@@ -62,32 +62,32 @@ function buildSelfRolePanel(guild, resolved = {}) {
 
     const colorEmojis = {
 
-        Red: "🔴",
-        Black: "⚫",
-        Cyan: "🔹",
-        Pink: "🩷",
-        Orange: "🟠",
-        Brown: "🟤",
-        Blue: "🔵",
-        Green: "🟢",
-        Violet: "🟣",
-        Yellow: "🟡"
+        red: "🔴",
+        black: "⚫",
+        cyan: "🔹",
+        pink: "🩷",
+        orange: "🟠",
+        brown: "🟤",
+        blue: "🔵",
+        green: "🟢",
+        violet: "🟣",
+        yellow: "🟡"
 
     };
 
-    const colorOptions = Object.values(groups.color || {})
+    const colorOptions = Object.entries(groups.color || {})
 
-        .map(roleId => guild.roles.cache.get(roleId))
+        .map(([key, roleId]) => ({ key, role: guild.roles.cache.get(roleId) }))
 
-        .filter(Boolean)
+        .filter(({ role }) => Boolean(role))
 
-        .map(role => ({
+        .map(({ key, role }) => ({
 
             label: role.name,
 
             value: role.id,
 
-            emoji: colorEmojis[role.name] ?? "🎨",
+            emoji: colorEmojis[key] ?? "🎨",
 
             description: `Choose the ${role.name} color role`,
 
@@ -114,13 +114,13 @@ function buildSelfRolePanel(guild, resolved = {}) {
             };
 
             const pingEmojis = {
-                "📌  •  Giveaway ping": "🎁",
-                "📌  •  SFA Videos Ping": "📸",
-                "📌  •  Announcement Ping": "📢",
-                "📌  •  Clan Update Ping": "⚔️",
-                "📌  •  Server Update Ping": "📰",
-                "Friendly ping": "🤝",
-                "Friendly Ping (Europe)": "🤝"
+                giveaway: "🎁",
+                videos: "📸",
+                announcement: "📢",
+                clanUpdate: "⚔️",
+                serverUpdate: "📰",
+                friendlyAS: "🤝",
+                friendlyEU: "🤝"
             };
 
             return {
@@ -129,7 +129,7 @@ function buildSelfRolePanel(guild, resolved = {}) {
 
                 value: role.id,
 
-                emoji: pingEmojis[role.name] ?? "🔔",
+                emoji: pingEmojis[key] ?? "🔔",
 
                 description: descriptions[key] ?? "Receive notifications",
 
