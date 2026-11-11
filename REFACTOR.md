@@ -1,5 +1,32 @@
 # Hornet — Refactor Notes
 
+## Plain role names (v1.11)
+
+Auto-created roles now use their plain name in the default font,
+with the emoji prefix kept — e.g. `👤 Member`, `🔴 Red`. Role names
+are plain strings in Discord, so bold or other formatting is not
+possible in a role name; the emoji is what makes them stand out.
+
+- `services/guildSetup.js`: `ROLE_DEFS` and `ROLE_GROUPS.color`
+  are plain names now; the `utils/fancyFont.js` styling
+  (`toScript`) is gone — the file is deleted, and with it the
+  trade-off from v1.8 (a styled name never matched a plain-text
+  Discord search).
+- Existing roles created by v1.8–v1.10 with styled names are
+  renamed back to plain on the next `/setup` run: the resolver
+  matches a role by its plain canonical name **or** its styled
+  form (via the legacy `destyleRoleName()` helper, which maps the
+  Mathematical Bold Script code points back to plain ASCII), then
+  renames it with `setName` when it finds a styled one. No duplicate
+  is created. Only a role whose de-styled name equals the canonical
+  name is ever renamed — a role the owner renamed to anything else,
+  or any unrelated role, is never touched. Renaming needs Manage
+  Roles; without it (or if the rename fails, e.g. the role sits
+  above the bot), the role is left alone and keeps working under
+  its old name — the next `/setup` run tries again.
+- Colour roles, faction / ping logic, the panel, and every other
+  command are untouched.
+
 ## Per-role images & banner links (v1.10)
 
 `/selfroles` now takes image links from the owner — nothing is
@@ -171,6 +198,10 @@ the old `HORNET` category ONLY if it ends up empty — a category
 that still holds any channel is left alone.
 
 ### A. Styled role names
+
+> Removed in v1.11 — see "Plain role names" above. Roles the bot
+> creates are plain now, and roles created with these styled names
+> are renamed back to plain on the next `/setup` run.
 
 Every role the bot creates fresh now has an emoji prefix plus its
 name in Mathematical Bold Script (one font, `utils/fancyFont.js`

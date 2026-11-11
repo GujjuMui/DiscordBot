@@ -108,6 +108,8 @@ function makeGuild(id) {
             everyone: { id: "everyone" },
             async create(opts) {
                 const role = { id: `role${++n}`, name: opts.name, color: opts.color || 0 };
+                role.setNameCalls = 0;
+                role.setName = async name => { role.setNameCalls++; role.name = name; return role; };
                 roles.set(role.id, role);
                 return role;
             }
@@ -168,10 +170,9 @@ test('resolveChannel reuses a BotSettings-stored ID without creating', async () 
 
 test('resolveGroupedRole persists through the extras blob and reuses it after the in-memory value is dropped', async () => {
     const guild = makeGuild('guild-c');
-    const { toScript } = require(path.join(root, 'utils', 'fancyFont.js'));
     const first = await guildSetup.resolveGroupedRole(guild, 'color', 'red');
     assert.equal(first.created, true);
-    assert.equal(first.role.name, '🔴 ' + toScript('Red'));
+    assert.equal(first.role.name, '🔴 Red');
     assert.equal(first.role.color, 0xED4245);
 
     // Simulate a restart: drop the in-memory static value. The
@@ -198,9 +199,8 @@ test('ensureSelfRoleGroups creates only the 10 canonical colour roles (factions/
     // adds them per server with /selfroles faction-add / ping-add.
     assert.deepEqual(groups.faction, {});
     assert.deepEqual(groups.ping, {});
-    const { toScript } = require(path.join(root, 'utils', 'fancyFont.js'));
-    assert.equal(groups.color.red.name, '🔴 ' + toScript('Red'));
-    assert.equal(groups.color.red.name !== 'Red', true, 'created roles must be styled, not plain');
+    assert.equal(groups.color.red.name, '🔴 Red',
+        'created roles use the plain default font with the emoji prefix');
 
     const second = await guildSetup.ensureSelfRoleGroups(guild);
     assert.equal(
@@ -328,15 +328,97 @@ test('/verification setup creates the onboarding channel too, from a bare guild'
     );
 });
 
-test('toScript styles letters and passes everything else through', async () => {
-    const { toScript } = require(path.join(root, 'utils', 'fancyFont.js'));
-    assert.equal(toScript('Member'), '𝓜𝓮𝓶𝓫𝓮𝓻');
-    assert.equal(toScript('Red'), '𝓡𝓮𝓭');
-    assert.equal(toScript('123 🔴 • (AS)'), '123 🔴 • (𝓐𝓢)');
-    const upper = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map(toScript);
-    assert.equal(new Set(upper).size, 26, 'each capital must map to a distinct styled letter');
-    const lower = [...'abcdefghijklmnopqrstuvwxyz'].map(toScript);
-    assert.equal(new Set(lower).size, 26, 'each lowercase letter must map to a distinct styled letter');
+test('destyleRoleName maps the old styled names back to plain', async () => {
+    const { destyleRoleName } = guildSetup;
+    assert.equal(destyleRoleName('👤 𝓜𝓮𝓶𝓫𝓮𝓻'), '👤 Member');
+    assert.equal(destyleRoleName('🔴 𝓡𝓮𝓭'), '🔴 Red');
+    assert.equal(destyleRoleName('🟠 𝒪𝓻𝓪𝓷𝓰𝓮'), '🟠 Orange');
+    assert.equal(destyleRoleName('🟢 𝒢𝓻𝓮𝓮𝓷'), '🟢 Green');
+    assert.equal(destyleRoleName('⚔️ 𝓒𝓵𝓪𝓷 𝓜𝓮𝓶𝓫𝓮𝓻 ℰ𝓤'), '⚔️ Clan Member EU');
+    assert.equal(destyleRoleName('👤 Member'), '👤 Member', 'plain names pass through');
+    assert.equal(destyleRoleName('123 🔴 • (AS)'), '123 🔴 • (AS)');
+});
+
+test('new roles are created with plain names and the emoji prefix', async () => {
+    const guild = makeGuild('guild-m');
+    const { role } = await guildSetup.resolveRole(guild, 'member');
+    assert.equal(role.name, '👤 Member');
+    const red = await guildSetup.resolveGroupedRole(guild, 'color', 'red');
+    assert.equal(red.role.name, '🔴 Red');
+    assert.equal(red.role.color, 0xED4245);
+});
+
+test('a role that already exists with the styled name is found and renamed to plain, not duplicated', async () => {
+    const guild = makeGuild('guild-n');
+    const styled = await guild.roles.create({ name: '👤 𝓜𝓮𝓶𝓫𝓮𝓻' });
+    const before = guild._roles.size;
+    // Neutralise the static value so the resolver takes the
+    // name-lookup path (there is no stored ID for this guild).
+    const savedStatic = settings.roles.member;
+    settings.roles.member = '';
+    try {
+        const { role, created } = await guildSetup.resolveRole(guild, 'member');
+        assert.equal(created, false, 'the styled role must be reused, not duplicated');
+        assert.equal(role.id, styled.id);
+        assert.equal(role.name, '👤 Member', 'the styled name must be renamed to plain');
+        assert.equal(styled.setNameCalls, 1, 'the rename must have happened once');
+        assert.equal(guild._roles.size, before, 'no second role must be created');
+    } finally {
+        settings.roles.member = savedStatic;
+    }
+});
+
+test('a styled role found by stored ID is renamed to plain on resolve', async () => {
+    const guild = makeGuild('guild-o');
+    const styled = await guild.roles.create({ name: '🔴 𝓡𝓮𝓭' });
+    // Pre-seed the BotSettings roleGroups blob only, and
+    // neutralise the static value for the test.
+    const doc = getDoc('guild-o');
+    doc.extras.roleGroups = JSON.stringify({ color: { red: styled.id }, faction: {}, ping: {} });
+    const savedStatic = settings.roles.color?.red;
+    delete settings.roles.color.red;
+    try {
+        const { role, created } = await guildSetup.resolveGroupedRole(guild, 'color', 'red');
+        assert.equal(created, false, 'the stored-ID role must be reused');
+        assert.equal(role.id, styled.id);
+        assert.equal(role.name, '🔴 Red', 'the styled name must be renamed to plain');
+        assert.equal(styled.setNameCalls, 1);
+    } finally {
+        if (savedStatic !== undefined) settings.roles.color.red = savedStatic;
+    }
+});
+
+test('a role that already exists with the plain name is left alone', async () => {
+    const guild = makeGuild('guild-p');
+    const plain = await guild.roles.create({ name: '👤 Member' });
+    const savedStatic = settings.roles.member;
+    settings.roles.member = '';
+    try {
+        const { role, created } = await guildSetup.resolveRole(guild, 'member');
+        assert.equal(created, false);
+        assert.equal(role.id, plain.id);
+        assert.equal(role.name, '👤 Member');
+        assert.equal(plain.setNameCalls, 0, 'a plain-named role must not be renamed');
+    } finally {
+        settings.roles.member = savedStatic;
+    }
+});
+
+test('unrelated roles are never renamed when the resolver runs', async () => {
+    const guild = makeGuild('guild-q');
+    const unrelated = await guild.roles.create({ name: '𝓜𝓸𝓭𝓮𝓻𝓪𝓽𝓸𝓻' });
+    const other = await guild.roles.create({ name: 'Random Role' });
+    const savedStatic = settings.roles.member;
+    settings.roles.member = '';
+    try {
+        await guildSetup.resolveRole(guild, 'member');
+        assert.equal(unrelated.name, '𝓜𝓸𝓭𝓮𝓻𝓪𝓽𝓸𝓻', 'an unrelated styled role must keep its name');
+        assert.equal(unrelated.setNameCalls, 0);
+        assert.equal(other.name, 'Random Role');
+        assert.equal(other.setNameCalls, 0);
+    } finally {
+        settings.roles.member = savedStatic;
+    }
 });
 
 test('resolveChannel moves a canonical-name channel out of the old HORNET category into its group category', async () => {

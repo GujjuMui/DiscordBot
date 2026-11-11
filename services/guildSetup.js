@@ -21,7 +21,6 @@
 const { ChannelType, PermissionFlagsBits } = require("discord.js");
 
 const settings = require("../config/settings");
-const { toScript } = require("../utils/fancyFont");
 const { getSettings, updateSetting } = require("../config/configLoader");
 
 // Channels are grouped into separate categories by what they are
@@ -104,26 +103,28 @@ const NAME_CHANNEL_KEYS = new Set([
     "cards", "arts", "links", "verification", "tournaments", "logs"
 ]);
 
-// Canonical role names. Flat roles use plain names; colour role names
-// are the plain colour names; faction / ping roles keep the exact
-// names the self-role panel already expects (see
-// utils/selfRoleComponents.js emoji maps) so those maps stay untouched.
-// Role names the bot creates fresh: an emoji prefix plus the name
-// in Mathematical Bold Script, one font for every created role
-// (see utils/fancyFont.js). Roles that already exist keep their
-// current names — the stored ID is tried first, so styling only
-// applies to roles created from here. Trade-off: Discord search
-// matches plain text, so a styled name does not match a search
-// for the plain name.
+// Canonical role names. Every role the bot creates fresh gets an
+// emoji prefix plus its plain name in the default font — role names
+// are plain strings in Discord, so bold or other formatting is not
+// possible in a role name; the emoji is what makes them stand out.
+// Colour role names are the plain colour names; faction / ping roles
+// keep the exact names the self-role panel already expects (see
+// utils/selfRoleComponents.js emoji maps) so those maps stay
+// untouched.
+// Roles created by v1.8–v1.10 carry the same names in Mathematical
+// Bold Script instead ("𝓜𝓮𝓶𝓫𝓮𝓻" for "Member"). The resolver
+// still recognises those styled names and renames them back to
+// plain on the next /setup run — see destyleRoleName() and
+// normalizeRoleName() below. Nothing ever styles a name any more.
 const ROLE_DEFS = Object.freeze({
-    member: { name: "👤 " + toScript("Member") },
-    pendingTryout: { name: "⏳ " + toScript("Pending Tryout") },
-    clanMemberAS: { name: "⚔️ " + toScript("Clan Member AS") },
-    clanMemberEU: { name: "⚔️ " + toScript("Clan Member EU") },
-    pendingTryoutAS: { name: "⏳ " + toScript("Pending Tryout AS") },
-    pendingTryoutEU: { name: "⏳ " + toScript("Pending Tryout EU") },
-    tryoutTesterAS: { name: "🧪 " + toScript("Tryout Tester AS") },
-    tryoutTesterEU: { name: "🧪 " + toScript("Tryout Tester EU") }
+    member: { name: "👤 Member" },
+    pendingTryout: { name: "⏳ Pending Tryout" },
+    clanMemberAS: { name: "⚔️ Clan Member AS" },
+    clanMemberEU: { name: "⚔️ Clan Member EU" },
+    pendingTryoutAS: { name: "⏳ Pending Tryout AS" },
+    pendingTryoutEU: { name: "⏳ Pending Tryout EU" },
+    tryoutTesterAS: { name: "🧪 Tryout Tester AS" },
+    tryoutTesterEU: { name: "🧪 Tryout Tester EU" }
 });
 
 // Only the colour roles are canonical across servers — the 10
@@ -135,16 +136,16 @@ const ROLE_DEFS = Object.freeze({
 // roles and in the per-guild BotSettings record — never here.
 const ROLE_GROUPS = Object.freeze({
     color: Object.freeze({
-        red: { name: "🔴 " + toScript("Red"), color: 0xED4245 },
-        black: { name: "⚫ " + toScript("Black"), color: 0x2B2D31 },
-        cyan: { name: "🔹 " + toScript("Cyan"), color: 0x00FFFF },
-        pink: { name: "🩷 " + toScript("Pink"), color: 0xFF69B4 },
-        orange: { name: "🟠 " + toScript("Orange"), color: 0xFFA500 },
-        brown: { name: "🟤 " + toScript("Brown"), color: 0x8B4513 },
-        blue: { name: "🔵 " + toScript("Blue"), color: 0x3498DB },
-        green: { name: "🟢 " + toScript("Green"), color: 0x2ECC71 },
-        violet: { name: "🟣 " + toScript("Violet"), color: 0x8A2BE2 },
-        yellow: { name: "🟡 " + toScript("Yellow"), color: 0xFEE75C }
+        red: { name: "🔴 Red", color: 0xED4245 },
+        black: { name: "⚫ Black", color: 0x2B2D31 },
+        cyan: { name: "🔹 Cyan", color: 0x00FFFF },
+        pink: { name: "🩷 Pink", color: 0xFF69B4 },
+        orange: { name: "🟠 Orange", color: 0xFFA500 },
+        brown: { name: "🟤 Brown", color: 0x8B4513 },
+        blue: { name: "🔵 Blue", color: 0x3498DB },
+        green: { name: "🟢 Green", color: 0x2ECC71 },
+        violet: { name: "🟣 Violet", color: 0x8A2BE2 },
+        yellow: { name: "🟡 Yellow", color: 0xFEE75C }
     })
 });
 
@@ -344,7 +345,7 @@ async function cleanupLegacyCategory(guild) {
 // does not manage are never touched.
 async function applyVisibility(guild) {
     // The Member role opens the hidden categories. Resolving it may
-    // create it (via the resolver, styled name) — a SetupPermission
+    // create it (via the resolver, plain name) — a SetupPermission
     // error propagates so the caller can say so clearly.
     const { role: memberRole } = await resolveRole(guild, "member");
     const me = botMember(guild);
@@ -380,6 +381,67 @@ function findRoleByStoredValue(guild, stored) {
     if (!stored) return null;
     if (isId(stored)) return guild.roles.cache.get(stored) || null;
     return guild.roles.cache.find(r => r.name === stored) || null;
+}
+
+// ---- legacy styled-name migration (v1.8–v1.10 -> v1.11) ----
+//
+// Roles created by v1.8–v1.10 carry their name in Mathematical Bold
+// Script ("𝓜𝓮𝓶𝓫𝓮𝓻" instead of "Member"). v1.11 creates plain
+// names, and — so the next /setup run neither leaves the old styled
+// roles behind nor creates plain duplicates next to them — the
+// resolver recognises a styled name as the canonical one and renames
+// it back to plain. destyleRoleName() maps the script code points
+// back to plain ASCII (the three capitals that live outside the main
+// script block — E U+2130, G U+1D4A2, O U+1D4AA — are handled
+// explicitly); every other character passes through unchanged. This
+// is migration only: nothing ever styles a name any more.
+const SCRIPT_CAPITAL_EXCEPTIONS = new Map([
+    [0x2130, "E"],
+    [0x1D4A2, "G"],
+    [0x1D4AA, "O"]
+]);
+
+function destyleRoleName(name) {
+    return [...String(name ?? "")].map(ch => {
+        const cp = ch.codePointAt(0);
+        if (SCRIPT_CAPITAL_EXCEPTIONS.has(cp)) return SCRIPT_CAPITAL_EXCEPTIONS.get(cp);
+        if (cp >= 0x1D4D0 && cp <= 0x1D4E9) return String.fromCharCode(0x41 + (cp - 0x1D4D0));
+        if (cp >= 0x1D4EA && cp <= 0x1D503) return String.fromCharCode(0x61 + (cp - 0x1D4EA));
+        return ch;
+    }).join("");
+}
+
+// Find a role by its canonical (plain) name. A role that still
+// carries the v1.8–v1.10 styled form of that name matches too, via
+// destyleRoleName(). An exact plain-name match wins over a styled
+// one when both exist. Roles with any other name never match.
+function findRoleByCanonicalName(guild, canonicalName) {
+    const exact = guild.roles.cache.find(r => r.name === canonicalName);
+    if (exact) return exact;
+    return guild.roles.cache.find(r => destyleRoleName(r.name) === canonicalName) || null;
+}
+
+// Rename a managed role back to its plain canonical name when it
+// still carries a styled name. Only a role whose de-styled name
+// equals the canonical name is touched — a role the owner renamed
+// to anything else, or any unrelated role, is never renamed.
+// Renaming needs Manage Roles: without it the role is left alone
+// and keeps working under its old name (the next /setup run tries
+// again). A rename failure (e.g. the role sits above the bot in the
+// hierarchy) is swallowed the same way — the role still works.
+async function normalizeRoleName(guild, role, canonicalName) {
+    if (!role || role.name === canonicalName) return role;
+    if (destyleRoleName(role.name) !== canonicalName) return role;
+    if (typeof role.setName !== "function") return role;
+    const me = botMember(guild);
+    if (!me?.permissions?.has(PermissionFlagsBits.ManageRoles)) return role;
+    try {
+        await role.setName(canonicalName);
+    } catch {
+        // Hierarchy or a transient failure — the role still works
+        // under its old name.
+    }
+    return role;
 }
 
 // ---- public resolver ----
@@ -460,12 +522,12 @@ async function resolveRole(guild, key, { create = true } = {}) {
 
     const stored = await storedRoleValue(guild, key);
     let role = findRoleByStoredValue(guild, stored);
-    if (role) return { role, created: false };
+    if (role) return { role: await normalizeRoleName(guild, role, def.name), created: false };
 
-    role = guild.roles.cache.find(r => r.name === def.name) || null;
+    role = findRoleByCanonicalName(guild, def.name);
     if (role) {
         await persistRole(guild, key, role.id);
-        return { role, created: false };
+        return { role: await normalizeRoleName(guild, role, def.name), created: false };
     }
 
     if (!create) return null;
@@ -482,12 +544,12 @@ async function resolveGroupedRole(guild, group, sub, { create = true } = {}) {
 
     const stored = await storedGroupedRoleValue(guild, group, sub);
     let role = findRoleByStoredValue(guild, stored);
-    if (role) return { role, created: false };
+    if (role) return { role: await normalizeRoleName(guild, role, def.name), created: false };
 
-    role = guild.roles.cache.find(r => r.name === def.name) || null;
+    role = findRoleByCanonicalName(guild, def.name);
     if (role) {
         await persistGroupedRole(guild, group, sub, role.id);
-        return { role, created: false };
+        return { role: await normalizeRoleName(guild, role, def.name), created: false };
     }
 
     if (!create) return null;
@@ -589,6 +651,7 @@ module.exports = {
     SELFROLES_CHANNEL_NAME,
     ROLE_DEFS,
     ROLE_GROUPS,
+    destyleRoleName,
     MANAGE_CHANNELS_MESSAGE,
     MANAGE_ROLES_MESSAGE,
     SetupPermissionError,
