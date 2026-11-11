@@ -32,6 +32,28 @@ const { bannerUrl } = require("../services/guildSetup");
 // skipped instead of posting an empty select menu (discord.js would
 // reject it).
 
+// A section gallery holds the section banner first, then one image
+// per role entry that has an imageUrl, in list order — at most 10
+// items, which is Discord's MediaGallery limit. No gallery at all
+// when there is neither a banner nor an entry image (a section with
+// no roles at all is skipped, as before).
+function galleryUrls(banner, imageUrls) {
+    const urls = [];
+    if (banner) urls.push(banner);
+    for (const url of imageUrls || []) {
+        if (typeof url === "string" && url.length > 0) urls.push(url);
+    }
+    return urls.slice(0, 10);
+}
+
+function mediaGallery(urls) {
+    return gallery => gallery.addItems(
+        ...urls.map(url =>
+            new MediaGalleryItemBuilder().setURL(url)
+        )
+    );
+}
+
 function buildSelfRolePanel(guild, resolved = {}) {
 
     const groups = resolved.groups || {
@@ -40,11 +62,15 @@ function buildSelfRolePanel(guild, resolved = {}) {
     const custom = resolved.custom || { factions: [], pings: [] };
     const banners = resolved.banners || settings.selfRoles.banners || {};
 
-    const factionOptions = (custom.factions || [])
+    // Entries whose role no longer exists in the guild are skipped —
+    // for the options and for their gallery images alike.
+    const factionEntries = (custom.factions || [])
 
         .map(entry => ({ entry, role: guild.roles.cache.get(entry.roleId) }))
 
-        .filter(({ role }) => Boolean(role))
+        .filter(({ role }) => Boolean(role));
+
+    const factionOptions = factionEntries
 
         .map(({ entry, role }) => ({
 
@@ -91,11 +117,13 @@ function buildSelfRolePanel(guild, resolved = {}) {
 
         }));
 
-    const pingOptions = (custom.pings || [])
+    const pingEntries = (custom.pings || [])
 
         .map(entry => ({ entry, role: guild.roles.cache.get(entry.roleId) }))
 
-        .filter(({ role }) => Boolean(role))
+        .filter(({ role }) => Boolean(role));
+
+    const pingOptions = pingEntries
 
         .map(({ entry, role }) => ({
 
@@ -203,18 +231,13 @@ Choose **one** color role. Selecting another color will automatically remove the
     // =========================
 
     if (factionOptions.length) {
-        const factionBanner = bannerUrl(banners, "faction");
-        if (factionBanner) {
+        const factionGallery = galleryUrls(
+            bannerUrl(banners, "faction"),
+            factionEntries.map(({ entry }) => entry.imageUrl)
+        );
+        if (factionGallery.length) {
             container.addMediaGalleryComponents(
-
-                gallery => gallery.addItems(
-
-                    new MediaGalleryItemBuilder()
-
-                        .setURL(factionBanner)
-
-                )
-
+                mediaGallery(factionGallery)
             );
         }
 
@@ -252,18 +275,13 @@ Choose **one** faction role. Selecting another faction will automatically remove
     // =========================
 
     if (pingOptions.length) {
-        const pingBanner = bannerUrl(banners, "ping");
-        if (pingBanner) {
+        const pingGallery = galleryUrls(
+            bannerUrl(banners, "ping"),
+            pingEntries.map(({ entry }) => entry.imageUrl)
+        );
+        if (pingGallery.length) {
             container.addMediaGalleryComponents(
-
-                gallery => gallery.addItems(
-
-                    new MediaGalleryItemBuilder()
-
-                        .setURL(pingBanner)
-
-                )
-
+                mediaGallery(pingGallery)
             );
         }
 

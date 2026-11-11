@@ -21,8 +21,10 @@ const {
 
 const {
     getCustomLists,
+    getCustomList,
     addCustomEntry,
-    removeCustomEntry
+    removeCustomEntry,
+    isHttpUrl
 } = require("../../services/selfRoleCustom");
 
 const { updateSetting } = require("../../config/configLoader");
@@ -40,7 +42,7 @@ const BANNER_SECTIONS = {
 function listLines(entries, emptyText) {
     if (!entries.length) return emptyText;
     return entries
-        .map(entry => `${entry.emoji || "•"} ${entry.name || entry.roleId}${entry.description ? ` — ${entry.description}` : ""}`)
+        .map(entry => `${entry.emoji || "•"} ${entry.name || entry.roleId}${entry.description ? ` — ${entry.description}` : ""} — image: ${entry.imageUrl || "none"}`)
         .join("\n");
 }
 
@@ -89,8 +91,9 @@ module.exports = {
 
         // Faction roles are per-guild custom — the owner picks the
         // roles with these subcommands instead of the bot shipping
-        // a fixed list. Re-adding a role updates its description
-        // and emoji.
+        // a fixed list. Re-adding a role updates its description,
+        // emoji and image (an image given with the re-add replaces
+        // the old one; re-adding without one keeps it).
         .addSubcommand(subcommand =>
 
             subcommand
@@ -118,6 +121,12 @@ module.exports = {
                     option
                         .setName("emoji")
                         .setDescription("Emoji shown next to the role (default: ⚔️)")
+                )
+
+                .addStringOption(option =>
+                    option
+                        .setName("image")
+                        .setDescription("Image link shown in the faction section gallery (paste a full https:// link)")
                 )
 
         )
@@ -182,6 +191,12 @@ module.exports = {
                         .setDescription("Emoji shown next to the role (default: 🔔)")
                 )
 
+                .addStringOption(option =>
+                    option
+                        .setName("image")
+                        .setDescription("Image link shown in the ping section gallery (paste a full https:// link)")
+                )
+
         )
 
         .addSubcommand(subcommand =>
@@ -215,9 +230,10 @@ module.exports = {
 
         )
 
-        // Banner art is an image the owner uploads — the attachment
-        // URL is saved for that panel section. No banner URL is ever
-        // written into code or config by hand.
+        // Banner art is an image the owner supplies — either by
+        // uploading it (the attachment URL is saved) or by pasting
+        // a link to it. No banner URL is ever written into code or
+        // config by hand.
         .addSubcommand(subcommand =>
 
             subcommand
@@ -244,8 +260,13 @@ module.exports = {
                 .addAttachmentOption(option =>
                     option
                         .setName("image")
-                        .setDescription("The banner image to use")
-                        .setRequired(true)
+                        .setDescription("Upload the banner image (used instead of the link if both are given)")
+                )
+
+                .addStringOption(option =>
+                    option
+                        .setName("link")
+                        .setDescription("Or paste a link to the banner image (a full https:// link)")
                 )
 
         ),
@@ -290,6 +311,22 @@ module.exports = {
             const role = interaction.options.getRole("role");
             const description = interaction.options.getString("description");
             const emoji = interaction.options.getString("emoji");
+            const image = interaction.options.getString("image");
+            if (image && !isHttpUrl(image)) {
+                return interaction.editReply({
+                    content: "❌ That image link isn't a valid image URL — paste a full link starting with http:// or https://."
+                });
+            }
+            // Re-adding a role without an image keeps the image it
+            // already had — only a new image replaces it.
+            let imageUrl = image || "";
+            if (!image) {
+                const existing = (await getCustomList(
+                    interaction.guild,
+                    isFaction ? "factions" : "pings"
+                )).find(e => e.roleId === role.id);
+                imageUrl = existing?.imageUrl || "";
+            }
             await addCustomEntry(
                 interaction.guild,
                 isFaction ? "factions" : "pings",
@@ -300,7 +337,8 @@ module.exports = {
                         || (isFaction
                             ? `Join the ${role.name} faction`
                             : "Receive notifications"),
-                    emoji: emoji || (isFaction ? "⚔️" : "🔔")
+                    emoji: emoji || (isFaction ? "⚔️" : "🔔"),
+                    imageUrl
                 }
             );
             return interaction.editReply({
@@ -341,15 +379,37 @@ module.exports = {
         if (subcommand === "banner-set") {
             const section = interaction.options.getString("section");
             const image = interaction.options.getAttachment("image");
-            if (!image || !image.contentType?.startsWith("image/")) {
+            const link = interaction.options.getString("link");
+            // Exactly one source must be given. When both are given
+            // the uploaded image wins and the reply says so.
+            let url;
+            let fromLink = false;
+            let ignoredLink = false;
+            if (image) {
+                if (!image.contentType?.startsWith("image/")) {
+                    return interaction.editReply({
+                        content: "❌ That file isn't an image — attach a PNG, JPG or GIF."
+                    });
+                }
+                url = image.url;
+                if (link) ignoredLink = true;
+            } else if (link) {
+                if (!isHttpUrl(link)) {
+                    return interaction.editReply({
+                        content: "❌ That link isn't a valid image URL — paste a full link starting with http:// or https://."
+                    });
+                }
+                url = link;
+                fromLink = true;
+            } else {
                 return interaction.editReply({
-                    content: "❌ That file isn't an image — attach a PNG, JPG or GIF."
+                    content: "❌ Give either an image attachment or a link."
                 });
             }
-            await updateSetting(interaction.guild.id, "banners", section, image.url);
-            settings.selfRoles.banners[section] = image.url;
+            await updateSetting(interaction.guild.id, "banners", section, url);
+            settings.selfRoles.banners[section] = url;
             return interaction.editReply({
-                content: `✅ ${BANNER_SECTIONS[section]} banner set. Run /selfroles refresh to show it on the panel.`
+                content: `✅ ${BANNER_SECTIONS[section]} banner set${fromLink ? " from the link" : ""}${ignoredLink ? " — used the attached image, the link was ignored" : ""}. Run /selfroles refresh to show it on the panel.`
             });
         }
 

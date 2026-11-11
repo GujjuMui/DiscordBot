@@ -1,5 +1,47 @@
 # Hornet — Refactor Notes
 
+## Per-role images & banner links (v1.10)
+
+`/selfroles` now takes image links from the owner — nothing is
+hardcoded: no image URL, link or channel is written anywhere in
+code. Images and links come only from what the owner pastes, stored
+per guild in BotSettings, and the panel shows them in the section's
+MediaGallery (Discord select-menu options cannot carry images, so
+per-entry images live in the gallery, not on the option).
+
+### Per-role images
+
+- `/selfroles faction-add role:<role> [description] [emoji] [image]`
+  and the same for `ping-add` — `image` is an optional pasted image
+  link (a full http(s) URL; anything else is rejected with a clear
+  ephemeral reply).
+- Stored per entry as `imageUrl` in the extras shape
+  `{ roleId, name, description, emoji, imageUrl }`
+  (services/selfRoleCustom.js, `cleanEntry`; validated by the shared
+  `isHttpUrl` helper). Seed entries get `imageUrl: ""`.
+- The faction section gallery shows the faction banner first, then
+  each faction entry's image in list order; same for ping. Entries
+  with no image contribute nothing, entries whose role no longer
+  exists are skipped, and a section with neither a banner nor entry
+  images has no gallery at all (unchanged behaviour). The gallery is
+  capped at 10 items, Discord's MediaGallery limit.
+- Re-adding a role with a new image updates it; re-adding without
+  one keeps the image already stored.
+- `/selfroles faction-list` / `ping-list` show each entry's stored
+  image URL, or "none", so the owner can verify what is set.
+
+### Banner by link
+
+- `/selfroles banner-set section:<main|color|faction|ping>
+  [image:<attachment>] [link:<url>]` — the attachment is now
+  optional; exactly one source must be given. If both are given the
+  uploaded image wins and the reply says the link was ignored; if
+  neither is given the command is rejected. A `link` is validated as
+  an http(s) URL and stored exactly the way the attachment URL is
+  stored today (BotSettings `banners` + the in-memory static value),
+  so it survives a restart the same way.
+- Colour roles are unchanged (the canonical 10 colours).
+
 ## Custom factions & pings (v1.9)
 
 Faction and ping roles are no longer hardcoded. Legion / Dynasty /

@@ -3,8 +3,13 @@
 // Faction and ping roles are specific to each server — they are NOT
 // hardcoded anywhere. Each guild keeps its own lists in BotSettings
 // extras as JSON blobs:
-//   extras.selfRoleFactions: [{ roleId, name, description, emoji }]
-//   extras.selfRolePings:    [{ roleId, name, description, emoji }]
+//   extras.selfRoleFactions: [{ roleId, name, description, emoji, imageUrl }]
+//   extras.selfRolePings:    [{ roleId, name, description, emoji, imageUrl }]
+//
+// `imageUrl` is an image link the owner pasted with faction-add /
+// ping-add — shown in the section's MediaGallery on the panel
+// (select-menu options cannot carry images). An entry without one
+// stores "" and contributes no gallery item. Seed entries get "".
 //
 // The panel builder and the select handler read ONLY these lists
 // for faction / ping options. Colour roles are unchanged — they
@@ -51,8 +56,22 @@ function cleanEntry(entry) {
         roleId: String(entry.roleId),
         name: typeof entry.name === "string" ? entry.name : "",
         description: typeof entry.description === "string" ? entry.description : "",
-        emoji: typeof entry.emoji === "string" ? entry.emoji : ""
+        emoji: typeof entry.emoji === "string" ? entry.emoji : "",
+        imageUrl: typeof entry.imageUrl === "string" ? entry.imageUrl : ""
     };
+}
+
+// An image link must be a full http(s) URL — a bare filename or a
+// different scheme (ftp:, file:, javascript:) is not a Discord image
+// URL and would only break the panel gallery.
+function isHttpUrl(value) {
+    if (typeof value !== "string" || value.length === 0) return false;
+    try {
+        const url = new URL(value);
+        return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+        return false;
+    }
 }
 
 async function storedLists(guild) {
@@ -80,7 +99,8 @@ function buildSeedSide(guild, merged, group, table, defaultDescription) {
             roleId,
             name: role.name,
             description: description || defaultDescription(role.name),
-            emoji: emoji || ""
+            emoji: emoji || "",
+            imageUrl: ""
         });
     }
     return out;
@@ -144,6 +164,7 @@ async function removeCustomEntry(guild, group, roleId) {
 module.exports = {
     FACTION_KEY,
     PING_KEY,
+    isHttpUrl,
     getCustomLists,
     getCustomList,
     saveCustomList,

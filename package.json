@@ -27,7 +27,7 @@
     "deploy": "node deploy-commands.js",
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "test": "node --test tests/index.test.js tests/mongo.test.js tests/presence.test.js tests/repositories.test.js tests/config.test.js tests/router.test.js tests/resolver.test.js tests/servermap.test.js tests/selfroles-custom.test.js"
+    "test": "node --test tests/index.test.js tests/mongo.test.js tests/presence.test.js tests/repositories.test.js tests/config.test.js tests/router.test.js tests/resolver.test.js tests/servermap.test.js tests/selfroles-custom.test.js tests/selfroles-images.test.js"
   },
-  "version": "1.9.0"
+  "version": "1.10.0"
 }
