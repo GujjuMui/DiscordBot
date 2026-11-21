@@ -1,24 +1,15 @@
 const {
     EmbedBuilder,
-    MessageFlags,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle
+    MessageFlags
 } = require("discord.js");
 
-const settings = require("../config/settings");
-const { getSettings } = require("../config/configLoader");
 const { PermissionsBitField } = require("discord.js");
 const logger = require("../utils/logger");
 const {
-    resolveChannel,
     resolveRole,
     SetupPermissionError
 } = require("../services/guildSetup");
-
-function isId(value) {
-    return /^\d+$/.test(String(value || ""));
-}
+const { postVerificationWelcome } = require("../services/welcomeMessage");
 
 module.exports = async (interaction) => {
 
@@ -31,10 +22,6 @@ module.exports = async (interaction) => {
         await interaction.deferReply({
             flags: MessageFlags.Ephemeral
         });
-
-        // DB-overridable settings for this guild, static fallback.
-        const guildSettings = await getSettings(interaction.guild?.id).catch(() => settings);
-        const channels = guildSettings?.channels || settings.channels;
 
         // The member role is resolved (stored ID, then canonical
         // name, then created) instead of erroring when it is not
@@ -98,100 +85,21 @@ module.exports = async (interaction) => {
         // Give role
         await interaction.member.roles.add(memberRole);
 
-        // Welcome channel, resolved (stored ID, then canonical
-        // name, then created under HORNET). A failure to resolve it
-        // skips the welcome message — the user is already verified.
-        let welcomeChannel = null;
-        try {
-            ({ channel: welcomeChannel } = await resolveChannel(
-                interaction.guild, "welcome"
-            ));
-        } catch (err) {
-            console.error("[verificationModalHandler] Failed to resolve welcome channel:", err.message);
-        }
-
-        // Link channels for the welcome buttons, resolved the
-        // same way; the stored ID is the fallback when resolution
-        // fails, so the buttons keep working as before.
-        const serverMapId = await (async () => {
-            try {
-                const { channel } = await resolveChannel(
-                    interaction.guild, "serverMap"
-                );
-                return channel.id;
-            } catch {
-                return isId(channels.serverMap) ? channels.serverMap : "";
-            }
-        })();
-        // How-to-join is optional: it is only linked when it
-        // already exists (stored ID, then canonical name) and is
-        // never created here. An empty ID means the Join button
-        // below is left out rather than linking nowhere.
-        const howToJoinId = await (async () => {
-            try {
-                const resolved = await resolveChannel(
-                    interaction.guild, "howToJoin", { create: false }
-                );
-                return resolved?.channel?.id || "";
-            } catch {
-                return isId(channels.howToJoin) ? channels.howToJoin : "";
-            }
-        })();
-
+        // Welcome message — posted when verification completes
+        // (shared with the direct-grant button flow). A failure
+        // to post it never undoes the verification.
         let welcomeFailed = false;
-        if (welcomeChannel) {
-
-            const welcomeEmbed = new EmbedBuilder()
-                .setColor("#ED4245")
-                .setDescription(
-                    `${"🐝"} Welcome to **${interaction.guild.name}**, ${interaction.user}!\nEnjoy your stay.`
-                );
-
-            const welcomeButtons = [
-
-                new ButtonBuilder()
-                    .setLabel("Server Map")
-                    .setEmoji("🗺️")
-                    .setStyle(ButtonStyle.Link)
-                    .setURL(
-                        `https://discord.com/channels/${interaction.guild.id}/${serverMapId}`
-                    )
-
-            ];
-
-            // Only link the clan when a how-to-join channel exists.
-            if (howToJoinId) {
-                welcomeButtons.push(
-                    new ButtonBuilder()
-                        .setLabel("Join Fate Clan")
-                        .setEmoji("🤝")
-                        .setStyle(ButtonStyle.Link)
-                        .setURL(
-                            `https://discord.com/channels/${interaction.guild.id}/${howToJoinId}`
-                        )
-                );
-            }
-
-            const buttons = new ActionRowBuilder().addComponents(
-                ...welcomeButtons
+        try {
+            const posted = await postVerificationWelcome(
+                interaction.guild, interaction.member
             );
-
-            try {
-                await welcomeChannel.send({
-
-                    embeds: [welcomeEmbed],
-
-                    components: [buttons]
-
-                });
-            } catch (err) {
-                // The role was already added — the user IS verified.
-                // Log it and tell them so, instead of reporting a
-                // generic verification failure.
-                welcomeFailed = true;
-                console.error("[verificationModalHandler] Failed to send welcome message:", err.message);
-            }
-
+            if (!posted) welcomeFailed = true;
+        } catch (err) {
+            // The role was already added — the user IS verified.
+            // Log it and tell them so, instead of reporting a
+            // generic verification failure.
+            welcomeFailed = true;
+            console.error("[verificationModalHandler] Failed to send welcome message:", err.message);
         }
 
         // Reply to user

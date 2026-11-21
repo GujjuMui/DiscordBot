@@ -139,7 +139,7 @@ function buildSelfRolePanel(guild, resolved = {}) {
 
     const container = new ContainerBuilder()
 
-        .setAccentColor(0x5865F2);
+        .setAccentColor(0xED4245);
 
     // =========================
     // MAIN

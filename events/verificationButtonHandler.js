@@ -16,6 +16,7 @@ const {
 const { VERIFY_MIN_ACCOUNT_AGE_MS, VERIFY_MIN_JOIN_AGE_MS } = require("../config/constants");
 const { resolveRole, SetupPermissionError } = require("../services/guildSetup");
 const VerificationRepository = require("../repositories/VerificationRepository");
+const { postVerificationWelcome } = require("../services/welcomeMessage");
 const logger = require("../utils/logger");
 
 async function safeDefer(interaction) {
@@ -137,6 +138,15 @@ module.exports = async interaction => {
     await safeEditReply(interaction, {
         content: `✅ You're verified in **${guild.name}**! Enjoy your stay! ❤️`
     });
+
+    // Welcome message — posted when verification completes
+    // (shared with the legacy modal flow). Best-effort: a
+    // failure here never undoes the verification.
+    try {
+        await postVerificationWelcome(guild, interaction.member);
+    } catch (err) {
+        console.error("[verificationButtonHandler] Failed to send welcome message:", err.message);
+    }
 
     // Best-effort log — a logging failure must never undo a
     // successful verification.
