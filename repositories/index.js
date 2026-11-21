@@ -12,6 +12,7 @@ module.exports = {
     autoReply: require("./AutoReplyRepository"),
     memberCooldown: require("./MemberCooldownRepository"),
     botSettings: require("./BotSettingsRepository"),
+    verification: require("./VerificationRepository"),
     selfRole: require("./SelfRoleMessageRepository"),
     counter: require("./CounterRepository")
 };

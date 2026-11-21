@@ -403,16 +403,19 @@ test('link category handler keys gallery state by message id', async () => {
 
 
 // Phase 4 runtime safety coverage.
-test('onboarding handler resolves channels through the shared resolver and never throws on a missing one', async () => {
+test('onboarding handler reads the saved verification config and exits gracefully when unconfigured', async () => {
     const source = fs.readFileSync(
         path.join(root, 'events', 'memberJoinHandler.js'),
         'utf8'
     );
 
-    assert.ok(source.includes('resolveChannel'), 'memberJoinHandler must use the shared resolver');
-    assert.ok(!source.includes('getConfiguredChannelId'), 'the hand-rolled ID check is replaced by the resolver');
-    assert.ok(source.includes('return null'));
-    assert.ok(source.includes('Onboarding channel is unavailable; skipping welcome message.'));
+    // Per-guild config from the database — never a hardcoded ID,
+    // and never auto-creating channels on a join.
+    assert.ok(source.includes('VerificationRepository'), 'memberJoinHandler must read the saved verification config');
+    assert.ok(source.includes('getVerificationConfig'), 'memberJoinHandler must load the config by guildId');
+    assert.ok(source.includes('onboardingChannelId'), 'memberJoinHandler must post into the saved onboarding channel');
+    assert.ok(!source.includes('resolveChannel'), 'memberJoinHandler must not auto-create channels on a join');
+    assert.ok(source.includes('Saved onboarding channel is unavailable; skipping welcome message.'));
     assert.ok(!source.includes('Onboarding channel not found:'));
 });
 

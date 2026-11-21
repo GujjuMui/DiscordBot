@@ -80,6 +80,24 @@ async function getSettings(guildId) {
             clan: {
                 embedImage: extras.clanEmbedImage || staticSettings.clan.embedImage
             },
+            // Verification suite passthrough: the per-guild WELCOME
+            // category / channel IDs, verified role and branding
+            // overrides from /verification setup + config. A guild
+            // with no verification block reads as all-empty here —
+            // callers treat an empty onboardingChannelId as
+            // "unconfigured" and exit gracefully.
+            verification: {
+                verifiedRoleId: "",
+                welcomeCategoryId: "",
+                rulesChannelId: "",
+                verificationChannelId: "",
+                guideChannelId: "",
+                supportChannelId: "",
+                onboardingChannelId: "",
+                customFooter: "",
+                accentColor: "",
+                ...(asObject(record.verification) || {})
+            },
             // Passthrough: nothing the static file defines may be dropped.
             idPrefix: { ...staticSettings.idPrefix, ...(asObject(record.idPrefix)) },
             brand: extras.brand || staticSettings.clan?.brand || "",

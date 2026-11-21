@@ -293,39 +293,84 @@ test('self-role panel builds from a bare guild with no banners', async () => {
     assert.ok(json.includes('selfroles_ping'), 'ping select must be present');
 });
 
-test('/verification setup creates the onboarding channel too, from a bare guild', async () => {
+test('/verification setup creates the WELCOME category and its 5 channels from a bare guild', async () => {
     const guild = makeGuild('guild-h');
-    // Text channels created by the resolver need .send for the panel.
+    guild.name = 'Resolver Test Server';
+    guild.iconURL = () => null;
+    // Text channels created by setup need .send for the panels.
     const realCreate = guild.channels.create.bind(guild.channels);
     const sent = [];
     guild.channels.create = async opts => {
         const ch = await realCreate(opts);
-        ch.send = async msg => { sent.push(msg); return { id: 'msg1' }; };
+        ch.send = async msg => { sent.push({ channel: ch, msg }); return { id: 'msg1' }; };
         return ch;
     };
+
+    // Stub the verification DAO in require.cache (same pattern as
+    // the BotSettings stub above) so no MongoDB is touched.
+    const verificationRepoPath = require.resolve(path.join(root, 'repositories', 'VerificationRepository.js'));
+    const verificationStore = new Map();
+    const verificationStub = {
+        emptyConfig(guildId) {
+            const config = { guildId: guildId || '' };
+            for (const f of ['verifiedRoleId', 'welcomeCategoryId', 'rulesChannelId', 'verificationChannelId', 'guideChannelId', 'supportChannelId', 'onboardingChannelId', 'customFooter', 'accentColor']) config[f] = '';
+            return config;
+        },
+        async getVerificationConfig(guildId) {
+            const stored = verificationStore.get(guildId);
+            return stored ? JSON.parse(JSON.stringify(stored)) : null;
+        },
+        async saveVerificationConfig(guildId, patch = {}) {
+            const current = verificationStore.get(guildId) || verificationStub.emptyConfig(guildId);
+            const next = { ...current, ...patch };
+            verificationStore.set(guildId, next);
+            return JSON.parse(JSON.stringify(next));
+        }
+    };
+    for (const key of Object.keys(require.cache)) {
+        if (key.includes('verificationSetup') || key.includes('commands/verification')) {
+            delete require.cache[key];
+        }
+    }
+    require.cache[verificationRepoPath] = { id: verificationRepoPath, filename: verificationRepoPath, loaded: true, exports: verificationStub };
 
     const verification = require(path.join(root, 'commands', 'verification', 'verification.js'));
     const replies = [];
     const interaction = {
         guild,
-        options: { getChannel: () => null },
-        reply: async msg => { replies.push(msg); }
+        options: { getSubcommand: () => 'setup' },
+        deferReply: async () => {},
+        editReply: async msg => { replies.push(msg); }
     };
     await verification.execute(interaction);
 
     const byName = name => [...guild._channels.values()].find(c => c.name === name);
-    const category = byName('✅ VERIFICATION');
-    const verificationChannel = byName('📝┃verification');
-    const onboardingChannel = byName('👋┃onboarding');
-    assert.ok(category, 'VERIFICATION category must have been auto-created');
-    assert.ok(verificationChannel, 'verification channel must have been auto-created');
-    assert.ok(onboardingChannel, 'onboarding channel must have been auto-created by verification setup');
-    assert.equal(onboardingChannel.parentId, category.id, 'onboarding must be under VERIFICATION');
-    assert.equal(sent.length, 1, 'the panel must be sent once to the verification channel');
+    const category = byName('WELCOME');
+    assert.ok(category, 'WELCOME category must have been auto-created');
+    assert.equal(category.type, ChannelType.GuildCategory);
+    for (const name of ['📜│server-rules', '📝│verification', '📖│server-guide', '💬│server-support', '👋│onboarding']) {
+        const channel = byName(name);
+        assert.ok(channel, `${name} must have been auto-created`);
+        assert.equal(channel.parentId, category.id, `${name} must be under WELCOME`);
+    }
+    assert.equal(guild._channels.size, 6, 'exactly one category + five channels');
+    const rulesPost = sent.find(s => s.channel.name === '📜│server-rules');
+    const verifyPost = sent.find(s => s.channel.name === '📝│verification');
+    assert.ok(rulesPost, 'the Server Rules embed must be posted');
+    assert.equal(rulesPost.msg.embeds[0].toJSON().title, '📜 Server Rules');
+    assert.ok(verifyPost, 'the verification panel must be posted');
+    assert.equal(verifyPost.msg.embeds[0].toJSON().title, '✅ Verify — Resolver Test Server');
+    assert.equal(verifyPost.msg.components[0].toJSON().components[0].custom_id, 'verify');
+    assert.equal(sent.length, 2, 'exactly the rules + verification panels must be sent');
+    assert.equal(replies.length, 1, 'setup must reply once, ephemerally');
     assert.ok(
-        replies.some(r => /Onboarding channel/.test(r.content)),
-        `reply must mention the onboarding channel, got ${JSON.stringify(replies)}`
+        replies[0].embeds[0].toJSON().title.includes('Verification setup complete'),
+        `reply must confirm setup, got ${JSON.stringify(replies)}`
     );
+    const saved = verificationStore.get('guild-h');
+    assert.ok(saved, 'setup must persist the per-guild verification config');
+    assert.equal(saved.welcomeCategoryId, category.id);
+    assert.equal(saved.onboardingChannelId, byName('👋│onboarding').id);
 });
 
 test('destyleRoleName maps the old styled names back to plain', async () => {

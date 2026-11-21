@@ -1,107 +1,44 @@
-const { EmbedBuilder } = require("discord.js");
-
-const { resolveChannel } = require("../services/guildSetup");
-
-// Resolve one onboarding channel. A failure (e.g. the bot cannot
-// create channels) resolves to null instead of throwing — a missing
-// channel must never break a member join.
-async function resolve(guild, key) {
-    try {
-        const { channel } = await resolveChannel(guild, key);
-        return channel;
-    } catch {
-        return null;
-    }
-}
+// Member-join onboarding — guildMemberAdd.
+//
+// Fetches this guild's saved verification configuration from the
+// database (repositories/VerificationRepository.js). If the guild
+// is unconfigured (no /verification setup yet), exits gracefully —
+// it never creates channels on a join. Otherwise it posts the
+// dynamic onboarding welcome embed (services/verificationSetup.js)
+// into the saved onboarding channel, with every <#channel> mention
+// and the {guild.name} placeholders resolved from the config.
+const { buildOnboardingEmbed } = require("../services/verificationSetup");
+const VerificationRepository = require("../repositories/VerificationRepository");
 
 module.exports = async member => {
 
-    // The four channel lookups are independent — run them in parallel.
-    // Each one is resolved (stored ID, then canonical name, then
-    // created under HORNET), so a fresh server builds its onboarding
-    // channels on the first join instead of skipping the welcome.
-    const [onboardingChannel, rulesChannel, welcomeChannel, supportChannel] = await Promise.all([
-        resolve(member.guild, "onboarding"),
-        resolve(member.guild, "serverRules"),
-        resolve(member.guild, "main_welcome"),
-        resolve(member.guild, "serverSupport")
-    ]);
+    const config = await VerificationRepository
+        .getVerificationConfig(member.guild.id)
+        .catch(() => null);
 
-    if (!onboardingChannel) {
-
-        console.warn(
-            "Onboarding channel is unavailable; skipping welcome message."
-        );
-
+    if (!config || !config.onboardingChannelId) {
+        // Unconfigured guild — nothing to welcome into yet.
         return;
-
     }
 
-    // Resolved like the others (stored ID, then canonical name,
-    // then created under HORNET); null when it cannot be resolved.
-    const verificationChannel =
-        await resolve(member.guild, "verification");
+    const onboardingChannel = member.guild.channels.cache.get(config.onboardingChannelId)
+        || await member.guild.channels.fetch(config.onboardingChannelId).catch(() => null);
 
-    const rulesMention =
-        rulesChannel
-            ? rulesChannel.toString()
-            : "📃┃server-rules";
+    if (!onboardingChannel) {
+        console.warn(
+            "[memberJoinHandler] Saved onboarding channel is unavailable; skipping welcome message."
+        );
+        return;
+    }
 
-    const verificationMention =
-        verificationChannel
-            ? verificationChannel.toString()
-            : "📝┃verification";
-
-    const welcomeMention =
-        welcomeChannel
-            ? welcomeChannel.toString()
-            : "🎀┃welcome";
-
-    const supportMention =
-        supportChannel
-            ? supportChannel.toString()
-            : "💬┃server-support";
-
-    const embed = new EmbedBuilder()
-
-        .setColor("#ED4245")
-
-        .setTitle("👋 Welcome to F A T E - SF")
-
-        .setDescription(
-            `Welcome to the server, ${member}!\n\n` +
-
-            `**📋 ONBOARDING**\n\n` +
-
-            `**1️⃣ Read the Rules**\n` +
-            `Please read the server rules in ${rulesMention}.\n\n` +
-
-            `**2️⃣ Verify Yourself**\n` +
-            `After reading the rules, head to ${verificationMention}.\n\n` +
-
-            `**3️⃣ Learn More**\n` +
-            `Our detailed server guide is available in ${welcomeMention}.\n\n` +
-
-            `**❓ NEED HELP?**\n` +
-            `Having trouble with verification? Ask for support in ${supportMention}.\n\n` +
-
-            `Enjoy your stay and welcome to **F A T E - SF**! ❤️`
-        )
-
-        .setFooter({
-            text: "F A T E - SF • Welcome"
-        })
-
-        .setTimestamp();
+    const embed = buildOnboardingEmbed(member, config);
 
     try {
-        await onboardingChannel.send({
-            embeds: [embed]
-        });
+        await onboardingChannel.send({ embeds: [embed] });
     } catch (err) {
         // A missing-permission / deleted-channel send must not make
-        // the member-join handler throw (index.js would only log it,
-        // but the join itself is already done).
+        // the member-join handler throw (the join itself is already
+        // done).
         console.error("[memberJoinHandler] Failed to send onboarding message:", err.message);
     }
 

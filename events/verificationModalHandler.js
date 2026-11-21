@@ -144,7 +144,7 @@ module.exports = async (interaction) => {
             const welcomeEmbed = new EmbedBuilder()
                 .setColor("#ED4245")
                 .setDescription(
-                    `${"🐝"} Welcome to **F A T E - SF**, ${interaction.user}!\nEnjoy your stay.`
+                    `${"🐝"} Welcome to **${interaction.guild.name}**, ${interaction.user}!\nEnjoy your stay.`
                 );
 
             const welcomeButtons = [
@@ -206,7 +206,7 @@ module.exports = async (interaction) => {
             )
 
             .setDescription(
-                `${"🐝"} Welcome to **F A T E - SF**, ${interaction.user}, enjoy your stay! ${"❤️"}`
+                `${"🐝"} Welcome to **${interaction.guild.name}**, ${interaction.user}, enjoy your stay! ${"❤️"}`
             );
 
         await interaction.editReply({
